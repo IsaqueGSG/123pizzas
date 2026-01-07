@@ -44,6 +44,19 @@ export default function CardProduto({
   const itemNoCarrinho = itens.find((i) => i.id === itemId);
 
   const adicionar = () => {
+    // BEBIDA
+    if (!isPizza) {
+      addItem({
+        id: produto.id,
+        nome: produto.nome,
+        preco: produto.valor,
+        quantidade: 1,
+        img: produto.img
+      });
+      return;
+    }
+
+    // PIZZA INTEIRA
     addItem({
       id: itemId,
       nome: `${produto.nome} (${tamanho.nome})`,
@@ -52,6 +65,7 @@ export default function CardProduto({
       img: produto.img
     });
   };
+
 
   return (
     <Card
@@ -62,8 +76,8 @@ export default function CardProduto({
         borderColor: selecionado ? "primary.main" : "divider",
         opacity:
           isMeia &&
-          saboresSelecionados.length === 2 &&
-          !selecionado
+            saboresSelecionados.length === 2 &&
+            !selecionado
             ? 0.5
             : 1
       }}
