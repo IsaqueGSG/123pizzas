@@ -2,28 +2,32 @@ import { useNavigate } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import CardActionArea from "@mui/material/CardActionArea";
-import CardContent from "@mui/material/CardContent";
-import CardMedia from "@mui/material/CardMedia";
+
 import Typography from "@mui/material/Typography";
 import Toolbar from "@mui/material/Toolbar";
+import Avatar from "@mui/material/Avatar";
 
-import Carrinho from "../../components/Carrinho";
+import Navbar from "../../components/Navbar";
+import CarrinhoDrawer from "../../components/CarrinhoDrawer";
 
 const categorias = [
     {
         id: "pizza",
         nome: "Pizzas",
-        img: "https://images8.alphacoders.com/369/369063.jpg"
+        img: "https://images8.alphacoders.com/369/369063.jpg",
+        descricao: "8 pedacoes"
     },
     {
         id: "broto",
         nome: "Broto",
-        img: "https://images8.alphacoders.com/369/369063.jpg"
+        img: "https://images8.alphacoders.com/369/369063.jpg",
+        descricao: "4 pedacoes"
     },
     {
         id: "bebida",
         nome: "Bebidas",
-        img: "https://images8.alphacoders.com/369/369063.jpg"
+        img: "https://images8.alphacoders.com/369/369063.jpg",
+        descricao: ""
     }
 ];
 
@@ -32,11 +36,10 @@ export default function Categorias() {
 
     return (
         <Box sx={{ p: 2 }}>
-            {/* Navbar / Carrinho */}
-            <Carrinho />
 
-            {/* Espaçamento da AppBar */}
+            <Navbar />
             <Toolbar />
+            <CarrinhoDrawer />
 
             <Typography variant="h5" fontWeight="bold" gutterBottom>
                 Escolha o tipo do produto
@@ -50,19 +53,36 @@ export default function Categorias() {
                 }}
             >
                 {
-                    categorias.map((cat, index )=> (
-                        <Card key={index}>
-                            <CardActionArea onClick={() => navigate(`/cardapio/${cat.id}`)}>
-                                <CardMedia
-                                    component="img"
-                                    height="160"
-                                    image={cat.img}
+                    categorias.map(cat => (
+                        <Card>
+                            <CardActionArea
+                                onClick={() => navigate(`/cardapio/${cat.id}`)}
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    p: 1.5,
+                                    mb: 1,
+                                    borderRadius: 2
+                                }}
+                            >
+
+                                {/* IMAGEM */}
+                                <Avatar
+                                    src={cat.img}
+                                    variant="rounded"
+                                    sx={{ width: 56, height: 56, mr: 1.5 }}
                                 />
-                                <CardContent>
-                                    <Typography variant="h6" align="center">
+
+                                {/* INFO */}
+                                <Box sx={{ flexGrow: 1 }}>
+                                    <Typography fontWeight="bold" fontSize={14}>
                                         {cat.nome}
                                     </Typography>
-                                </CardContent>
+
+                                    <Typography variant="body2" color="text.secondary">
+                                        {cat.descricao}
+                                    </Typography>
+                                </Box>
                             </CardActionArea>
                         </Card>
                     ))

@@ -1,5 +1,6 @@
 import { useCarrinho } from "../../contexts/CarrinhoContext";
-import Carrinho from "../../components/Carrinho";
+import Navbar from "../../components/Navbar";
+import CarrinhoDrawer from "../../components/CarrinhoDrawer";
 
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
@@ -30,9 +31,11 @@ const Checkout = () => {
 
   return (
     <Box sx={{ p: 2 }}>
-      {/* Navbar */}
-      <Carrinho />
+
+      <Navbar />
       <Toolbar />
+      <CarrinhoDrawer />
+
 
       <Typography variant="h5" fontWeight="bold" gutterBottom>
         Resumo do pedido

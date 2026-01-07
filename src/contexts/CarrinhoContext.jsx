@@ -57,7 +57,7 @@ export const CartProvider = ({ children }) => {
     );
   };
 
-
+  const [open, setOpen] = useState(false);
 
   return (
     <CarrinhoContext.Provider
@@ -68,7 +68,9 @@ export const CartProvider = ({ children }) => {
         incrementar,
         decrementar,
         total,
-        quantidadeTotal
+        quantidadeTotal,
+        open, 
+        setOpen
       }}
     >
 

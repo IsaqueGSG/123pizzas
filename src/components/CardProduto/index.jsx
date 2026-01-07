@@ -47,7 +47,7 @@ export default function CardProduto({
     // BEBIDA
     if (!isPizza) {
       addItem({
-        id: produto.id,
+        id: itemId, // ✅ usa o mesmo ID
         nome: produto.nome,
         preco: produto.valor,
         quantidade: 1,
@@ -65,7 +65,6 @@ export default function CardProduto({
       img: produto.img
     });
   };
-
 
   return (
     <Card

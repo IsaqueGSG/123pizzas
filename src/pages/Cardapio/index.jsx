@@ -1,7 +1,8 @@
 import { useProducts } from "../../contexts/ProdutosContext";
 import { useCarrinho } from "../../contexts/CarrinhoContext";
-import Carrinho from "../../components/Carrinho";
 import CardProduto from "../../components/CardProduto";
+import Navbar from "../../components/Navbar";
+import CarrinhoDrawer from "../../components/CarrinhoDrawer";
 
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -60,8 +61,10 @@ const Cardapio = () => {
 
   return (
     <Box sx={{ p: 2 }}>
-      <Carrinho />
+      
+      <Navbar />
       <Toolbar />
+      <CarrinhoDrawer />
 
       {loading && (
         <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
