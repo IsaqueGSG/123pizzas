@@ -73,9 +73,21 @@ export default function Carrinho() {
       {/* TOPO */}
       <AppBar position="fixed" open={open}>
         <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
+          <Typography
+            variant="h6"
+            sx={{
+              flexGrow: 1,
+              cursor: "pointer",
+              userSelect: "none",
+              "&:hover": {
+                opacity: 0.8
+              }
+            }}
+            onClick={() => navigate("/")}
+          >
             123Pizzas
           </Typography>
+
 
           <IconButton
             color="inherit"

@@ -5,17 +5,19 @@ const ProdutosContext = createContext(null);
 const produtosTeste = [
   {
     id: 0,
-    nome: "Pizza Calabresa",
+    nome: "Calabresa",
     valor: 38,
     img: "https://images8.alphacoders.com/369/369063.jpg",
-    tipo: "pizza"
+    tipo: "pizza",
+    ingredientes: "calabres e cebola"
   },
   {
     id: 1,
-    nome: "Pizza Marguerita",
+    nome: "Marguerita",
     valor: 36,
     img: "https://images8.alphacoders.com/369/369063.jpg",
-    tipo: "pizza"
+    tipo: "pizza",
+    ingredientes: "calabres e cebola"
   },
   {
     id: 2,
