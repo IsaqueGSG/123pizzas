@@ -40,7 +40,7 @@ export default function Navbar() {
                     sx={{ flexGrow: 1, cursor: "pointer" }}
                     onClick={() => navigate("/")}
                 >
-                    123Pizzas
+                    123Pedidos
                 </Typography>
 
                 <IconButton color="inherit" onClick={() => setOpen(true)}>

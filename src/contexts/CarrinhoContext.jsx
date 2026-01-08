@@ -23,7 +23,7 @@ export const CartProvider = ({ children }) => {
     setItens((prev) => prev.filter((i) => i.id !== id));
   };
 
-  const clear = () => setItens([]);
+  const limparCarrinho = () => setItens([]);
 
   const total = itens.reduce(
     (acc, item) => acc + item.preco * item.quantidade,
@@ -71,7 +71,8 @@ export const CartProvider = ({ children }) => {
         total,
         quantidadeTotal,
         open,
-        setOpen
+        setOpen,
+        limparCarrinho
       }}
     >
 

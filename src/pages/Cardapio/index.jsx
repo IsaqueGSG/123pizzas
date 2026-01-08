@@ -108,7 +108,7 @@ export default function Cardapio() {
         Cardápio de {categoria}
       </Typography>
 
-      {categoria !== "bebidas" && (
+      {categoria !== "bebida" && (
         <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
           <Button
             fullWidth

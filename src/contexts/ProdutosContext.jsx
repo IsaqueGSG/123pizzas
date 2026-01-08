@@ -1,41 +1,24 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { getPizzas } from "../services/pizzas.service"
 
-const ProdutosContext = createContext(null);
+const ProdutosContext = createContext();
 
-const produtosTeste = [
-  {
-    id: 0,
-    nome: "Calabresa",
-    valor: 38,
-    img: "https://images8.alphacoders.com/369/369063.jpg",
-    tipo: "pizza",
-    ingredientes: "calabres e cebola"
-  },
-  {
-    id: 1,
-    nome: "Marguerita",
-    valor: 36,
-    img: "https://images8.alphacoders.com/369/369063.jpg",
-    tipo: "pizza",
-    ingredientes: "calabres e cebola"
-  },
-  {
-    id: 2,
-    nome: "Refrigerante 1L",
-    valor: 8,
-    img: "https://images8.alphacoders.com/369/369063.jpg",
-    tipo: "bebida"
-  }
-];
-
-export const ProdutosProvider = ({ children }) => {
+export function ProdutosProvider({ children }) {
   const [produtos, setProdutos] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // simula busca (API/Firebase no futuro)
-    setProdutos(produtosTeste);
-    setLoading(false);
+    async function load() {
+      try {
+        const listaPizzas = await getPizzas();
+        console.log(listaPizzas)
+        setProdutos(listaPizzas);
+        setLoading(false);
+      } catch (e) {
+        console.log(e);
+      }
+    }
+    load();
   }, []);
 
   return (
@@ -43,7 +26,8 @@ export const ProdutosProvider = ({ children }) => {
       {children}
     </ProdutosContext.Provider>
   );
-};
+}
+
 
 export const useProducts = () => {
   const context = useContext(ProdutosContext);

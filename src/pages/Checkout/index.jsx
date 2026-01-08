@@ -16,18 +16,29 @@ import Toolbar from "@mui/material/Toolbar";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 
+import { criarPedido } from "../../services/pedido.service";
 const Checkout = () => {
   const {
     itens,
     total,
     incrementar,
-    decrementar
+    decrementar,
+    limparCarrinho
   } = useCarrinho();
 
-  const finalizarPedido = () => {
-    // futuramente: salvar no Firebase / enviar WhatsApp / imprimir
+  async function finalizarPedido() {
+    await criarPedido({
+      cliente: {
+        nome: "Cliente balcão",
+        telefone: ""
+      },
+      itens,
+      total
+    });
+
+    limparCarrinho();
     alert("Pedido enviado com sucesso!");
-  };
+  }
 
   return (
     <Box sx={{ p: 2 }}>
