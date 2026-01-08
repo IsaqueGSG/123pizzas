@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { getPizzas } from "../services/pizzas.service"
+import { getBebidas } from "../services/bebidas.service"
 
 const ProdutosContext = createContext();
 
@@ -11,14 +12,22 @@ export function ProdutosProvider({ children }) {
     async function load() {
       try {
         const listaPizzas = await getPizzas();
-        console.log(listaPizzas)
-        setProdutos(listaPizzas);
+        const listaBebidas = await getBebidas();
+
+        const produtos = [
+          ...listaBebidas,
+          ...listaPizzas
+        ]
+
+        console.log(produtos)
+        setProdutos(produtos);
         setLoading(false);
       } catch (e) {
         console.log(e);
       }
     }
     load();
+
   }, []);
 
   return (
