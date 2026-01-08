@@ -17,10 +17,20 @@ import { useCarrinho } from "../../contexts/CarrinhoContext";
 
 const drawerWidth = 320;
 
+import { useLocation } from "react-router-dom";
+import { useEffect } from "react";
+
+
 export default function CarrinhoDrawer() {
   const theme = useTheme();
   const navigate = useNavigate();
   const { open, setOpen, itens, total, incrementar, decrementar } = useCarrinho();
+
+  const location = useLocation();
+
+  useEffect(() => {
+    setOpen(false);
+  }, [location.pathname]);
 
   return (
     <Drawer

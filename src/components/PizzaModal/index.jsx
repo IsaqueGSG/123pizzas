@@ -6,7 +6,11 @@ import {
   Button,
   Typography,
   Box,
-  TextField
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel
 } from "@mui/material";
 import { useState } from "react";
 
@@ -51,7 +55,7 @@ export default function PizzaModal({
           Sabores selecionados
         </Typography>
 
-        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+        <Box sx={{ display: "flex", justifyContent:"space-around", flexWrap: "wrap" }}>
           {sabores.map((s) => (
             <Button key={s.id} variant="contained">
               {s.nome}
@@ -59,23 +63,28 @@ export default function PizzaModal({
           ))}
         </Box>
 
-        {/* BORDA */}
-        <Typography fontWeight="bold" mt={3}>
-          Borda recheada
-        </Typography>
-
-        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 1 }}>
-          {bordas.map((b) => (
-            <Button
-              key={b.id}
-              variant={borda.id === b.id ? "contained" : "outlined"}
-              onClick={() => setBorda(b)}
-            >
-              {b.nome}
-              {b.valor > 0 && ` (+R$ ${b.valor})`}
-            </Button>
-          ))}
-        </Box>
+        {/* BORDA (SELECT) */}
+        <FormControl fullWidth sx={{ mt: 3 }}>
+          <InputLabel id="borda-label">Borda recheada</InputLabel>
+          <Select
+            labelId="borda-label"
+            label="Borda recheada"
+            value={borda.id}
+            onChange={(e) => {
+              const selecionada = bordas.find(
+                (b) => b.id === e.target.value
+              );
+              setBorda(selecionada);
+            }}
+          >
+            {bordas.map((b) => (
+              <MenuItem key={b.id} value={b.id}>
+                {b.nome}
+                {b.valor > 0 && ` (+R$ ${b.valor.toFixed(2)})`}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
 
         {/* OBS */}
         <TextField
@@ -95,7 +104,7 @@ export default function PizzaModal({
         </Typography>
 
         <Button variant="contained" onClick={confirmar}>
-          Adicionar
+          Adicionar ao carrinho
         </Button>
       </DialogActions>
     </Dialog>

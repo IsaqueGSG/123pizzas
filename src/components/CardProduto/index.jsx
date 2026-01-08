@@ -13,22 +13,31 @@ import RemoveIcon from "@mui/icons-material/Remove";
 
 import { useCarrinho } from "../../contexts/CarrinhoContext";
 
+const tamanhosPizza = {
+  pizza: { nome: "Família", fator: 1 },
+  broto: { nome: "Broto", fator: 0.75 }
+};
+
 export default function CardProduto({
   produto,
+  categoria,
   tipoPizza,
   selecionado,
   onSelecionar
 }) {
-  const {
-    itens,
-    addItem,
-    incrementar,
-    decrementar
-  } = useCarrinho();
+  const { itens, addItem, incrementar, decrementar } = useCarrinho();
 
   const isPizza = produto.tipo === "pizza";
+  const isBebida = produto.tipo === "bebida";
 
-  // 👉 BEBIDA NO CARRINHO
+  /* -------- PREÇO CORRETO -------- */
+  const tamanho = isPizza ? tamanhosPizza[categoria] : null;
+
+  const precoExibido = isPizza
+    ? produto.valor * tamanho.fator
+    : produto.valor;
+
+  /* -------- BEBIDA NO CARRINHO -------- */
   const itemCarrinho = itens.find(
     (i) => i.id === produto.id
   );
@@ -53,10 +62,19 @@ export default function CardProduto({
       <CardMedia component="img" height="160" image={produto.img} />
 
       <CardContent>
-        <Typography fontWeight="bold">{produto.nome}</Typography>
-        <Typography color="primary">
-          R$ {produto.valor.toFixed(2)}
+        <Typography fontWeight="bold">
+          {produto.nome}
         </Typography>
+
+        <Typography color="primary" fontWeight="bold">
+          R$ {precoExibido.toFixed(2)}
+        </Typography>
+
+        {isPizza && (
+          <Typography variant="caption" color="text.secondary">
+            {tamanho.nome}
+          </Typography>
+        )}
       </CardContent>
 
       {/* ---------- AÇÕES ---------- */}

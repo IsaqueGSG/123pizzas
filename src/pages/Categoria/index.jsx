@@ -53,8 +53,8 @@ export default function Categorias() {
                 }}
             >
                 {
-                    categorias.map(cat => (
-                        <Card>
+                    categorias.map((cat, index) => (
+                        <Card key={index}>
                             <CardActionArea
                                 onClick={() => navigate(`/cardapio/${cat.id}`)}
                                 sx={{
