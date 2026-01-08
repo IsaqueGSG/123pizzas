@@ -1,66 +1,43 @@
-import { useCarrinho } from "../../contexts/CarrinhoContext";
-
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
-import CardMedia from "@mui/material/CardMedia";
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
-import CardActionArea from "@mui/material/CardActionArea";
-import CardActions from "@mui/material/CardActions";
-import Box from "@mui/material/Box";
-import IconButton from "@mui/material/IconButton";
+import {
+  Card,
+  CardContent,
+  CardMedia,
+  Typography,
+  Button,
+  Box,
+  IconButton
+} from "@mui/material";
 
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 
-const tamanhosPizza = {
-  pizza: { nome: "Família", fator: 1 },
-  broto: { nome: "Broto", fator: 0.75 }
-};
+import { useCarrinho } from "../../contexts/CarrinhoContext";
 
 export default function CardProduto({
   produto,
-  categoria,
   tipoPizza,
-  saboresSelecionados,
-  onSelecionarSabor
+  selecionado,
+  onSelecionar
 }) {
-  const { itens, addItem, incrementar, decrementar } = useCarrinho();
+  const {
+    itens,
+    addItem,
+    incrementar,
+    decrementar
+  } = useCarrinho();
 
   const isPizza = produto.tipo === "pizza";
-  const isMeia = tipoPizza === "1/2";
 
-  const tamanho = isPizza ? tamanhosPizza[categoria] : null;
-  const precoFinal = isPizza ? produto.valor * tamanho.fator : produto.valor;
-
-  const selecionado = saboresSelecionados?.some(
-    (p) => p.id === produto.id
+  // 👉 BEBIDA NO CARRINHO
+  const itemCarrinho = itens.find(
+    (i) => i.id === produto.id
   );
 
-  const itemId = isPizza
-    ? `${produto.id}-${categoria}`
-    : `${produto.id}`;
-
-  const itemNoCarrinho = itens.find((i) => i.id === itemId);
-
-  const adicionar = () => {
-    // BEBIDA
-    if (!isPizza) {
-      addItem({
-        id: itemId, // ✅ usa o mesmo ID
-        nome: produto.nome,
-        preco: produto.valor,
-        quantidade: 1,
-        img: produto.img
-      });
-      return;
-    }
-
-    // PIZZA INTEIRA
+  const adicionarBebida = () => {
     addItem({
-      id: itemId,
-      nome: `${produto.nome} (${tamanho.nome})`,
-      preco: precoFinal,
+      id: produto.id,
+      nome: produto.nome,
+      preco: produto.valor,
       quantidade: 1,
       img: produto.img
     });
@@ -69,77 +46,63 @@ export default function CardProduto({
   return (
     <Card
       sx={{
-        borderRadius: 2,
-        overflow: "hidden",
         border: selecionado ? "2px solid" : "1px solid",
-        borderColor: selecionado ? "primary.main" : "divider",
-        opacity:
-          isMeia &&
-            saboresSelecionados.length === 2 &&
-            !selecionado
-            ? 0.5
-            : 1
+        borderColor: selecionado ? "primary.main" : "divider"
       }}
     >
-      <CardActionArea>
-        <CardMedia
-          component="img"
-          height="160"
-          image={produto.img}
-          alt={produto.nome}
-        />
+      <CardMedia component="img" height="160" image={produto.img} />
 
-        <CardContent>
+      <CardContent>
+        <Typography fontWeight="bold">{produto.nome}</Typography>
+        <Typography color="primary">
+          R$ {produto.valor.toFixed(2)}
+        </Typography>
+      </CardContent>
+
+      {/* ---------- AÇÕES ---------- */}
+      {isPizza ? (
+        <Button
+          fullWidth
+          variant={selecionado ? "outlined" : "contained"}
+          onClick={onSelecionar}
+        >
+          {tipoPizza === "1/2"
+            ? selecionado
+              ? "Remover sabor"
+              : "Escolher sabor"
+            : "Adicionar"}
+        </Button>
+      ) : !itemCarrinho ? (
+        <Button
+          fullWidth
+          variant="contained"
+          onClick={adicionarBebida}
+        >
+          Adicionar
+        </Button>
+      ) : (
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 1,
+            pb: 1
+          }}
+        >
+          <IconButton onClick={() => decrementar(produto.id)}>
+            <RemoveIcon />
+          </IconButton>
+
           <Typography fontWeight="bold">
-            {produto.nome}
+            {itemCarrinho.quantidade}
           </Typography>
 
-          <Typography color="primary" fontWeight="bold">
-            R$ {precoFinal.toFixed(2)}
-          </Typography>
-
-          {produto.ingredientes && (
-            <Typography
-              variant="caption"
-              color="text.secondary"
-            >
-              {produto.ingredientes}
-            </Typography>
-          )}
-        </CardContent>
-      </CardActionArea>
-
-      <CardActions sx={{ justifyContent: "center" }}>
-        {isMeia ? (
-          <Button
-            fullWidth
-            variant={selecionado ? "outlined" : "contained"}
-            onClick={() => onSelecionarSabor(produto)}
-          >
-            {selecionado ? "Remover sabor" : "Escolher sabor"}
-          </Button>
-        ) : !itemNoCarrinho ? (
-          <Button
-            fullWidth
-            variant="contained"
-            onClick={adicionar}
-          >
-            Adicionar
-          </Button>
-        ) : (
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <IconButton onClick={() => decrementar(itemId)}>
-              <RemoveIcon />
-            </IconButton>
-            <Typography fontWeight="bold">
-              {itemNoCarrinho.quantidade}
-            </Typography>
-            <IconButton onClick={() => incrementar(itemId)}>
-              <AddIcon />
-            </IconButton>
-          </Box>
-        )}
-      </CardActions>
+          <IconButton onClick={() => incrementar(produto.id)}>
+            <AddIcon />
+          </IconButton>
+        </Box>
+      )}
     </Card>
   );
 }

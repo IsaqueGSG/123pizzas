@@ -57,6 +57,7 @@ export const CartProvider = ({ children }) => {
     );
   };
 
+
   const [open, setOpen] = useState(false);
 
   return (
@@ -69,7 +70,7 @@ export const CartProvider = ({ children }) => {
         decrementar,
         total,
         quantidadeTotal,
-        open, 
+        open,
         setOpen
       }}
     >
