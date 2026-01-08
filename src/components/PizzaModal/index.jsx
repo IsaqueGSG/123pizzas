@@ -10,14 +10,24 @@ import {
   Select,
   MenuItem,
   FormControl,
-  InputLabel
+  InputLabel,
+  Collapse,
+  IconButton
 } from "@mui/material";
+import { Close } from "@mui/icons-material"
 import { useState } from "react";
 
 const bordas = [
-  { id: "sem", nome: "Sem borda", valor: 0 },
+  { id: "semBorda", nome: "Sem borda", valor: 0 },
   { id: "catupiry", nome: "Catupiry", valor: 5 },
   { id: "cheddar", nome: "Cheddar", valor: 5 }
+];
+
+const extrasDisponiveis = [
+  { id: "bacon", nome: "Bacon extra", valor: 5 },
+  { id: "calabresa", nome: "Calabresa extra", valor: 4 },
+  { id: "cheddar", nome: "Cheddar extra", valor: 5 },
+  { id: "cebola", nome: "Cebola", valor: 2 }
 ];
 
 export default function PizzaModal({
@@ -27,27 +37,63 @@ export default function PizzaModal({
   tamanho,
   onConfirm
 }) {
+
+  const [extrasAbertos, setExtrasAbertos] = useState(false);
+  const [extrasSelecionados, setExtrasSelecionados] = useState([]);
+
   const [borda, setBorda] = useState(bordas[0]);
   const [obs, setObs] = useState("");
+
+
+  const toggleExtra = (extra) => {
+    const existe = extrasSelecionados.find((e) => e.id === extra.id);
+
+    if (existe) {
+      setExtrasSelecionados(
+        extrasSelecionados.filter((e) => e.id !== extra.id)
+      );
+    } else {
+      setExtrasSelecionados([...extrasSelecionados, extra]);
+    }
+  };
+
 
   /* -------- PREÇO -------- */
   const precoBase =
     Math.max(...sabores.map((s) => s.valor)) * tamanho.fator;
 
-  const precoFinal = precoBase + borda.valor;
+  const valorExtras = extrasSelecionados.reduce(
+    (total, e) => total + e.valor,
+    0
+  );
+
+  const precoFinal = precoBase + borda.valor + valorExtras;
 
   const confirmar = () => {
     onConfirm({
       sabores,
       borda,
       obs,
-      precoFinal
+      precoFinal,
+      extras: extrasSelecionados,
     });
   };
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth>
-      <DialogTitle>Personalizar Pizza</DialogTitle>
+      <DialogTitle
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between"
+        }}
+      >
+        Personalizar Pizza
+
+        <IconButton onClick={onClose}>
+          <Close />
+        </IconButton>
+      </DialogTitle>
 
       <DialogContent>
         {/* SABORES */}
@@ -55,9 +101,9 @@ export default function PizzaModal({
           Sabores selecionados
         </Typography>
 
-        <Box sx={{ display: "flex", justifyContent:"space-around", flexWrap: "wrap" }}>
+        <Box sx={{ display: "flex", gap: 1 }}>
           {sabores.map((s) => (
-            <Button key={s.id} variant="contained">
+            <Button fullWidth key={s.id} variant="contained">
               {s.nome}
             </Button>
           ))}
@@ -85,6 +131,39 @@ export default function PizzaModal({
             ))}
           </Select>
         </FormControl>
+
+        {/* Extras (SELECT) */}
+        {/* EXTRAS */}
+        <Box sx={{ mt: 3 }}>
+          <Button
+            fullWidth
+            variant="outlined"
+            onClick={() => setExtrasAbertos(!extrasAbertos)}
+          >
+            Extras {extrasAbertos ? "▲" : "▼"}
+          </Button>
+
+          <Collapse in={extrasAbertos}>
+            <Box sx={{ mt: 2, display: "flex", flexWrap: "wrap", gap: 1 }}>
+              {extrasDisponiveis.map((extra) => {
+                const ativo = extrasSelecionados.some(
+                  (e) => e.id === extra.id
+                );
+
+                return (
+                  <Button
+                    key={extra.id}
+                    variant={ativo ? "contained" : "outlined"}
+                    onClick={() => toggleExtra(extra)}
+                  >
+                    {extra.nome}
+                    {extra.valor > 0 && ` (+R$ ${extra.valor.toFixed(2)})`}
+                  </Button>
+                );
+              })}
+            </Box>
+          </Collapse>
+        </Box>
 
         {/* OBS */}
         <TextField

@@ -105,7 +105,7 @@ export default function Cardapio() {
       <CarrinhoDrawer />
 
       <Typography variant="h5" fontWeight="bold" gutterBottom>
-        Cardápio
+        Cardápio de {categoria}
       </Typography>
 
       {categoria !== "bebidas" && (
@@ -161,6 +161,7 @@ export default function Cardapio() {
       {openModal && categoria !== "bebida" && saboresSelecionados.length > 0 && (
         <PizzaModal
           open={openModal}
+          setOpenModal={setOpenModal}
           onClose={() => {
             setOpenModal(false);
             setSaboresSelecionados([]);

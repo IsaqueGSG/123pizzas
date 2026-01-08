@@ -70,6 +70,21 @@ export default function CarrinhoDrawer() {
               <Typography variant="body2">
                 R$ {item.preco.toFixed(2)}
               </Typography>
+
+              {/* Borda */}
+              {item.extras?.borda && (
+                <Typography variant="body2" color="text.secondary">
+                  Borda: {item.extras.borda}
+                </Typography>
+              )}
+
+              {/* Extras */}
+              {item.extras?.extras?.length > 0 && (
+                <Typography variant="body2" color="text.secondary">
+                  Extras:{" "}
+                  {item.extras.extras.map((e) => e.nome).join(", ")}
+                </Typography>
+              )}
             </Box>
 
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
