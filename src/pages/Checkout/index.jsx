@@ -16,8 +16,12 @@ import Toolbar from "@mui/material/Toolbar";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 
-import { criarPedido } from "../../services/pedido.service";
+import { useNavigate } from "react-router-dom";
+
+import { criarPedido } from "../../services/pedidos.service";
 const Checkout = () => {
+  const navigate = useNavigate();
+
   const {
     itens,
     total,
@@ -27,6 +31,7 @@ const Checkout = () => {
   } = useCarrinho();
 
   async function finalizarPedido() {
+
     await criarPedido({
       cliente: {
         nome: "Cliente balcão",
@@ -37,7 +42,8 @@ const Checkout = () => {
     });
 
     limparCarrinho();
-    alert("Pedido enviado com sucesso!");
+    alert("Pedido realizado com sucesso!!");
+    navigate('/');
   }
 
   return (

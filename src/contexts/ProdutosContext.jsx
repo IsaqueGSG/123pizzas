@@ -8,30 +8,21 @@ export function ProdutosProvider({ children }) {
   const [produtos, setProdutos] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  async function load() {
+    setLoading(true);
+    const listaPizzas = await getPizzas();
+    const listaBebidas = await getBebidas();
+
+    setProdutos([...listaBebidas, ...listaPizzas]);
+    setLoading(false);
+  }
+
   useEffect(() => {
-    async function load() {
-      try {
-        const listaPizzas = await getPizzas();
-        const listaBebidas = await getBebidas();
-
-        const produtos = [
-          ...listaBebidas,
-          ...listaPizzas
-        ]
-
-        console.log(produtos)
-        setProdutos(produtos);
-        setLoading(false);
-      } catch (e) {
-        console.log(e);
-      }
-    }
     load();
-
   }, []);
 
   return (
-    <ProdutosContext.Provider value={{ produtos, loading }}>
+    <ProdutosContext.Provider value={{ produtos, loading, reloadProdutos: load }} >
       {children}
     </ProdutosContext.Provider>
   );

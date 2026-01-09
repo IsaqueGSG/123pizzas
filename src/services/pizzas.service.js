@@ -1,4 +1,4 @@
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db } from "../config/firebase";
 
 // formato da pizza no firestore e componentes
@@ -19,3 +19,39 @@ export async function getPizzas() {
     ...doc.data()
   }));
 }
+
+''
+export async function addPizza(pizza) {
+  const pizzasRef = collection(db, "clientes123pedidos", "chavao", "pizzas");
+
+  const docRef = await addDoc(pizzasRef, pizza);
+
+  return docRef.id; // retorna o id criado
+}
+
+
+export async function updatePizza(id, novosDados) {
+  const pizzaRef = doc(
+    db,
+    "clientes123pedidos",
+    "chavao",
+    "pizzas",
+    id
+  );
+
+  await updateDoc(pizzaRef, novosDados);
+}
+
+export async function deletePizza(id) {
+  const pizzaRef = doc(
+    db,
+    "clientes123pedidos",
+    "chavao",
+    "pizzas",
+    id
+  );
+
+  await deleteDoc(pizzaRef);
+}
+
+

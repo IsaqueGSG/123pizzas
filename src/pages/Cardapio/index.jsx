@@ -143,18 +143,22 @@ export default function Cardapio() {
           gap: 2
         }}
       >
-        {produtosFiltrados.map((produto) => (
-          <CardProduto
-            key={produto.id}
-            produto={produto}
-            categoria={categoria}
-            tipoPizza={tipoPizza}
-            selecionado={saboresSelecionados.some(
-              (s) => s.id === produto.id
-            )}
-            onSelecionar={() => selecionarSabor(produto)}
-          />
-        ))}
+        {produtosFiltrados.map((produto) => {
+
+          //renderiza se produto esta ativo
+          return produto.status && (
+            <CardProduto
+              key={produto.id}
+              produto={produto}
+              categoria={categoria}
+              tipoPizza={tipoPizza}
+              selecionado={saboresSelecionados.some(
+                (s) => s.id === produto.id
+              )}
+              onSelecionar={() => selecionarSabor(produto)}
+            />
+          )
+        })}
       </Box>
 
       {/* MODAL */}

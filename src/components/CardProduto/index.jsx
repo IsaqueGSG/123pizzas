@@ -63,18 +63,12 @@ export default function CardProduto({
 
       <CardContent>
         <Typography fontWeight="bold">
-          {produto.nome}
+          {`${produto.tipo} ${produto.nome}`}
         </Typography>
 
         <Typography color="primary" fontWeight="bold">
           R$ {precoExibido.toFixed(2)}
         </Typography>
-
-        {isPizza && (
-          <Typography variant="caption" color="text.secondary">
-            {tamanho.nome}
-          </Typography>
-        )}
       </CardContent>
 
       {/* ---------- AÇÕES ---------- */}

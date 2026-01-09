@@ -1,8 +1,8 @@
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db } from "../config/firebase";
 
 // formato de bebida no firestore e componentes
-//  {
+// const bebida = {
 //   id: 2,
 //   nome: "Refrigerante 1L",
 //   valor: 8,
@@ -18,3 +18,37 @@ export async function getBebidas() {
     ...doc.data()
   }));
 }
+
+export async function addBebida(bebida) {
+  const bebidasRef = collection(db, "clientes123pedidos", "chavao", "bebidas");
+
+  const docRef = await addDoc(bebidasRef, bebida);
+
+  return docRef.id; // retorna o id criado
+}
+
+
+export async function updateBebida(id, novosDados) {
+  const bebidaRef = doc(
+    db,
+    "clientes123pedidos",
+    "chavao",
+    "bebidas",
+    id
+  );
+
+  await updateDoc(bebidaRef, novosDados);
+}
+
+export async function deleteBebida(id) {
+  const bebidaRef = doc(
+    db,
+    "clientes123pedidos",
+    "chavao",
+    "bebidas",
+    id
+  );
+
+  await deleteDoc(bebidaRef);
+}
+
