@@ -1,4 +1,4 @@
-import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, writeBatch } from "firebase/firestore";
 import { db } from "../config/firebase";
 
 // formato de bebida no firestore e componentes
@@ -52,3 +52,25 @@ export async function deleteBebida(id) {
   await deleteDoc(bebidaRef);
 }
 
+
+export async function updateBebidaStatusBatch(bebidas) {
+  if (!bebidas || bebidas.length === 0) return;
+
+  const batch = writeBatch(db);
+
+  bebidas.forEach((bebida) => {
+    const ref = doc(
+      db,
+      "clientes123pedidos",
+      "chavao",
+      "bebidas",
+      bebida.id
+    );
+
+    batch.update(ref, {
+      status: bebida.status,
+    });
+  });
+
+  await batch.commit();
+}

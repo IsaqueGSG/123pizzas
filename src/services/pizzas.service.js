@@ -1,4 +1,4 @@
-import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, writeBatch } from "firebase/firestore";
 import { db } from "../config/firebase";
 
 // formato da pizza no firestore e componentes
@@ -55,3 +55,24 @@ export async function deletePizza(id) {
 }
 
 
+export async function updatePizzaStatusBatch(pizzas) {
+  if (!pizzas || pizzas.length === 0) return;
+
+  const batch = writeBatch(db);
+
+  pizzas.forEach((pizza) => {
+    const ref = doc(
+      db,
+      "clientes123pedidos",
+      "chavao",
+      "pizzas",
+      pizza.id
+    );
+
+    batch.update(ref, {
+      status: pizza.status,
+    });
+  });
+
+  await batch.commit();
+}

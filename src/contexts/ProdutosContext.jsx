@@ -22,7 +22,7 @@ export function ProdutosProvider({ children }) {
   }, []);
 
   return (
-    <ProdutosContext.Provider value={{ produtos, loading, reloadProdutos: load }} >
+    <ProdutosContext.Provider value={{ produtos, loading, load }} >
       {children}
     </ProdutosContext.Provider>
   );
