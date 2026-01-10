@@ -9,15 +9,19 @@ import Badge from "@mui/material/Badge";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import LocalPizzaIcon from '@mui/icons-material/LocalPizza';
+import MenuIcon from '@mui/icons-material/Menu';
 
 import { useCarrinho } from "../../contexts/CarrinhoContext";
+import { useAuth } from "../../contexts/AuthContext";
 
 const AppBar = styled(MuiAppBar)({});
 
 export default function Navbar() {
+    const { user, setOpenAdminDrawer } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
-    const { quantidadeTotal, setOpen } = useCarrinho();
+    const { quantidadeTotal, setOpenCarrinho } = useCarrinho();
+
 
     const showBack = location.pathname !== "/";
 
@@ -43,16 +47,25 @@ export default function Navbar() {
                     123Pedidos
                 </Typography>
 
-                <IconButton color="inherit" onClick={() => setOpen(true)}>
-                    <Badge
-                        badgeContent={quantidadeTotal}
-                        color="error"
-                        invisible={quantidadeTotal === 0}
-                    >
-                        <ShoppingCartIcon />
-                    </Badge>
-                </IconButton>
+                {
+                    user ? (
+                        <IconButton onClick={() => setOpenAdminDrawer(true)}>
+                            <MenuIcon />
+                        </IconButton>
+                    ) : (
+                        <IconButton color="inherit" onClick={() => setOpenCarrinho(true)}>
+                            <Badge
+                                badgeContent={quantidadeTotal}
+                                color="error"
+                                invisible={quantidadeTotal === 0}
+                            >
+                                <ShoppingCartIcon />
+                            </Badge>
+                        </IconButton>
+                    )
+                }
+
             </Toolbar>
-        </AppBar>
+        </AppBar >
     );
 }

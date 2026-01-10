@@ -24,19 +24,19 @@ import { useEffect } from "react";
 export default function CarrinhoDrawer() {
   const theme = useTheme();
   const navigate = useNavigate();
-  const { open, setOpen, itens, total, incrementar, decrementar } = useCarrinho();
+  const { openCarrinho, setOpenCarrinho, itens, total, incrementar, decrementar } = useCarrinho();
 
   const location = useLocation();
 
   useEffect(() => {
-    setOpen(false);
+    setOpenCarrinho(false);
   }, [location.pathname]);
 
   return (
     <Drawer
       variant="persistent"
       anchor="right"
-      open={open}
+      open={openCarrinho}
       sx={{
         width: drawerWidth,
         "& .MuiDrawer-paper": {
@@ -48,7 +48,7 @@ export default function CarrinhoDrawer() {
     >
 
       <Box sx={{ display: "flex", alignItems: "center", p: 1 }}>
-        <IconButton onClick={() => setOpen(false)}>
+        <IconButton onClick={() => setOpenCarrinho(false)}>
           <ChevronRightIcon />
         </IconButton>
       </Box>

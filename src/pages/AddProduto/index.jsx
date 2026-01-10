@@ -5,6 +5,8 @@ import { Box, TextField, Button, Toolbar, Typography } from "@mui/material"
 import { addPizza } from "../../services/pizzas.service";
 import { addBebida } from "../../services/bebidas.service";
 import Navbar from "../../components/Navbar";
+import AdminDrawer from "../../components/AdminDrawer";
+
 
 export default function AddProduto() {
 
@@ -50,6 +52,7 @@ export default function AddProduto() {
         <Box sx={{ p: 2 }}>
             <Navbar />
             <Toolbar />
+            <AdminDrawer />
 
             <Typography variant="h5" fontWeight="bold" gutterBottom>
                 Adicionar Produto

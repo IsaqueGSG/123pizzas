@@ -7,6 +7,7 @@ import { useProducts } from "../../contexts/ProdutosContext";
 import { updatePizza } from "../../services/pizzas.service";
 import { updateBebida } from "../../services/bebidas.service";
 import Navbar from "../../components/Navbar";
+import AdminDrawer from "../../components/AdminDrawer";
 
 export default function AddProduto() {
     const { IDproduto } = useParams();
@@ -59,6 +60,7 @@ export default function AddProduto() {
         <Box sx={{ p: 2 }}>
             <Navbar />
             <Toolbar />
+            <AdminDrawer />
 
             <Typography variant="h5" fontWeight="bold" gutterBottom>
                 Editar Produto

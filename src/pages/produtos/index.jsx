@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -7,15 +8,19 @@ import {
   Avatar,
   Card,
   Switch,
-  Button
+  Button,
+  IconButton
 } from "@mui/material";
 
 import Navbar from "../../components/Navbar";
+import AdminDrawer from "../../components/AdminDrawer";
 import { useProducts } from "../../contexts/ProdutosContext";
 import { updatePizzaStatusBatch } from "../../services/pizzas.service";
 import { updateBebidaStatusBatch } from "../../services/bebidas.service";
+import { Edit } from "@mui/icons-material";
 
-export default function AtivarProdutos() {
+export default function AdminProdutos() {
+  const navigate = useNavigate();
   const { produtos, loading } = useProducts();
 
   const [produtosOriginais, setProdutosOriginais] = useState([]);
@@ -56,12 +61,12 @@ export default function AtivarProdutos() {
   };
 
   useEffect(() => {
-    //evita bug
-    const copia = produtos.map((p) => ({ ...p }));
+    if (produtos.length === 0) return;
 
-    setProdutosOriginais(copia);
-    setCloneProdutos(copia.map((p) => ({ ...p })));
-  }, [produtos]);
+    setProdutosOriginais(produtos.map((p) => ({ ...p })));
+    setCloneProdutos(produtos.map((p) => ({ ...p })));
+  }, []); // 🔥 SEM dependências
+
 
 
 
@@ -69,6 +74,8 @@ export default function AtivarProdutos() {
     <Box sx={{ p: 2 }}>
       <Navbar />
       <Toolbar />
+      <AdminDrawer />
+
 
       <Typography variant="h5" fontWeight="bold" gutterBottom>
         Gestão de Produtos
@@ -97,10 +104,15 @@ export default function AtivarProdutos() {
                 </Typography>
               </Box>
 
+
               <Switch
                 checked={Boolean(prod.status)}
                 onChange={() => toggleStatus(prod)}
               />
+
+              <IconButton onClick={() => navigate(`/editproduto/${prod.id}`)}>
+                <Edit></Edit>
+              </IconButton>
 
             </Box>
 
