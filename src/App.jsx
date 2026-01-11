@@ -12,6 +12,7 @@ import AdminPedidos from "./pages/AdminPedidos";
 import { CartProvider } from "./contexts/CarrinhoContext";
 import { ProdutosProvider } from "./contexts/ProdutosContext";
 import { AuthProvider } from "./contexts/AuthContext";
+import AdminLayout from "./components/AdminLayout";
 
 import PrivateRoute from "./components/PrivateRoute";
 
@@ -27,6 +28,7 @@ const App = () => {
               <Route path="/cardapio/:categoria" element={<Cardapio />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/login" element={<Login />} />
+
 
               {/* rotas privadas */}
               <Route
@@ -60,7 +62,9 @@ const App = () => {
                 path="/pedidos"
                 element={
                   <PrivateRoute>
-                    <AdminPedidos />
+                    <AdminLayout>
+                      <AdminPedidos />
+                    </AdminLayout>
                   </PrivateRoute>
                 }
               />

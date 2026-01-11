@@ -11,7 +11,7 @@ import {
 import Navbar from "../../components/Navbar";
 import AdminDrawer from "../../components/AdminDrawer";
 
-import { getPedidos, updatePedidoStatus } from "../../services/pedidos.service";
+import { getPedidos, updatePedidoStatus, aceitarPedido } from "../../services/pedidos.service";
 
 export default function AdminPedidos() {
   const [pedidos, setPedidos] = useState([]);
@@ -28,7 +28,12 @@ export default function AdminPedidos() {
   }, []);
 
   const mudarStatus = async (id, status) => {
-    await updatePedidoStatus(id, status);
+    if (status === "aceito") {
+      await aceitarPedido(id);
+    } else {
+      await updatePedidoStatus(id, status);
+    }
+
     loadPedidos();
   };
 
@@ -50,9 +55,9 @@ export default function AdminPedidos() {
           mt: 3,
           display: "grid",
           gridTemplateColumns: {
-            xs: "1fr",              // mobile
-            sm: "repeat(2, 1fr)",   // tablets
-            md: "repeat(3, 1fr)"    // desktop
+            xs: "1fr",
+            sm: "repeat(2, 1fr)",
+            md: "repeat(3, 1fr)"
           },
           gap: 2
         }}
@@ -61,7 +66,6 @@ export default function AdminPedidos() {
           <Card
             key={pedido.id}
             sx={{
-              mb: 2,
               p: 2,
               borderRadius: 2,
               display: "flex",
@@ -107,13 +111,6 @@ export default function AdminPedidos() {
                   Borda: {item.extras?.borda || "Sem borda"}
                 </Typography>
 
-                {item.extras?.extras?.length > 0 && (
-                  <Typography variant="body2">
-                    Extras:{" "}
-                    {item.extras.extras.map((e) => e.nome).join(", ")}
-                  </Typography>
-                )}
-
                 {item.obs && (
                   <Typography variant="body2">
                     Obs: {item.obs}
@@ -122,33 +119,16 @@ export default function AdminPedidos() {
               </Box>
             ))}
 
-
             {/* AÇÕES */}
             {pedido.status === "pendente" && (
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 1,
-                  mt: "auto",   // empurra para o final do card
-                  pt: 2
-                }}
-              >
+              <Box sx={{ mt: "auto", pt: 2 }}>
+                <Divider sx={{ mb: 1 }} />
 
-                <Box>
-                  <Divider sx={{ my: 1 }} />
-                  {/* TOTAL */}
-                  <Typography fontWeight="bold">
-                    Total: R$ {pedido.total.toFixed(2)}
-                  </Typography>
-                </Box>
+                <Typography fontWeight="bold">
+                  Total: R$ {pedido.total.toFixed(2)}
+                </Typography>
 
-                <Box
-                  sx={{
-                    display: "flex",
-                    gap: 1,
-                  }}
-                >
+                <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
                   <Button
                     variant="contained"
                     color="success"

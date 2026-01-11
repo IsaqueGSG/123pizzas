@@ -22,6 +22,18 @@ export default function Navbar() {
     const location = useLocation();
     const { quantidadeTotal, setOpenCarrinho } = useCarrinho();
 
+    const privateRoutes = [
+        "/produtos",
+        "/addproduto",
+        "/pedidos",
+    ];
+
+
+    const isPrivateRoute = privateRoutes.some(route =>
+        location.pathname === route ||
+        location.pathname.startsWith("/editproduto")
+    );
+
 
     const showBack = location.pathname !== "/";
 
@@ -48,7 +60,7 @@ export default function Navbar() {
                 </Typography>
 
                 {
-                    user ? (
+                    (user && isPrivateRoute) ? (
                         <IconButton color="inherit" onClick={() => setOpenAdminDrawer(true)}>
                             <MenuIcon />
                         </IconButton>

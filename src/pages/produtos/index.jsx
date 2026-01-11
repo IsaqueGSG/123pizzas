@@ -72,12 +72,11 @@ export default function AdminProdutos() {
   };
 
   useEffect(() => {
-    if (produtos.length === 0) return;
+    if (produtos.length === 0 || cloneProdutos.length > 0) return;
 
     setProdutosOriginais(produtos.map((p) => ({ ...p })));
     setCloneProdutos(produtos.map((p) => ({ ...p })));
-  }, []); // SEM dependências
-
+  }, [produtos]);
 
 
   return (

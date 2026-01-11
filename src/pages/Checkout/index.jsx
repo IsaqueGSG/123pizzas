@@ -38,7 +38,8 @@ const Checkout = () => {
         telefone: ""
       },
       itens,
-      total
+      total,
+      impresso: false
     });
 
     limparCarrinho();
