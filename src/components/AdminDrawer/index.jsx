@@ -15,6 +15,7 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import AddIcon from "@mui/icons-material/Add";
 import LogoutIcon from "@mui/icons-material/Logout";
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
+import FoodBankIcon from '@mui/icons-material/FoodBank';
 
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
@@ -60,6 +61,14 @@ export default function AdminDrawer() {
 
       {/* Navegação */}
       <List sx={{ flexGrow: 1 }}>
+
+        <ListItem disablePadding>
+          <ListItemButton onClick={() => navigate("/pedidos")}>
+            <FoodBankIcon sx={{ mr: 2 }} />
+            <ListItemText primary="Gerenciar Pedidos" />
+          </ListItemButton>
+        </ListItem>
+
         <ListItem disablePadding>
           <ListItemButton onClick={() => navigate("/addproduto")}>
             <AddIcon sx={{ mr: 2 }} />
@@ -73,6 +82,8 @@ export default function AdminDrawer() {
             <ListItemText primary="Gerenciar Produtos" />
           </ListItemButton>
         </ListItem>
+
+
       </List>
 
       <Divider />

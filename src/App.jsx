@@ -7,6 +7,7 @@ import AdminProdutos from "./pages/produtos";
 import AddProduto from "./pages/AddProduto";
 import EditProduto from "./pages/EditProduto";
 import Login from "./pages/Login";
+import AdminPedidos from "./pages/AdminPedidos";
 
 import { CartProvider } from "./contexts/CarrinhoContext";
 import { ProdutosProvider } from "./contexts/ProdutosContext";
@@ -54,6 +55,16 @@ const App = () => {
                   </PrivateRoute>
                 }
               />
+
+              <Route
+                path="/pedidos"
+                element={
+                  <PrivateRoute>
+                    <AdminPedidos />
+                  </PrivateRoute>
+                }
+              />
+
             </Routes>
           </BrowserRouter>
         </ProdutosProvider>
