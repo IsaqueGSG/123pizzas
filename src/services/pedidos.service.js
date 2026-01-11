@@ -38,13 +38,13 @@ export async function updatePedidoStatus(id, status) {
 }
 
 
-export async function aceitarPedido(id) {
+export async function aceitarPedido(pedidoId) {
   const ref = doc(
     db,
     "clientes123pedidos",
     "chavao",
     "pedidos",
-    id
+    pedidoId
   );
 
   await updateDoc(ref, {

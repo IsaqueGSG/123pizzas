@@ -12,6 +12,7 @@ import Navbar from "../../components/Navbar";
 import AdminDrawer from "../../components/AdminDrawer";
 
 import { getPedidos, updatePedidoStatus, aceitarPedido } from "../../services/pedidos.service";
+import { enviarMensagem } from "../../services/whatsapp.service";
 
 export default function AdminPedidos() {
   const [pedidos, setPedidos] = useState([]);
@@ -27,15 +28,20 @@ export default function AdminPedidos() {
     loadPedidos();
   }, []);
 
-  const mudarStatus = async (id, status) => {
+  const mudarStatus = async (pedido, status) => {
     if (status === "aceito") {
-      await aceitarPedido(id);
+      // WhatsApp
+      enviarMensagem(pedido);
+
+      await aceitarPedido(pedido.id);
     } else {
-      await updatePedidoStatus(id, status);
+      await updatePedidoStatus(pedido.id, status);
     }
 
     loadPedidos();
   };
+
+
 
   if (loading) {
     return <Typography sx={{ p: 3 }}>Carregando pedidos...</Typography>;
@@ -133,7 +139,7 @@ export default function AdminPedidos() {
                     variant="contained"
                     color="success"
                     fullWidth
-                    onClick={() => mudarStatus(pedido.id, "aceito")}
+                    onClick={() => mudarStatus(pedido, "aceito")}
                   >
                     Aceitar
                   </Button>
@@ -142,10 +148,11 @@ export default function AdminPedidos() {
                     variant="outlined"
                     color="error"
                     fullWidth
-                    onClick={() => mudarStatus(pedido.id, "cancelado")}
+                    onClick={() => mudarStatus(pedido, "cancelado")}
                   >
                     Recusar
                   </Button>
+
                 </Box>
               </Box>
             )}

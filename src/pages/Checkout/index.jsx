@@ -19,6 +19,9 @@ import RemoveIcon from "@mui/icons-material/Remove";
 import { useNavigate } from "react-router-dom";
 
 import { criarPedido } from "../../services/pedidos.service";
+import { useState } from "react";
+
+
 const Checkout = () => {
   const navigate = useNavigate();
 
@@ -30,22 +33,39 @@ const Checkout = () => {
     limparCarrinho
   } = useCarrinho();
 
+  const [cliente, setCliente] = useState({
+    nome: "",
+    telefone: "",
+    endereco: "",
+    observacao: ""
+  });
+
+
   async function finalizarPedido() {
+    if (!cliente.nome || !cliente.telefone) {
+      alert("Informe nome e telefone");
+      return;
+    }
 
     await criarPedido({
-      cliente: {
-        nome: "Cliente balcão",
-        telefone: ""
-      },
-      itens,
+      cliente,
+      itens: itens.map(item => ({
+        id: item.id,
+        nome: item.nome,
+        preco: item.preco,
+        quantidade: item.quantidade
+      })),
       total,
-      impresso: false
+      status: "novo",
+      impresso: false,
+      criadoEm: new Date()
     });
 
     limparCarrinho();
     alert("Pedido realizado com sucesso!!");
-    navigate('/');
+    navigate("/");
   }
+
 
   return (
     <Box sx={{ p: 2 }}>
@@ -156,13 +176,22 @@ const Checkout = () => {
             fullWidth
             size="small"
             sx={{ mb: 1 }}
+            value={cliente.nome}
+            onChange={(e) =>
+              setCliente({ ...cliente, nome: e.target.value })
+            }
           />
+
 
           <TextField
             label="Telefone"
             fullWidth
             size="small"
             sx={{ mb: 1 }}
+            value={cliente.telefone}
+            onChange={(e) =>
+              setCliente({ ...cliente, telefone: e.target.value })
+            }
           />
 
           <TextField
@@ -170,6 +199,10 @@ const Checkout = () => {
             fullWidth
             size="small"
             sx={{ mb: 1 }}
+            value={cliente.endereco}
+            onChange={(e) =>
+              setCliente({ ...cliente, endereco: e.target.value })
+            }
           />
 
           <TextField
@@ -178,7 +211,12 @@ const Checkout = () => {
             size="small"
             multiline
             rows={2}
+            value={cliente.observacao}
+            onChange={(e) =>
+              setCliente({ ...cliente, observacao: e.target.value })
+            }
           />
+
         </CardContent>
       </Card>
 
