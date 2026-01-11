@@ -47,10 +47,14 @@ export default function CarrinhoDrawer() {
       }}
     >
 
+      {/* header */}
       <Box sx={{ display: "flex", alignItems: "center", p: 1 }}>
         <IconButton onClick={() => setOpenCarrinho(false)}>
           <ChevronRightIcon />
         </IconButton>
+        <Typography sx={{ ml: 1 }} fontWeight="bold">
+          Administração
+        </Typography>
       </Box>
 
       <Divider />
@@ -106,7 +110,7 @@ export default function CarrinhoDrawer() {
           p: 2,
           borderTop: "1px solid",
           borderColor: "divider",
-          mt: "auto", // 🔥 EMPURRA PARA O FINAL
+          mt: "auto", // EMPURRA PARA O FINAL
           backgroundColor: "background.paper"
         }}
       >

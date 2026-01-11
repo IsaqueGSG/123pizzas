@@ -49,7 +49,7 @@ export default function Navbar() {
 
                 {
                     user ? (
-                        <IconButton onClick={() => setOpenAdminDrawer(true)}>
+                        <IconButton color="inherit" onClick={() => setOpenAdminDrawer(true)}>
                             <MenuIcon />
                         </IconButton>
                     ) : (
@@ -69,3 +69,4 @@ export default function Navbar() {
         </AppBar >
     );
 }
+

@@ -1,43 +1,62 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import {
     loginWithGoogle,
     logout,
     isUserAllowed,
 } from "../services/auth.service";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "../config/firebase";
 
 const AuthContext = createContext({});
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [openAdminDrawer, setOpenAdminDrawer] = useState(false);
 
-    const login = async () => {
-        setLoading(true);
+    // persiste sessão
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+            if (firebaseUser) {
+                const allowed = await isUserAllowed(firebaseUser.email);
 
+                if (!allowed) {
+                    await logout();
+                    setUser(null);
+                } else {
+                    setUser(firebaseUser);
+                }
+            } else {
+                setUser(null);
+            }
+
+            setLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, []);
+
+    const login = async () => {
         const user = await loginWithGoogle();
         const allowed = await isUserAllowed(user.email);
 
         if (!allowed) {
             await logout();
             alert("Acesso não autorizado");
-            setLoading(false);
             return;
         }
 
         setUser(user);
-        setLoading(false);
     };
 
     const signOut = async () => {
         await logout();
         setUser(null);
-        setOpenAdminDrawer(false); 
     };
 
     return (
         <AuthContext.Provider value={{ user, login, signOut, loading, openAdminDrawer, setOpenAdminDrawer }}>
-            {children}
+            {!loading && children}
         </AuthContext.Provider>
     );
 };

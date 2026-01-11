@@ -15,11 +15,22 @@ import {
 import Navbar from "../../components/Navbar";
 import AdminDrawer from "../../components/AdminDrawer";
 import { useProducts } from "../../contexts/ProdutosContext";
-import { updatePizzaStatusBatch } from "../../services/pizzas.service";
-import { updateBebidaStatusBatch } from "../../services/bebidas.service";
-import { Edit } from "@mui/icons-material";
+import { updatePizzaStatusBatch, deletePizza } from "../../services/pizzas.service";
+import { updateBebidaStatusBatch, deleteBebida } from "../../services/bebidas.service";
+import { Edit, Delete } from "@mui/icons-material";
+
+import ConfirmDialog from "../../components/ConfirmDialog";
+import ProductMenu from "../../components/MenuOptions";
 
 export default function AdminProdutos() {
+  const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
+  const [produtoSelecionado, setProdutoSelecionado] = useState(null);
+  const abrirConfirmacaoExcluir = (prod) => {
+    setProdutoSelecionado(prod);
+    setOpenConfirmDialog(true);
+  };
+
+
   const navigate = useNavigate();
   const { produtos, loading } = useProducts();
 
@@ -65,8 +76,7 @@ export default function AdminProdutos() {
 
     setProdutosOriginais(produtos.map((p) => ({ ...p })));
     setCloneProdutos(produtos.map((p) => ({ ...p })));
-  }, []); // 🔥 SEM dependências
-
+  }, []); // SEM dependências
 
 
 
@@ -110,9 +120,28 @@ export default function AdminProdutos() {
                 onChange={() => toggleStatus(prod)}
               />
 
-              <IconButton onClick={() => navigate(`/editproduto/${prod.id}`)}>
-                <Edit></Edit>
-              </IconButton>
+              {/* menu com opcoes editar e excluir */}
+              <ProductMenu
+                onEdit={() => navigate(`/editproduto/${prod.id}`)}
+                onDelete={() => abrirConfirmacaoExcluir(prod)}
+              />
+
+              <ConfirmDialog
+                open={openConfirmDialog}
+                onClose={() => setOpenConfirmDialog(false)}
+                title="Excluir produto"
+                message={`Tem certeza que deseja excluir "${produtoSelecionado?.nome}"?`}
+                funcao={async () => {
+                  if (!produtoSelecionado) return;
+
+                  if (produtoSelecionado.tipo === "pizza") {
+                    await deletePizza(produtoSelecionado.id);
+                  } else {
+                    await deleteBebida(produtoSelecionado.id);
+                  }
+                }}
+              />
+
 
             </Box>
 
