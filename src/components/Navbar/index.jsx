@@ -26,6 +26,7 @@ export default function Navbar() {
         "/produtos",
         "/addproduto",
         "/pedidos",
+        "/preferencias"
     ];
 
 

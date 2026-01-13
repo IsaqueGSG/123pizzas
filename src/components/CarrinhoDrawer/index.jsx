@@ -14,6 +14,9 @@ import RemoveIcon from "@mui/icons-material/Remove";
 
 import { useNavigate } from "react-router-dom";
 import { useCarrinho } from "../../contexts/CarrinhoContext";
+import { usePreferencias } from "../../contexts/PreferenciasContext";
+
+import { abertoAgora } from "../../services/preferencias.service";
 
 const drawerWidth = 320;
 
@@ -27,6 +30,9 @@ export default function CarrinhoDrawer() {
   const { openCarrinho, setOpenCarrinho, itens, total, incrementar, decrementar } = useCarrinho();
 
   const location = useLocation();
+  const { preferencias } = usePreferencias()
+
+  const aberto = abertoAgora(preferencias?.horarioFuncionamento);
 
   useEffect(() => {
     setOpenCarrinho(false);
@@ -122,7 +128,7 @@ export default function CarrinhoDrawer() {
           variant="contained"
           fullWidth
           sx={{ mt: 1 }}
-          disabled={itens.length === 0}
+          disabled={itens.length === 0 || !aberto}
           onClick={() => navigate("/checkout")}
         >
           Finalizar Pedido

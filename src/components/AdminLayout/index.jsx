@@ -1,12 +1,11 @@
 import { useEffect } from "react";
 import {
   escutarPedidos,
-  gerarComandaHTML,
   imprimir,
-  marcarComoImpresso
+  marcarComoImpresso,
+  gerarComandaHTML,
+  geraComandaHTML80mm
 } from "../../services/impressora.service";
-
-import { geraComandaHTML80mm } from "../../components/LayoutComanda"
 
 export default function AdminLayout({ children }) {
 
