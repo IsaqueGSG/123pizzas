@@ -36,7 +36,6 @@ export async function updatePedidoStatus(id, status) {
   await updateDoc(ref, { status });
 }
 
-
 export async function aceitarPedido(pedidoId) {
   const ref = doc(
     db,
