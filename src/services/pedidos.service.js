@@ -1,4 +1,13 @@
-import { collection, addDoc, serverTimestamp, query, getDocs, doc, orderBy, updateDoc } from "firebase/firestore";
+import {
+  collection,
+  addDoc,
+  serverTimestamp,
+  query,
+  doc,
+  orderBy,
+  updateDoc,
+  onSnapshot
+} from "firebase/firestore";
 import { db } from "../config/firebase";
 
 export async function criarPedido({ cliente, itens, total }) {
@@ -9,20 +18,10 @@ export async function criarPedido({ cliente, itens, total }) {
       itens,
       total,
       status: "pendente",
-      impresso: false,   
+      impresso: false,
       createdAt: serverTimestamp()
     }
   );
-}
-
-export async function getPedidos() {
-  const q = query(collection(db, "clientes123pedidos", "chavao", "pedidos"), orderBy("createdAt", "desc"));
-  const snapshot = await getDocs(q);
-
-  return snapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data()
-  }));
 }
 
 export async function updatePedidoStatus(id, status) {
@@ -53,4 +52,18 @@ export async function aceitarPedido(pedidoId) {
   });
 }
 
+export function escutarPedidos(callback) {
+  const q = query(
+    collection(db, "clientes123pedidos", "chavao", "pedidos"),
+    orderBy("createdAt", "desc")
+  );
 
+  return onSnapshot(q, (snapshot) => {
+    const pedidos = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    callback(pedidos);
+  });
+}

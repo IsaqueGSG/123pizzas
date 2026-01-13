@@ -11,21 +11,23 @@ import {
 import Navbar from "../../components/Navbar";
 import AdminDrawer from "../../components/AdminDrawer";
 
-import { getPedidos, updatePedidoStatus, aceitarPedido } from "../../services/pedidos.service";
+import { getPedidos, updatePedidoStatus, aceitarPedido, escutarPedidos } from "../../services/pedidos.service";
 import { enviarMensagem } from "../../services/whatsapp.service";
 
 export default function AdminPedidos() {
   const [pedidos, setPedidos] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  async function loadPedidos() {
-    const data = await getPedidos();
-    setPedidos(data);
-    setLoading(false);
-  }
 
   useEffect(() => {
-    loadPedidos();
+    // 🔥 inicia escuta em tempo real
+    const unsubscribe = escutarPedidos((pedidosAtualizados) => {
+      setPedidos(pedidosAtualizados);
+      setLoading(false);
+    });
+
+    // 🔥 remove listener ao sair da tela
+    return () => unsubscribe();
   }, []);
 
   const mudarStatus = async (pedido, status) => {
@@ -37,11 +39,7 @@ export default function AdminPedidos() {
     } else {
       await updatePedidoStatus(pedido.id, status);
     }
-
-    loadPedidos();
   };
-
-
 
   if (loading) {
     return <Typography sx={{ p: 3 }}>Carregando pedidos...</Typography>;
