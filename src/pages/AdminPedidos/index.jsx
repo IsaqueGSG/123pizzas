@@ -11,7 +11,7 @@ import {
 import Navbar from "../../components/Navbar";
 import AdminDrawer from "../../components/AdminDrawer";
 
-import { getPedidos, updatePedidoStatus, aceitarPedido, escutarPedidos } from "../../services/pedidos.service";
+import { updatePedidoStatus, aceitarPedido, escutarPedidos } from "../../services/pedidos.service";
 import { enviarMensagem } from "../../services/whatsapp.service";
 
 export default function AdminPedidos() {
