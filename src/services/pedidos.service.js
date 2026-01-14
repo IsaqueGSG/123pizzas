@@ -58,11 +58,7 @@ export function escutarPedidos(callback) {
   );
 
   return onSnapshot(q, (snapshot) => {
-    const pedidos = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-
-    callback(pedidos);
+    callback(snapshot);
   });
 }
+

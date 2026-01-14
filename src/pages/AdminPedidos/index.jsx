@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   Box,
   Typography,
@@ -10,23 +10,41 @@ import {
 
 import Navbar from "../../components/Navbar";
 import AdminDrawer from "../../components/AdminDrawer";
+import ModalAtivarAudio from "../../components/ModalAtivarAudio";
 
 import { updatePedidoStatus, aceitarPedido, escutarPedidos } from "../../services/pedidos.service";
 import { geraComandaHTML80mm, imprimir, marcarComoImpresso } from "../../services/impressora.service";
 import { enviarMensagem } from "../../services/whatsapp.service";
+import { tocarAudio } from "../../services/audio.service";
+import campainha from "../../assets/audios/campainha.mp3"
 
 export default function AdminPedidos() {
   const [pedidos, setPedidos] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const firstLoad = useRef(true);
+
   useEffect(() => {
-    const unsubscribe = escutarPedidos((pedidosAtualizados) => {
-      setPedidos(pedidosAtualizados);
-      setLoading(false);
+    const unsub = escutarPedidos((snapshot) => {
+      snapshot.docChanges().forEach(change => {
+        if (
+          change.type === "added" &&
+          change.doc.data().status === "pendente" &&
+          !firstLoad.current
+        ) {
+          tocarAudio(campainha);
+        }
+
+      });
+
+      firstLoad.current = false;
+      setPedidos(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+      setLoading(false)
     });
 
-    return unsubscribe;
+    return unsub;
   }, []);
+
 
   const handleAceitar = async (pedido) => {
     try {
@@ -61,6 +79,7 @@ export default function AdminPedidos() {
 
   return (
     <Box sx={{ p: 2 }}>
+      <ModalAtivarAudio />
       <Navbar />
       <AdminDrawer />
 
