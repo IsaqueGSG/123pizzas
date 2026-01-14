@@ -24,13 +24,13 @@ export async function criarPedido({ cliente, itens, total }) {
   );
 }
 
-export async function updatePedidoStatus(id, status) {
+export async function updatePedidoStatus(pedidoId, status) {
   const ref = doc(
     db,
     "clientes123pedidos",
     "chavao",
     "pedidos",
-    id
+    pedidoId
   );
 
   await updateDoc(ref, { status });

@@ -10,7 +10,6 @@ import Login from "./pages/Login";
 import AdminPedidos from "./pages/AdminPedidos";
 import AdminPreferencias from "./pages/AdminPreferencias";
 
-import AdminLayout from "./components/AdminLayout";
 import { CartProvider } from "./contexts/CarrinhoContext";
 import { ProdutosProvider } from "./contexts/ProdutosContext";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -64,9 +63,7 @@ const App = () => {
                   path="/pedidos"
                   element={
                     <PrivateRoute>
-                      <AdminLayout>
                         <AdminPedidos />
-                      </AdminLayout>
                     </PrivateRoute>
                   }
                 />
@@ -75,9 +72,7 @@ const App = () => {
                   path="/preferencias"
                   element={
                     <PrivateRoute>
-                      <AdminLayout>
-                        <AdminPreferencias />
-                      </AdminLayout>
+                      <AdminPreferencias />
                     </PrivateRoute>
                   }
                 />

@@ -150,27 +150,6 @@ export function geraComandaHTML80mm(pedido) {
 `;
 }
 
-
-/**
- * Escuta pedidos aceitos e não impressos
- */
-export function escutarPedidos(callback) {
-  const q = query(
-    collection(db, "clientes123pedidos", "chavao", "pedidos"),
-    where("status", "==", "aceito"),
-    where("impresso", "==", false)
-  );
-
-  return onSnapshot(q, (snapshot) => {
-    snapshot.docChanges().forEach((change) => {
-      if (change.type === "added") {
-        const pedido = change.doc.data();
-        callback({ id: change.doc.id, ...pedido });
-      }
-    });
-  });
-}
-
 /**
  * HTML simples para impressora térmica (58mm)
  */
