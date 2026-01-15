@@ -8,44 +8,44 @@ import {
   Avatar,
   Card,
   Switch,
-  Button,
-  IconButton
+  Button
 } from "@mui/material";
 
 import Navbar from "../../components/Navbar";
 import AdminDrawer from "../../components/AdminDrawer";
 import { useProducts } from "../../contexts/ProdutosContext";
-import { updatePizzaStatusBatch, deletePizza } from "../../services/pizzas.service";
-import { updateBebidaStatusBatch, deleteBebida } from "../../services/bebidas.service";
-import { Edit, Delete } from "@mui/icons-material";
+import {
+  updateProdutoStatusBatch,
+  deleteProduto,
+  getProdutos
+} from "../../services/produtos.service";
 
 import ConfirmDialog from "../../components/ConfirmDialog";
 import ProductMenu from "../../components/MenuOptions";
 
 export default function AdminProdutos() {
-  const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
-  const [produtoSelecionado, setProdutoSelecionado] = useState(null);
-  const abrirConfirmacaoExcluir = (prod) => {
-    setProdutoSelecionado(prod);
-    setOpenConfirmDialog(true);
-  };
-
-
   const navigate = useNavigate();
   const { produtos, loading } = useProducts();
 
   const [produtosOriginais, setProdutosOriginais] = useState([]);
   const [cloneProdutos, setCloneProdutos] = useState([]);
 
-  const toggleStatus = (prod) => {
-    const updatedProdutos = cloneProdutos.map((element) => {
-      if (element.id === prod.id) {
-        return { ...element, status: !element.status }; // inverte o status
-      }
-      return element;
-    });
+  const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
+  const [produtoSelecionado, setProdutoSelecionado] = useState(null);
 
-    setCloneProdutos(updatedProdutos); // atualiza o estado
+  /* ---------- EXCLUIR ---------- */
+  const abrirConfirmacaoExcluir = (prod) => {
+    setProdutoSelecionado(prod);
+    setOpenConfirmDialog(true);
+  };
+
+  /* ---------- STATUS ---------- */
+  const toggleStatus = (prod) => {
+    setCloneProdutos((prev) =>
+      prev.map((p) =>
+        p.id === prod.id ? { ...p, status: !p.status } : p
+      )
+    );
   };
 
   const salvarStatus = async () => {
@@ -54,37 +54,31 @@ export default function AdminProdutos() {
       return original && original.status !== prod.status;
     });
 
-    if (produtosAlterados.length === 0) return;
-
-    const pizzas = produtosAlterados.filter((p) => p.tipo === "pizza");
-    const bebidas = produtosAlterados.filter((p) => p.tipo === "bebida");
+    if (!produtosAlterados.length) return;
 
     try {
-      await Promise.all([
-        updatePizzaStatusBatch(pizzas),
-        updateBebidaStatusBatch(bebidas),
-      ]);
+      await updateProdutoStatusBatch(produtosAlterados);
 
+      setProdutosOriginais(cloneProdutos.map((p) => ({ ...p })));
       console.log("Status atualizados com sucesso!");
     } catch (error) {
       console.error("Erro ao salvar status:", error);
     }
   };
 
+  /* ---------- INIT ---------- */
   useEffect(() => {
-    if (produtos.length === 0 || cloneProdutos.length > 0) return;
+    if (!produtos.length || cloneProdutos.length) return;
 
     setProdutosOriginais(produtos.map((p) => ({ ...p })));
     setCloneProdutos(produtos.map((p) => ({ ...p })));
   }, [produtos]);
-
 
   return (
     <Box sx={{ p: 2 }}>
       <Navbar />
       <Toolbar />
       <AdminDrawer />
-
 
       <Typography variant="h5" fontWeight="bold" gutterBottom>
         Gestão de Produtos
@@ -113,44 +107,43 @@ export default function AdminProdutos() {
                 </Typography>
               </Box>
 
-
               <Switch
                 checked={Boolean(prod.status)}
                 onChange={() => toggleStatus(prod)}
               />
 
-              {/* menu com opcoes editar e excluir */}
               <ProductMenu
                 onEdit={() => navigate(`/editproduto/${prod.id}`)}
                 onDelete={() => abrirConfirmacaoExcluir(prod)}
               />
-
-              <ConfirmDialog
-                open={openConfirmDialog}
-                onClose={() => setOpenConfirmDialog(false)}
-                title="Excluir produto"
-                message={`Tem certeza que deseja excluir "${produtoSelecionado?.nome}"?`}
-                funcao={async () => {
-                  if (!produtoSelecionado) return;
-
-                  if (produtoSelecionado.tipo === "pizza") {
-                    await deletePizza(produtoSelecionado.id);
-                  } else {
-                    await deleteBebida(produtoSelecionado.id);
-                  }
-                }}
-              />
-
-
             </Box>
-
           </Card>
         ))}
       </Box>
 
-      <Button sx={{ mt: 3 }} variant="contained" fullWidth onClick={salvarStatus}>
+      <Button
+        sx={{ mt: 3 }}
+        variant="contained"
+        fullWidth
+        onClick={salvarStatus}
+      >
         Salvar status dos Produtos
       </Button>
+
+      {/* ---------- CONFIRMAÇÃO ---------- */}
+      <ConfirmDialog
+        open={openConfirmDialog}
+        onClose={() => setOpenConfirmDialog(false)}
+        title="Excluir produto"
+        message={`Tem certeza que deseja excluir "${produtoSelecionado?.nome}"?`}
+        funcao={async () => {
+          if (!produtoSelecionado) return;
+
+          await deleteProduto(produtoSelecionado.id);
+          await getProdutos();
+          setOpenConfirmDialog(false);
+        }}
+      />
     </Box>
   );
 }

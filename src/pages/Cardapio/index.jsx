@@ -16,29 +16,33 @@ import Typography from "@mui/material/Typography";
 import { useCarrinho } from "../../contexts/CarrinhoContext";
 
 const tamanhosPizza = {
-  pizza: { nome: "Família", fator: 1 },
-  broto: { nome: "Broto", fator: 0.75 }
+  pizza: 1,
+  broto: 0.6
 };
+
 
 export default function Cardapio() {
   const { produtos, loading } = useProducts();
   const { categoria } = useParams();
+  const { addItem } = useCarrinho();
 
   const [tipoPizza, setTipoPizza] = useState("inteira");
   const [saboresSelecionados, setSaboresSelecionados] = useState([]);
   const [openModal, setOpenModal] = useState(false);
 
   const produtosFiltrados = produtos.filter((p) => {
-    if (categoria === "pizza" || categoria === "broto") return p.tipo === "pizza";
-    if (categoria === "bebida") return p.tipo === "bebida";
-    return false;
+    if (categoria === "pizza" || categoria === "broto") {
+      return p.tipo === "pizza";
+    }
+    return p.tipo === categoria;
   });
+
 
   const selecionarSabor = (produto) => {
     // 👉 BEBIDA
     if (produto.tipo === "bebida") {
       addItem({
-        id: `bebida-${produto.id}-${Date.now()}`,
+        id: `${produto.tipo}-${produto.id}`,
         nome: produto.nome,
         preco: produto.valor,
         quantidade: 1,
@@ -75,20 +79,21 @@ export default function Cardapio() {
   };
 
 
-  const { addItem } = useCarrinho();
-  const onConfirmPizza = ({ sabores, borda, obs, precoFinal }) => {
-    const tamanho = tamanhosPizza[categoria];
 
-    const nomeSabores = sabores.map((s) => s.nome).join(" / ");
+  const onConfirmPizza = ({ sabores, borda, obs, precoFinal, extras }) => {
+
+    const nomeSabores = sabores.map(s => s.nome).join(" / ");
+    const idPizza = `pizza-${categoria}-${sabores.map(s => s.id).sort().join("-")}-${borda.id}-${extras.map(e => e.id).join("-")}`;
 
     addItem({
-      id: `pizza-${Date.now()}`,
-      nome: `Pizza ${nomeSabores} (${tamanho.nome})`,
+      id: idPizza,
+      nome: `Pizza ${nomeSabores} (${categoria})`,
       preco: precoFinal,
       quantidade: 1,
       img: sabores[0].img,
       extras: {
         borda: borda.nome,
+        adicionais: extras,
         obs
       }
     });
@@ -150,6 +155,7 @@ export default function Cardapio() {
             <CardProduto
               key={produto.id}
               produto={produto}
+              fator={tamanhosPizza[categoria]}
               categoria={categoria}
               tipoPizza={tipoPizza}
               selecionado={saboresSelecionados.some(
@@ -170,10 +176,12 @@ export default function Cardapio() {
             setOpenModal(false);
             setSaboresSelecionados([]);
           }}
-          sabores={saboresSelecionados}
-          tamanho={tamanhosPizza[categoria]}
           onConfirm={onConfirmPizza}
+          sabores={saboresSelecionados}
+          categoria={categoria}
+          fator={tamanhosPizza[categoria]}
         />
+
       )}
 
     </Box>

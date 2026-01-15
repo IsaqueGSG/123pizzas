@@ -15,7 +15,7 @@ import {
   IconButton
 } from "@mui/material";
 import { Close } from "@mui/icons-material"
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const bordas = [
   { id: "semBorda", nome: "Sem borda", valor: 0 },
@@ -34,8 +34,8 @@ export default function PizzaModal({
   open,
   onClose,
   sabores,
-  tamanho,
-  onConfirm
+  onConfirm,
+  fator,
 }) {
 
   const [extrasAbertos, setExtrasAbertos] = useState(false);
@@ -60,7 +60,10 @@ export default function PizzaModal({
 
   /* -------- PREÇO -------- */
   const precoBase =
-    Math.max(...sabores.map((s) => s.valor)) * tamanho.fator;
+    sabores.length
+      ? Math.max(...sabores.map(s => s.valor)) * fator
+      : 0;
+
 
   const valorExtras = extrasSelecionados.reduce(
     (total, e) => total + e.valor,
@@ -76,8 +79,20 @@ export default function PizzaModal({
       obs,
       precoFinal,
       extras: extrasSelecionados,
+      tamanhoFator: fator
     });
+
   };
+
+  useEffect(() => {
+    if (!open) {
+      setExtrasSelecionados([]);
+      setExtrasAbertos(false);
+      setBorda(bordas[0]);
+      setObs("");
+    }
+  }, [open]);
+
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth>

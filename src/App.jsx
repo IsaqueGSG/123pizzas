@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Cardapio from "./pages/Cardapio";
 import Checkout from "./pages/Checkout";
 import Categorias from "./pages/Categoria";
-import AdminProdutos from "./pages/produtos";
+import AdminProdutos from "./pages/AdminProdutos";
 import AddProduto from "./pages/AddProduto";
 import EditProduto from "./pages/EditProduto";
 import Login from "./pages/Login";

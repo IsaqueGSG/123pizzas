@@ -2,8 +2,8 @@ import { useState } from "react";
 
 import { Box, TextField, Button, Toolbar, Typography } from "@mui/material"
 
-import { addPizza } from "../../services/pizzas.service";
-import { addBebida } from "../../services/bebidas.service";
+import { addProduto } from "../../services/produtos.service";
+
 import Navbar from "../../components/Navbar";
 import AdminDrawer from "../../components/AdminDrawer";
 
@@ -11,42 +11,47 @@ import AdminDrawer from "../../components/AdminDrawer";
 export default function AddProduto() {
 
     const tipos = ["pizza", "bebida"]
-    const [tipoSelecionado, setTipoSelecionado] = useState("pizza")
 
     const [novoProduto, setNovoProduto] = useState({
         nome: "",
         descricao: "",
-        tipo: tipoSelecionado, //esse campo sera preenchido pelos botoes
+        tipo: "pizza",
         ingredientes: "",
         img: "",
         valor: ""
     });
 
+
     const salvarNovoProduto = async () => {
+
+        if (!novoProduto.nome || !novoProduto.valor) {
+            alert("Preencha nome e valor");
+            return;
+        }
+
         const produto = {
             ...novoProduto,
             valor: Number(novoProduto.valor),
             status: true
         };
 
-        if (produto.tipo === "pizza") {
-            await addPizza(produto);
-        } else if (produto.tipo === "bebida") {
-            await addBebida(produto);
-        } else {
-            alert("Tipo inválido");
-            return;
+        if (produto.tipo !== "pizza") {
+            delete produto.ingredientes;
         }
+
+        await addProduto(produto);
+
 
         setNovoProduto({
             nome: "",
             descricao: "",
-            tipo: "",
+            tipo: "pizza",
             ingredientes: "",
             img: "",
             valor: ""
         });
-    }
+    };
+
 
     return (
         <Box sx={{ p: 2 }}>
@@ -61,22 +66,23 @@ export default function AddProduto() {
             <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
                 <Box
                     component="img"
-                    src={novoProduto.img}
+                    src={novoProduto.img || null}
                     sx={{ width: "100%", height: 160, objectFit: "cover", borderRadius: 2 }}
                 />
 
                 <Box sx={{ display: "flex", gap: 1 }}>
-                    {tipos.map((tipo) => (
+                    {tipos.map((tipo, index) => (
                         <Button
+                            key={index}
                             fullWidth
-                            variant={tipoSelecionado === tipo ? "contained" : "outlined"}
-                            onClick={() => {
-                                setNovoProduto((p) => ({ ...p, tipo })) //atualiza o tipo do produto
-                                setTipoSelecionado(tipo)
-                            }}
+                            variant={novoProduto.tipo === tipo ? "contained" : "outlined"}
+                            onClick={() =>
+                                setNovoProduto((p) => ({ ...p, tipo }))
+                            }
                         >
                             {tipo}
                         </Button>
+
                     ))}
                 </Box>
 
@@ -97,17 +103,16 @@ export default function AddProduto() {
                 />
 
 
-                {
-                    tipoSelecionado === "pizza" && (
-                        <TextField
-                            label="Ingredientes"
-                            value={novoProduto.ingredientes}
-                            onChange={(e) =>
-                                setNovoProduto((p) => ({ ...p, ingredientes: e.target.value }))
-                            }
-                        />
-                    )
-                }
+                {novoProduto.tipo === "pizza" && (
+                    <TextField
+                        label="Ingredientes"
+                        value={novoProduto.ingredientes}
+                        onChange={(e) =>
+                            setNovoProduto((p) => ({ ...p, ingredientes: e.target.value }))
+                        }
+                    />
+                )}
+
 
                 <TextField
                     label="Valor"

@@ -10,7 +10,7 @@ import Avatar from "@mui/material/Avatar";
 import Navbar from "../../components/Navbar";
 import CarrinhoDrawer from "../../components/CarrinhoDrawer";
 
-const categorias = [
+const tiposProduto = [
     {
         id: "pizza",
         nome: "Pizzas",
@@ -53,7 +53,7 @@ export default function Categorias() {
                 }}
             >
                 {
-                    categorias.map((cat, index) => (
+                    tiposProduto.map((cat, index) => (
                         <Card key={index}>
                             <CardActionArea
                                 onClick={() => navigate(`/cardapio/${cat.id}`)}

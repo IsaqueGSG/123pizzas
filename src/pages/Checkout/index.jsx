@@ -53,7 +53,8 @@ const Checkout = () => {
         id: item.id,
         nome: item.nome,
         preco: item.preco,
-        quantidade: item.quantidade
+        quantidade: item.quantidade,
+        extras: item.extras ?? null
       })),
       total,
       status: "novo",
