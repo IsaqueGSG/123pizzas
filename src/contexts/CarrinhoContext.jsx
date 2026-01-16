@@ -1,13 +1,15 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState } from "react";
 
 const CarrinhoContext = createContext(null);
 
 export const CartProvider = ({ children }) => {
   const [itens, setItens] = useState([]);
+  const [openCarrinho, setOpenCarrinho] = useState(false);
 
   const addItem = (item) => {
     setItens((prev) => {
       const existe = prev.find((i) => i.id === item.id);
+
       if (existe) {
         return prev.map((i) =>
           i.id === item.id
@@ -15,25 +17,10 @@ export const CartProvider = ({ children }) => {
             : i
         );
       }
+
       return [...prev, { ...item, quantidade: 1 }];
     });
   };
-
-  const removeItem = (id) => {
-    setItens((prev) => prev.filter((i) => i.id !== id));
-  };
-
-  const limparCarrinho = () => setItens([]);
-
-  const total = itens.reduce(
-    (acc, item) => acc + item.preco * item.quantidade,
-    0
-  );
-
-  const quantidadeTotal = itens.reduce(
-    (acc, item) => acc + item.quantidade,
-    0
-  );
 
   const incrementar = (id) => {
     setItens((prev) =>
@@ -57,25 +44,37 @@ export const CartProvider = ({ children }) => {
     );
   };
 
+  const removeItem = (id) => {
+    setItens((prev) => prev.filter((i) => i.id !== id));
+  };
 
-  const [openCarrinho, setOpenCarrinho] = useState(false);
+  const limparCarrinho = () => setItens([]);
+
+  const total = itens.reduce(
+    (acc, item) => acc + Number(item.valor || 0) * item.quantidade,
+    0
+  );
+
+  const quantidadeTotal = itens.reduce(
+    (acc, item) => acc + item.quantidade,
+    0
+  );
 
   return (
     <CarrinhoContext.Provider
       value={{
         itens,
         addItem,
-        removeItem,
         incrementar,
         decrementar,
+        removeItem,
+        limparCarrinho,
         total,
         quantidadeTotal,
         openCarrinho,
-        setOpenCarrinho,
-        limparCarrinho
+        setOpenCarrinho
       }}
     >
-
       {children}
     </CarrinhoContext.Provider>
   );
@@ -83,6 +82,6 @@ export const CartProvider = ({ children }) => {
 
 export const useCarrinho = () => {
   const ctx = useContext(CarrinhoContext);
-  if (!ctx) throw new Error("useCart deve estar dentro do CartProvider");
+  if (!ctx) throw new Error("useCarrinho deve estar dentro do CartProvider");
   return ctx;
 };

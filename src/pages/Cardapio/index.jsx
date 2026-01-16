@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
 import { useProducts } from "../../contexts/ProdutosContext";
+import { useCarrinho } from "../../contexts/CarrinhoContext";
+
 import CardProduto from "../../components/CardProduto";
-import PizzaModal from "../../components/PizzaModal";
+import PizzaModal from "../../components/ModalPersonalizar";
 import Navbar from "../../components/Navbar";
 import CarrinhoDrawer from "../../components/CarrinhoDrawer";
 
@@ -12,14 +14,6 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Button from "@mui/material/Button";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
-
-import { useCarrinho } from "../../contexts/CarrinhoContext";
-
-const tamanhosPizza = {
-  pizza: 1,
-  broto: 0.6
-};
-
 
 export default function Cardapio() {
   const { produtos, loading } = useProducts();
@@ -30,35 +24,41 @@ export default function Cardapio() {
   const [saboresSelecionados, setSaboresSelecionados] = useState([]);
   const [openModal, setOpenModal] = useState(false);
 
-  const produtosFiltrados = produtos.filter((p) => {
-    if (categoria === "pizza" || categoria === "broto") {
-      return p.tipo === "pizza";
-    }
-    return p.tipo === categoria;
-  });
+  const isPizzaCategoria = ["pizza", "broto"].includes(categoria);
+  const isProdutoSimples = ["bebida", "esfiha"].includes(categoria);
+
+  useEffect(() => {
+    setTipoPizza("inteira");
+    setSaboresSelecionados([]);
+  }, [categoria]);
 
 
-  const selecionarSabor = (produto) => {
-    // 👉 BEBIDA
-    if (produto.tipo === "bebida") {
+  const produtosFiltrados = produtos.filter(
+    (p) => p.tipo === categoria && p.status
+  );
+
+  const selecionarProduto = (produto) => {
+    // PRODUTO SIMPLES
+    if (isProdutoSimples) {
       addItem({
         id: `${produto.tipo}-${produto.id}`,
         nome: produto.nome,
-        preco: produto.valor,
-        quantidade: 1,
-        img: produto.img
+        valor: produto.valor,
+        img: produto.img,
+        tipo: produto.tipo,
+        descricao: produto.descricao
       });
       return;
     }
 
-    // 👉 PIZZA INTEIRA
+    // PIZZA INTEIRA (pizza ou broto)
     if (tipoPizza === "inteira") {
       setSaboresSelecionados([produto]);
       setOpenModal(true);
       return;
     }
 
-    // 👉 PIZZA 1/2
+    // PIZZA / BROTO 1/2
     const existe = saboresSelecionados.find((s) => s.id === produto.id);
 
     if (existe) {
@@ -79,18 +79,20 @@ export default function Cardapio() {
   };
 
 
-
   const onConfirmPizza = ({ sabores, borda, obs, precoFinal, extras }) => {
+    const nomeSabores = sabores.map((s) => s.nome).join(" / ");
 
-    const nomeSabores = sabores.map(s => s.nome).join(" / ");
-    const idPizza = `pizza-${categoria}-${sabores.map(s => s.id).sort().join("-")}-${borda.id}-${extras.map(e => e.id).join("-")}`;
+    const idPizza = `pizza-${categoria}-${sabores
+      .map((s) => s.id)
+      .sort()
+      .join("-")}-${borda.id}-${extras.map((e) => e.id).join("-")}`;
 
     addItem({
       id: idPizza,
       nome: `Pizza ${nomeSabores} (${categoria})`,
-      preco: precoFinal,
-      quantidade: 1,
+      valor: precoFinal, // ✅ CERTO
       img: sabores[0].img,
+      tipo: categoria,
       extras: {
         borda: borda.nome,
         adicionais: extras,
@@ -98,10 +100,10 @@ export default function Cardapio() {
       }
     });
 
+
     setOpenModal(false);
     setSaboresSelecionados([]);
   };
-
 
   return (
     <Box sx={{ p: 2 }}>
@@ -113,7 +115,7 @@ export default function Cardapio() {
         Cardápio de {categoria}
       </Typography>
 
-      {categoria !== "bebida" && (
+      {isPizzaCategoria && (
         <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
           <Button
             fullWidth
@@ -148,27 +150,20 @@ export default function Cardapio() {
           gap: 2
         }}
       >
-        {produtosFiltrados.map((produto) => {
-
-          //renderiza se produto esta ativo
-          return produto.status && (
-            <CardProduto
-              key={produto.id}
-              produto={produto}
-              fator={tamanhosPizza[categoria]}
-              categoria={categoria}
-              tipoPizza={tipoPizza}
-              selecionado={saboresSelecionados.some(
-                (s) => s.id === produto.id
-              )}
-              onSelecionar={() => selecionarSabor(produto)}
-            />
-          )
-        })}
+        {produtosFiltrados.map((produto) => (
+          <CardProduto
+            key={produto.id}
+            produto={produto}
+            tipoPizza={tipoPizza}
+            selecionado={saboresSelecionados.some(
+              (s) => s.id === produto.id
+            )}
+            onSelecionar={() => selecionarProduto(produto)}
+          />
+        ))}
       </Box>
 
-      {/* MODAL */}
-      {openModal && categoria !== "bebida" && saboresSelecionados.length > 0 && (
+      {openModal && isPizzaCategoria && saboresSelecionados.length > 0 && (
         <PizzaModal
           open={openModal}
           setOpenModal={setOpenModal}
@@ -179,11 +174,8 @@ export default function Cardapio() {
           onConfirm={onConfirmPizza}
           sabores={saboresSelecionados}
           categoria={categoria}
-          fator={tamanhosPizza[categoria]}
         />
-
       )}
-
     </Box>
   );
 }

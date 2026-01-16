@@ -14,7 +14,7 @@ import {
   Collapse,
   IconButton
 } from "@mui/material";
-import { Close } from "@mui/icons-material"
+import { Close } from "@mui/icons-material";
 import { useState, useEffect } from "react";
 
 const bordas = [
@@ -34,36 +34,25 @@ export default function PizzaModal({
   open,
   onClose,
   sabores,
-  onConfirm,
-  fator,
+  onConfirm
 }) {
-
   const [extrasAbertos, setExtrasAbertos] = useState(false);
   const [extrasSelecionados, setExtrasSelecionados] = useState([]);
-
   const [borda, setBorda] = useState(bordas[0]);
   const [obs, setObs] = useState("");
 
-
   const toggleExtra = (extra) => {
-    const existe = extrasSelecionados.find((e) => e.id === extra.id);
-
-    if (existe) {
-      setExtrasSelecionados(
-        extrasSelecionados.filter((e) => e.id !== extra.id)
-      );
-    } else {
-      setExtrasSelecionados([...extrasSelecionados, extra]);
-    }
+    setExtrasSelecionados((prev) =>
+      prev.some((e) => e.id === extra.id)
+        ? prev.filter((e) => e.id !== extra.id)
+        : [...prev, extra]
+    );
   };
 
-
   /* -------- PREÇO -------- */
-  const precoBase =
-    sabores.length
-      ? Math.max(...sabores.map(s => s.valor)) * fator
-      : 0;
-
+  const precoBase = sabores.length
+    ? Math.max(...sabores.map((s) => s.valor))
+    : 0;
 
   const valorExtras = extrasSelecionados.reduce(
     (total, e) => total + e.valor,
@@ -78,10 +67,8 @@ export default function PizzaModal({
       borda,
       obs,
       precoFinal,
-      extras: extrasSelecionados,
-      tamanhoFator: fator
+      extras: extrasSelecionados
     });
-
   };
 
   useEffect(() => {
@@ -93,18 +80,16 @@ export default function PizzaModal({
     }
   }, [open]);
 
-
   return (
     <Dialog open={open} onClose={onClose} fullWidth>
       <DialogTitle
         sx={{
           display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between"
+          justifyContent: "space-between",
+          alignItems: "center"
         }}
       >
         Personalizar Pizza
-
         <IconButton onClick={onClose}>
           <Close />
         </IconButton>
@@ -116,27 +101,23 @@ export default function PizzaModal({
           Sabores selecionados
         </Typography>
 
-        <Box sx={{ display: "flex", gap: 1 }}>
+        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
           {sabores.map((s) => (
-            <Button fullWidth key={s.id} variant="contained">
+            <Button key={s.id} variant="contained">
               {s.nome}
             </Button>
           ))}
         </Box>
 
-        {/* BORDA (SELECT) */}
+        {/* BORDA */}
         <FormControl fullWidth sx={{ mt: 3 }}>
-          <InputLabel id="borda-label">Borda recheada</InputLabel>
+          <InputLabel>Borda recheada</InputLabel>
           <Select
-            labelId="borda-label"
-            label="Borda recheada"
             value={borda.id}
-            onChange={(e) => {
-              const selecionada = bordas.find(
-                (b) => b.id === e.target.value
-              );
-              setBorda(selecionada);
-            }}
+            label="Borda recheada"
+            onChange={(e) =>
+              setBorda(bordas.find((b) => b.id === e.target.value))
+            }
           >
             {bordas.map((b) => (
               <MenuItem key={b.id} value={b.id}>
@@ -147,7 +128,6 @@ export default function PizzaModal({
           </Select>
         </FormControl>
 
-        {/* Extras (SELECT) */}
         {/* EXTRAS */}
         <Box sx={{ mt: 3 }}>
           <Button
@@ -159,7 +139,7 @@ export default function PizzaModal({
           </Button>
 
           <Collapse in={extrasAbertos}>
-            <Box sx={{ mt: 2, display: "flex", flexWrap: "wrap", gap: 1 }}>
+            <Box sx={{ mt: 2, display: "flex", gap: 1, flexWrap: "wrap" }}>
               {extrasDisponiveis.map((extra) => {
                 const ativo = extrasSelecionados.some(
                   (e) => e.id === extra.id
@@ -172,7 +152,8 @@ export default function PizzaModal({
                     onClick={() => toggleExtra(extra)}
                   >
                     {extra.nome}
-                    {extra.valor > 0 && ` (+R$ ${extra.valor.toFixed(2)})`}
+                    {extra.valor > 0 &&
+                      ` (+R$ ${extra.valor.toFixed(2)})`}
                   </Button>
                 );
               })}

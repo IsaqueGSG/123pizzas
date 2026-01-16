@@ -17,8 +17,8 @@ import { useProducts } from "../../contexts/ProdutosContext";
 import {
   updateProdutoStatusBatch,
   deleteProduto,
-  getProdutos
 } from "../../services/produtos.service";
+
 
 import ConfirmDialog from "../../components/ConfirmDialog";
 import ProductMenu from "../../components/MenuOptions";
@@ -66,6 +66,15 @@ export default function AdminProdutos() {
     }
   };
 
+  const produtosPorTipo = cloneProdutos.reduce((acc, prod) => {
+    if (!acc[prod.tipo]) {
+      acc[prod.tipo] = [];
+    }
+    acc[prod.tipo].push(prod);
+    return acc;
+  }, {});
+
+
   /* ---------- INIT ---------- */
   useEffect(() => {
     if (!produtos.length || cloneProdutos.length) return;
@@ -87,39 +96,102 @@ export default function AdminProdutos() {
       {loading && <CircularProgress sx={{ mt: 3 }} />}
 
       {/* ---------- LISTA ---------- */}
-      <Box
-        sx={{
-          mt: 3,
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-          gap: 2
-        }}
-      >
-        {cloneProdutos.map((prod) => (
-          <Card key={prod.id} sx={{ p: 1.5, borderRadius: 2 }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <Avatar src={prod.img} variant="rounded" />
 
-              <Box sx={{ flexGrow: 1 }}>
-                <Typography fontWeight="bold">{prod.nome}</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {prod.descricao}
-                </Typography>
-              </Box>
 
-              <Switch
-                checked={Boolean(prod.status)}
-                onChange={() => toggleStatus(prod)}
-              />
+      {Object.entries(produtosPorTipo).map(([tipo, produtos]) => (
+        <Box key={tipo} sx={{ mb: 4 }}>
+          {/* ---------- TÍTULO DA SEÇÃO ---------- */}
+          <Typography
+            variant="h6"
+            fontWeight="bold"
+            sx={{ mb: 2, textTransform: "capitalize" }}
+          >
+            {tipo}
+          </Typography>
 
-              <ProductMenu
-                onEdit={() => navigate(`/editproduto/${prod.id}`)}
-                onDelete={() => abrirConfirmacaoExcluir(prod)}
-              />
-            </Box>
-          </Card>
-        ))}
-      </Box>
+          {/* ---------- GRID ---------- */}
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+              gap: 2
+            }}
+          >
+            {produtos.map((prod) => (
+              <Card
+                key={prod.id}
+                sx={{
+                  p: 2,
+                  borderRadius: 3,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 1
+                }}
+              >
+                {/* IMAGEM */}
+                <Avatar
+                  src={prod.img}
+                  variant="rounded"
+                  sx={{
+                    width: "100%",
+                    height: 140,
+                    mb: 1
+                  }}
+                />
+
+                {/* INFO */}
+                <Box sx={{ flexGrow: 1 }}>
+                  <Typography fontWeight="bold">
+                    {prod.nome}
+                  </Typography>
+
+                  {prod.descricao && (
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mb: 0.5 }}
+                    >
+                      {prod.descricao}
+                    </Typography>
+                  )}
+
+                  <Typography fontWeight="bold">
+                    R$ {Number(prod.valor).toFixed(2)}
+                  </Typography>
+                </Box>
+
+                {/* STATUS */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between"
+                  }}
+                >
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Switch
+                      checked={Boolean(prod.status)}
+                      onChange={() => toggleStatus(prod)}
+                    />
+                    <Typography
+                      variant="caption"
+                      color={prod.status ? "success.main" : "error.main"}
+                    >
+                      {prod.status ? "Ativo" : "Inativo"}
+                    </Typography>
+                  </Box>
+
+                  <ProductMenu
+                    onEdit={() => navigate(`/editproduto/${prod.id}`)}
+                    onDelete={() => abrirConfirmacaoExcluir(prod)}
+                  />
+                </Box>
+              </Card>
+            ))}
+
+          </Box>
+        </Box>
+      ))}
 
       <Button
         sx={{ mt: 3 }}
@@ -140,7 +212,16 @@ export default function AdminProdutos() {
           if (!produtoSelecionado) return;
 
           await deleteProduto(produtoSelecionado.id);
-          await getProdutos();
+
+          // 🔥 REMOVE DO ESTADO LOCAL
+          setCloneProdutos((prev) =>
+            prev.filter((p) => p.id !== produtoSelecionado.id)
+          );
+
+          setProdutosOriginais((prev) =>
+            prev.filter((p) => p.id !== produtoSelecionado.id)
+          );
+
           setOpenConfirmDialog(false);
         }}
       />

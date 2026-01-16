@@ -19,7 +19,7 @@ import RemoveIcon from "@mui/icons-material/Remove";
 import { useNavigate } from "react-router-dom";
 
 import { criarPedido } from "../../services/pedidos.service";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 
 const Checkout = () => {
@@ -32,6 +32,11 @@ const Checkout = () => {
     decrementar,
     limparCarrinho
   } = useCarrinho();
+
+  useEffect(() => {
+    console.log(itens);
+
+  }, [itens])
 
   const [cliente, setCliente] = useState({
     nome: "",
@@ -52,7 +57,7 @@ const Checkout = () => {
       itens: itens.map(item => ({
         id: item.id,
         nome: item.nome,
-        preco: item.preco,
+        valor: item.valor,
         quantidade: item.quantidade,
         extras: item.extras ?? null
       })),
@@ -96,56 +101,103 @@ const Checkout = () => {
           )}
 
           {itens.map((item) => (
-            <Box
+            <Card
               key={item.id}
               sx={{
-                display: "flex",
-                alignItems: "center",
-                mb: 1
+                mb: 1.5,
+                p: 1.5,
+                borderRadius: 2
               }}
             >
-              <Avatar
-                src={item.img}
-                variant="rounded"
-                sx={{ width: 48, height: 48, mr: 1 }}
-              />
+              <Box sx={{ display: "flex", gap: 1 }}>
+                {/* IMAGEM */}
+                <Avatar
+                  src={item.img}
+                  variant="rounded"
+                  sx={{ width: 64, height: 64 }}
+                />
 
-              <Box sx={{ flexGrow: 1 }}>
-                <Typography fontSize={14} fontWeight="bold">
-                  {item.nome}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  R$ {item.preco.toFixed(2)}
-                </Typography>
-              </Box>
+                {/* CONTEÚDO */}
+                <Box sx={{ flexGrow: 1 }}>
+                  <Typography fontWeight="bold">
+                    {item.nome}
+                  </Typography>
 
-              {/* CONTROLES */}
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 0.5
-                }}
-              >
-                <IconButton
-                  size="small"
-                  onClick={() => decrementar(item.id)}
+                  {/* TIPO */}
+                  {item.tipo && (
+                    <Typography
+                      variant="caption"
+                      color="primary"
+                      sx={{ display: "block" }}
+                    >
+                      {item.tipo.toUpperCase()}
+                    </Typography>
+                  )}
+
+                  {/* DESCRIÇÃO */}
+                  {item.descricao && (
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                    >
+                      {item.descricao}
+                    </Typography>
+                  )}
+
+                  {/* EXTRAS / OBS */}
+                  {item.extras && (
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      {item.extras.borda && <>Borda: {item.extras.borda}<br /></>}
+                      {item.extras.adicionais?.length > 0 && (
+                        <>Extras: {item.extras.adicionais.map(e => e.nome).join(", ")}<br /></>
+                      )}
+                      {item.extras.obs && <>Obs: {item.extras.obs}</>}
+                    </Typography>
+                  )}
+
+                </Box>
+
+                {/* CONTROLES */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "flex-end",
+                    justifyContent: "space-between"
+                  }}
                 >
-                  <RemoveIcon fontSize="small" />
-                </IconButton>
+                  {/* CONTROLE QTD */}
+                  <Box sx={{ display: "flex", alignItems: "center" }}>
+                    <IconButton
+                      size="small"
+                      onClick={() => decrementar(item.id)}
+                    >
+                      <RemoveIcon fontSize="small" />
+                    </IconButton>
 
-                <Typography fontWeight="bold">
-                  {item.quantidade}
-                </Typography>
+                    <Typography fontWeight="bold">
+                      {item.quantidade}
+                    </Typography>
 
-                <IconButton
-                  size="small"
-                  onClick={() => incrementar(item.id)}
-                >
-                  <AddIcon fontSize="small" />
-                </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => incrementar(item.id)}
+                    >
+                      <AddIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
+
+                  {/* PREÇOS */}
+                  <Typography variant="caption">
+                    R$ {item.valor.toFixed(2)} un.
+                  </Typography>
+
+                  <Typography fontWeight="bold">
+                    R$ {(item.valor * item.quantidade).toFixed(2)}
+                  </Typography>
+                </Box>
               </Box>
-            </Box>
+            </Card>
           ))}
 
           <Divider sx={{ my: 1 }} />

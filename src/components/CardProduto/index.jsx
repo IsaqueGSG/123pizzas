@@ -5,7 +5,7 @@ import {
   Typography,
   Button,
   Box,
-  IconButton,
+  IconButton
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
@@ -16,27 +16,19 @@ export default function CardProduto({
   produto,
   tipoPizza,
   selecionado,
-  onSelecionar,
-  fator,
+  onSelecionar
 }) {
   const { itens, addItem, incrementar, decrementar } = useCarrinho();
 
-  const isPizza = produto.tipo === "pizza";
+  const isPizza = ["pizza", "broto"].includes(produto.tipo);
+  const isProdutoSimples = ["bebida", "esfiha"].includes(produto.tipo);
 
-  /* -------- PREÇO -------- */
-  const precoExibido = isPizza
-    ? produto.valor * fator
-    : produto.valor;
-
-
-  /* -------- ID DO CARRINHO -------- */
+  const precoExibido = produto.valor;
   const carrinhoId = `${produto.tipo}-${produto.id}`;
 
-  const itemCarrinho = itens.find(
-    (i) => i.id === carrinhoId
-  );
+  const itemCarrinho = itens.find((i) => i.id === carrinhoId);
 
-  const adicionarBebida = () => {
+  const adicionarProdutoSimples = () => {
     addItem({
       id: carrinhoId,
       nome: produto.nome,
@@ -66,18 +58,18 @@ export default function CardProduto({
           variant={selecionado ? "outlined" : "contained"}
           onClick={onSelecionar}
         >
-          {tipoPizza === "1/2"
+          {tipoPizza === "1/2" && produto.tipo === "pizza"
             ? selecionado
               ? "Remover sabor"
               : "Escolher sabor"
             : "Adicionar"}
         </Button>
       ) : !itemCarrinho ? (
-        <Button fullWidth variant="contained" onClick={adicionarBebida}>
+        <Button fullWidth variant="contained" onClick={adicionarProdutoSimples}>
           Adicionar
         </Button>
       ) : (
-        <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
+        <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 1 }}>
           <IconButton onClick={() => decrementar(carrinhoId)}>
             <RemoveIcon />
           </IconButton>

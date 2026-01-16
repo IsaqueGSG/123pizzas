@@ -12,26 +12,29 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useCarrinho } from "../../contexts/CarrinhoContext";
 import { usePreferencias } from "../../contexts/PreferenciasContext";
-
 import { abertoAgora } from "../../services/preferencias.service";
-
-const drawerWidth = 320;
-
-import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
 
+const drawerWidth = 320;
 
 export default function CarrinhoDrawer() {
   const theme = useTheme();
   const navigate = useNavigate();
-  const { openCarrinho, setOpenCarrinho, itens, total, incrementar, decrementar } = useCarrinho();
-
   const location = useLocation();
-  const { preferencias } = usePreferencias()
 
+  const {
+    openCarrinho,
+    setOpenCarrinho,
+    itens,
+    total,
+    incrementar,
+    decrementar
+  } = useCarrinho();
+
+  const { preferencias } = usePreferencias();
   const aberto = abertoAgora(preferencias?.horarioFuncionamento);
 
   useEffect(() => {
@@ -48,23 +51,23 @@ export default function CarrinhoDrawer() {
         "& .MuiDrawer-paper": {
           width: drawerWidth,
           display: "flex",
-          flexDirection: "column" // 🔥 ESSENCIAL
+          flexDirection: "column"
         }
       }}
     >
-
-      {/* header */}
+      {/* HEADER */}
       <Box sx={{ display: "flex", alignItems: "center", p: 1 }}>
         <IconButton onClick={() => setOpenCarrinho(false)}>
           <ChevronRightIcon />
         </IconButton>
-        <Typography sx={{ ml: 1 }} fontWeight="bold">
-          Administração
+        <Typography fontWeight="bold" sx={{ ml: 1 }}>
+          Carrinho
         </Typography>
       </Box>
 
       <Divider />
 
+      {/* ITENS */}
       <List sx={{ flexGrow: 1, overflowY: "auto" }}>
         {itens.length === 0 && (
           <Typography sx={{ p: 2 }} color="text.secondary">
@@ -75,24 +78,23 @@ export default function CarrinhoDrawer() {
         {itens.map((item) => (
           <Box key={item.id} sx={{ p: 2, display: "flex", gap: 1 }}>
             <Avatar src={item.img} variant="rounded" />
+
             <Box sx={{ flexGrow: 1 }}>
               <Typography fontWeight="bold">{item.nome}</Typography>
               <Typography variant="body2">
-                R$ {item.preco.toFixed(2)}
+                R$ {item.valor.toFixed(2)}
               </Typography>
 
-              {/* Borda */}
               {item.extras?.borda && (
                 <Typography variant="body2" color="text.secondary">
                   Borda: {item.extras.borda}
                 </Typography>
               )}
 
-              {/* Extras */}
-              {item.extras?.extras?.length > 0 && (
+              {item.extras?.adicionais?.length > 0 && (
                 <Typography variant="body2" color="text.secondary">
                   Extras:{" "}
-                  {item.extras.extras.map((e) => e.nome).join(", ")}
+                  {item.extras.adicionais.map((e) => e.nome).join(", ")}
                 </Typography>
               )}
             </Box>
@@ -109,24 +111,18 @@ export default function CarrinhoDrawer() {
           </Box>
         ))}
       </List>
+
       <Divider />
 
-      <Box
-        sx={{
-          p: 2,
-          borderTop: "1px solid",
-          borderColor: "divider",
-          mt: "auto", // EMPURRA PARA O FINAL
-          backgroundColor: "background.paper"
-        }}
-      >
+      {/* FOOTER */}
+      <Box sx={{ p: 2, mt: "auto" }}>
         <Typography variant="h6">
           Total: R$ {total.toFixed(2)}
         </Typography>
 
         <Button
-          variant="contained"
           fullWidth
+          variant="contained"
           sx={{ mt: 1 }}
           disabled={itens.length === 0 || !aberto}
           onClick={() => navigate("/checkout")}
@@ -134,7 +130,6 @@ export default function CarrinhoDrawer() {
           Finalizar Pedido
         </Button>
       </Box>
-
     </Drawer>
   );
 }

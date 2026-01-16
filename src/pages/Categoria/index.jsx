@@ -24,9 +24,15 @@ const tiposProduto = [
         descricao: "4 pedacoes"
     },
     {
+        id: "esfiha",
+        nome: "Esfiha",
+        img: "https://images8.alphacoders.com/369/369063.jpg",
+        descricao: ""
+    },
+    {
         id: "bebida",
         nome: "Bebidas",
-        img: "https://images8.alphacoders.com/369/369063.jpg",
+        img: "https://st3.depositphotos.com/1063437/13933/i/1600/depositphotos_139337744-stock-photo-bottles-of-assorted-coca-cola.jpg",
         descricao: ""
     }
 ];

@@ -9,6 +9,13 @@ import { updateProduto } from "../../services/produtos.service";
 import Navbar from "../../components/Navbar";
 import AdminDrawer from "../../components/AdminDrawer";
 
+const TIPOS_PRODUTO = [
+  { id: "pizza", label: "Pizza" },
+  { id: "broto", label: "Broto" },
+  { id: "esfiha", label: "Esfiha" },
+  { id: "bebida", label: "Bebida" }
+];
+
 export default function EditProduto() {
   const { IDproduto } = useParams();
   const navigate = useNavigate();
@@ -17,8 +24,6 @@ export default function EditProduto() {
 
   const [produtoAtualizado, setProdutoAtualizado] = useState(null);
   const [tipoSelecionado, setTipoSelecionado] = useState("");
-
-  const tipos = ["pizza", "bebida"];
 
   /* ---------- BUSCA PRODUTO ---------- */
   useEffect(() => {
@@ -46,7 +51,7 @@ export default function EditProduto() {
 
   /* ---------- SALVAR ---------- */
   const salvarEdicao = async () => {
-    if (!produtoAtualizado.nome || !produtoAtualizado.valor) {
+    if (!produtoAtualizado.nome || produtoAtualizado.valor === "") {
       alert("Preencha nome e valor");
       return;
     }
@@ -54,18 +59,16 @@ export default function EditProduto() {
     const dados = {
       ...produtoAtualizado,
       valor: Number(produtoAtualizado.valor),
+      tipo: tipoSelecionado
     };
 
-    // remove ingredientes se não for pizza
-    if (dados.tipo !== "pizza") {
-      delete dados.ingredientes;
-    }
 
     try {
       await updateProduto(produtoAtualizado.id, dados);
       navigate("/produtos");
     } catch (error) {
       console.error("Erro ao atualizar produto:", error);
+      alert("Erro ao atualizar produto");
     }
   };
 
@@ -93,21 +96,20 @@ export default function EditProduto() {
 
         {/* ---------- TIPO ---------- */}
         <Box sx={{ display: "flex", gap: 1 }}>
-          {tipos.map((tipo) => (
+          {TIPOS_PRODUTO.map((tipo) => (
             <Button
-              key={tipo}
+              key={tipo.id}
               fullWidth
-              variant={tipoSelecionado === tipo ? "contained" : "outlined"}
+              variant={tipoSelecionado === tipo.id ? "contained" : "outlined"}
               onClick={() => {
-                setTipoSelecionado(tipo);
+                setTipoSelecionado(tipo.id);
                 setProdutoAtualizado((p) => ({
                   ...p,
-                  tipo,
-                  ...(tipo !== "pizza" ? { ingredientes: "" } : {})
+                  tipo: tipo.id
                 }));
               }}
             >
-              {tipo}
+              {tipo.label}
             </Button>
           ))}
         </Box>
@@ -125,7 +127,7 @@ export default function EditProduto() {
 
         <TextField
           label="Descrição"
-          value={produtoAtualizado.descricao}
+          value={produtoAtualizado.descricao || ""}
           onChange={(e) =>
             setProdutoAtualizado((p) => ({
               ...p,
@@ -133,19 +135,6 @@ export default function EditProduto() {
             }))
           }
         />
-
-        {tipoSelecionado === "pizza" && (
-          <TextField
-            label="Ingredientes"
-            value={produtoAtualizado.ingredientes || ""}
-            onChange={(e) =>
-              setProdutoAtualizado((p) => ({
-                ...p,
-                ingredientes: e.target.value
-              }))
-            }
-          />
-        )}
 
         <TextField
           label="Valor"
@@ -170,7 +159,11 @@ export default function EditProduto() {
           }
         />
 
-        <Button variant="contained" onClick={salvarEdicao}>
+        <Button
+          variant="contained"
+          onClick={salvarEdicao}
+          disabled={loading}
+        >
           Atualizar Produto
         </Button>
       </Box>
