@@ -6,6 +6,7 @@ import {
   doc,
   orderBy,
   updateDoc,
+  deleteDoc,
   onSnapshot
 } from "firebase/firestore";
 import { db } from "../config/firebase";
@@ -49,6 +50,18 @@ export async function aceitarPedido(pedidoId) {
     status: "aceito",
     impresso: false
   });
+}
+
+export async function deletarPedido(pedidoId) {
+  const ref = doc(
+    db,
+    "clientes123pedidos",
+    "chavao",
+    "pedidos",
+    pedidoId
+  );
+
+  await deleteDoc(ref);
 }
 
 export function escutarPedidos(callback) {

@@ -33,11 +33,6 @@ const Checkout = () => {
     limparCarrinho
   } = useCarrinho();
 
-  useEffect(() => {
-    console.log(itens);
-
-  }, [itens])
-
   const [cliente, setCliente] = useState({
     nome: "",
     telefone: "",
@@ -123,16 +118,6 @@ const Checkout = () => {
                     {item.nome}
                   </Typography>
 
-                  {/* TIPO */}
-                  {item.tipo && (
-                    <Typography
-                      variant="caption"
-                      color="primary"
-                      sx={{ display: "block" }}
-                    >
-                      {item.tipo.toUpperCase()}
-                    </Typography>
-                  )}
 
                   {/* DESCRIÇÃO */}
                   {item.descricao && (
@@ -186,12 +171,7 @@ const Checkout = () => {
                       <AddIcon fontSize="small" />
                     </IconButton>
                   </Box>
-
-                  {/* PREÇOS */}
-                  <Typography variant="caption">
-                    R$ {item.valor.toFixed(2)} un.
-                  </Typography>
-
+ 
                   <Typography fontWeight="bold">
                     R$ {(item.valor * item.quantidade).toFixed(2)}
                   </Typography>

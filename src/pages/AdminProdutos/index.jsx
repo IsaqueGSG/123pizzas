@@ -106,7 +106,7 @@ export default function AdminProdutos() {
             fontWeight="bold"
             sx={{ mb: 2, textTransform: "capitalize" }}
           >
-            {tipo}
+           {`${tipo}s`}
           </Typography>
 
           {/* ---------- GRID ---------- */}

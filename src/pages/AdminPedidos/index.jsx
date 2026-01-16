@@ -11,8 +11,9 @@ import {
 import Navbar from "../../components/Navbar";
 import AdminDrawer from "../../components/AdminDrawer";
 import ModalAtivarAudio from "../../components/ModalAtivarAudio";
+import ConfirmDialog from "../../components/ConfirmDialog";
 
-import { updatePedidoStatus, aceitarPedido, escutarPedidos } from "../../services/pedidos.service";
+import { updatePedidoStatus, aceitarPedido, escutarPedidos, deletarPedido } from "../../services/pedidos.service";
 import { geraComandaHTML80mm, imprimir, marcarComoImpresso } from "../../services/impressora.service";
 import { enviarMensagem } from "../../services/whatsapp.service";
 import { tocarAudio } from "../../services/audio.service";
@@ -21,6 +22,9 @@ import campainha from "../../assets/audios/campainha.mp3"
 export default function AdminPedidos() {
   const [pedidos, setPedidos] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pedidoSelecionado, setPedidoSelecionado] = useState(null);
 
   const firstLoad = useRef(true);
 
@@ -39,6 +43,7 @@ export default function AdminPedidos() {
 
       firstLoad.current = false;
       setPedidos(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+      console.log(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
       setLoading(false)
     });
 
@@ -74,6 +79,24 @@ export default function AdminPedidos() {
 
   const handleCancelar = async (pedido) => {
     await updatePedidoStatus(pedido.id, "cancelado");
+  };
+
+  const handleExcluir = async () => {
+    if (!pedidoSelecionado) return;
+
+    const podeExcluir = !["pendente", "aceito"].includes(pedidoSelecionado.status);
+
+    if (!podeExcluir) {
+      alert("Pedidos pendentes ou aceitos não podem ser excluídos.");
+      return;
+    }
+
+    try {
+      await deletarPedido(pedidoSelecionado.id);
+    } catch (error) {
+      console.error("Erro ao excluir pedido:", error);
+      alert("Erro ao excluir pedido");
+    }
   };
 
 
@@ -146,30 +169,52 @@ export default function AdminPedidos() {
                   {pedido.itens.map((item, index) => (
                     <Box key={index} sx={{ mb: 1 }}>
                       <Typography fontWeight="bold">
-                        {item.nome} x{item.quantidade}
+                        {item.quantidade}x {item.nome}
                       </Typography>
 
                       <Typography variant="body2">
-                        Borda: {item.extras?.borda || "Sem borda"}
+                        Valor unitário: R$ {item.valor.toFixed(2)}
                       </Typography>
 
-                      {item.obs && (
+                      {item.extras?.borda && (
                         <Typography variant="body2">
-                          Obs: {item.obs}
+                          Borda: {item.extras?.borda?.nome || "Sem borda"}
+                        </Typography>
+
+                      )}
+
+                      {item.extras?.adicionais?.length > 0 && (
+                        <Typography variant="body2">
+                          Extras:{" "}
+                          {item.extras.adicionais
+                            .map((e) => `${e.nome} (+R$ ${e.valor.toFixed(2)})`)
+                            .join(", ")}
                         </Typography>
                       )}
+
+                      {item.extras?.obs && (
+                        <Typography variant="body2">
+                          Obs: {item.extras.obs}
+                        </Typography>
+                      )}
+
+                      <Typography variant="body2" fontWeight="bold">
+                        Subtotal: R$ {(item.valor * item.quantidade).toFixed(2)}
+                      </Typography>
                     </Box>
                   ))}
 
+
                   {/* AÇÕES */}
-                  {pedido.status === "pendente" && (
-                    <Box sx={{ mt: "auto", pt: 2 }}>
-                      <Divider sx={{ mb: 1 }} />
+                  <Box sx={{ mt: "auto", pt: 2 }}>
+                    <Divider sx={{ mb: 1 }} />
 
-                      <Typography fontWeight="bold">
-                        Total: R$ {pedido.total.toFixed(2)}
-                      </Typography>
+                    <Typography fontWeight="bold">
+                      Total: R$ {pedido.total.toFixed(2)}
+                    </Typography>
 
+                    {/* AÇÕES PARA PENDENTE */}
+                    {pedido.status === "pendente" && (
                       <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
                         <Button
                           variant="contained"
@@ -188,17 +233,46 @@ export default function AdminPedidos() {
                         >
                           Recusar
                         </Button>
-
                       </Box>
-                    </Box>
-                  )}
+                    )}
 
+                    {/* AÇÃO DE EXCLUSÃO */}
+                    {!["pendente", "aceito"].includes(pedido.status) && (
+                      <>
+                        <Divider sx={{ my: 1 }} />
+                        <Button
+                          variant="outlined"
+                          color="error"
+                          fullWidth
+                          onClick={() => {
+                            setPedidoSelecionado(pedido);
+                            setConfirmOpen(true);
+                          }}
+                        >
+                          Excluir Pedido
+                        </Button>
+
+                      </>
+                    )}
+                  </Box>
                 </Card>
               ))}
             </Box>
           </>
         )
       }
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={() => {
+          setConfirmOpen(false);
+          setPedidoSelecionado(null);
+        }}
+        title="Excluir pedido"
+        message="Tem certeza que deseja excluir este pedido? Esta ação não pode ser desfeita."
+        funcao={handleExcluir}
+      />
+
     </Box>
   );
 }

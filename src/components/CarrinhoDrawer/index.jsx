@@ -85,7 +85,13 @@ export default function CarrinhoDrawer() {
                 R$ {item.valor.toFixed(2)}
               </Typography>
 
-              {item.extras?.borda && (
+              {item.extras?.obs && (
+                <Typography variant="body2" color="text.secondary">
+                  Obs: {item.extras.obs}
+                </Typography>
+              )}
+
+               {item.extras?.borda && (
                 <Typography variant="body2" color="text.secondary">
                   Borda: {item.extras.borda}
                 </Typography>

@@ -11,6 +11,8 @@ import AdminDrawer from "../../components/AdminDrawer";
 
 import AddSabor from "../../components/AddSabor";
 import AddBebida from "../../components/AddBebida";
+import AddExtra from "../../components/AddExtra";
+import AddBorda from "../../components/AddBorda";
 
 export default function AddProduto() {
     const [aba, setAba] = useState(0);
@@ -28,10 +30,15 @@ export default function AddProduto() {
             >
                 <Tab label="Adicionar Sabor(pizza, broto, esfirra)" />
                 <Tab label="Adicionar Bebida" />
+                <Tab label="Adicionar Extras" />
+                <Tab label="Adicionar Bordas" />
             </Tabs>
 
             {aba === 0 && <AddSabor />}
             {aba === 1 && <AddBebida />}
+            {aba === 2 && <AddExtra />}
+            {aba === 3 && <AddBorda />}
+
         </Box>
     );
 }

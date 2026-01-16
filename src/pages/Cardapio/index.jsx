@@ -5,7 +5,7 @@ import { useProducts } from "../../contexts/ProdutosContext";
 import { useCarrinho } from "../../contexts/CarrinhoContext";
 
 import CardProduto from "../../components/CardProduto";
-import PizzaModal from "../../components/ModalPersonalizar";
+import ModalExtras from "../../components/ModalExtras";
 import Navbar from "../../components/Navbar";
 import CarrinhoDrawer from "../../components/CarrinhoDrawer";
 
@@ -35,6 +35,14 @@ export default function Cardapio() {
 
   const produtosFiltrados = produtos.filter(
     (p) => p.tipo === categoria && p.status
+  );
+
+  const bordas = produtos.filter(
+    (p) => p.tipo === "borda" && p.status
+  );
+
+  const extrasDisponiveis = produtos.filter(
+    (p) => p.tipo === "extra" && p.status
   );
 
   const selecionarProduto = (produto) => {
@@ -89,8 +97,8 @@ export default function Cardapio() {
 
     addItem({
       id: idPizza,
-      nome: `Pizza ${nomeSabores} (${categoria})`,
-      valor: precoFinal, // ✅ CERTO
+      nome: `(${categoria}) ${nomeSabores}`,
+      valor: precoFinal,
       img: sabores[0].img,
       tipo: categoria,
       extras: {
@@ -164,17 +172,18 @@ export default function Cardapio() {
       </Box>
 
       {openModal && isPizzaCategoria && saboresSelecionados.length > 0 && (
-        <PizzaModal
+        <ModalExtras
           open={openModal}
-          setOpenModal={setOpenModal}
           onClose={() => {
             setOpenModal(false);
             setSaboresSelecionados([]);
           }}
           onConfirm={onConfirmPizza}
           sabores={saboresSelecionados}
-          categoria={categoria}
+          bordas={bordas}
+          extrasDisponiveis={extrasDisponiveis}
         />
+
       )}
     </Box>
   );
