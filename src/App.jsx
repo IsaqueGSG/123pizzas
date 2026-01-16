@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import 'leaflet/dist/leaflet.css';
 
 import Cardapio from "./pages/Cardapio";
 import Checkout from "./pages/Checkout";
@@ -14,6 +15,7 @@ import { CartProvider } from "./contexts/CarrinhoContext";
 import { ProdutosProvider } from "./contexts/ProdutosContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { PreferenciasProvider } from "./contexts/PreferenciasContext";
+import { EntregaProvider } from "./contexts/EntregaContext";
 
 import PrivateRoute from "./components/PrivateRoute";
 
@@ -22,67 +24,69 @@ const App = () => {
     <AuthProvider>
       <PreferenciasProvider>
         <CartProvider>
-          <ProdutosProvider>
-            <BrowserRouter>
-              <Routes>
-                {/* rotas públicas */}
-                <Route path="/" element={<Categorias />} />
-                <Route path="/cardapio/:categoria" element={<Cardapio />} />
-                <Route path="/checkout" element={<Checkout />} />
-                <Route path="/login" element={<Login />} />
+          <EntregaProvider>
+            <ProdutosProvider>
+              <BrowserRouter>
+                <Routes>
+                  {/* rotas públicas */}
+                  <Route path="/" element={<Categorias />} />
+                  <Route path="/cardapio/:categoria" element={<Cardapio />} />
+                  <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/login" element={<Login />} />
 
-                {/* rotas privadas */}
-                <Route
-                  path="/produtos"
-                  element={
-                    <PrivateRoute>
-                      <AdminProdutos />
-                    </PrivateRoute>
-                  }
-                />
+                  {/* rotas privadas */}
+                  <Route
+                    path="/produtos"
+                    element={
+                      <PrivateRoute>
+                        <AdminProdutos />
+                      </PrivateRoute>
+                    }
+                  />
 
-                <Route
-                  path="/addproduto"
-                  element={
-                    <PrivateRoute>
-                      <AddProduto />
-                    </PrivateRoute>
-                  }
-                />
+                  <Route
+                    path="/addproduto"
+                    element={
+                      <PrivateRoute>
+                        <AddProduto />
+                      </PrivateRoute>
+                    }
+                  />
 
-                <Route
-                  path="/editproduto/:IDproduto"
-                  element={
-                    <PrivateRoute>
-                      <EditProduto />
-                    </PrivateRoute>
-                  }
-                />
+                  <Route
+                    path="/editproduto/:IDproduto"
+                    element={
+                      <PrivateRoute>
+                        <EditProduto />
+                      </PrivateRoute>
+                    }
+                  />
 
-                <Route
-                  path="/pedidos"
-                  element={
-                    <PrivateRoute>
+                  <Route
+                    path="/pedidos"
+                    element={
+                      <PrivateRoute>
                         <AdminPedidos />
-                    </PrivateRoute>
-                  }
-                />
+                      </PrivateRoute>
+                    }
+                  />
 
-                <Route
-                  path="/preferencias"
-                  element={
-                    <PrivateRoute>
-                      <AdminPreferencias />
-                    </PrivateRoute>
-                  }
-                />
+                  <Route
+                    path="/preferencias"
+                    element={
+                      <PrivateRoute>
+                        <AdminPreferencias />
+                      </PrivateRoute>
+                    }
+                  />
 
-              </Routes>
-            </BrowserRouter>
-          </ProdutosProvider>
+                </Routes>
+              </BrowserRouter>
+            </ProdutosProvider>
+          </EntregaProvider>
         </CartProvider>
       </PreferenciasProvider>
-    </AuthProvider>
+    </AuthProvider >
   );
 };
 

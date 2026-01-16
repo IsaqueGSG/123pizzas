@@ -1,6 +1,8 @@
 import { useCarrinho } from "../../contexts/CarrinhoContext";
 import Navbar from "../../components/Navbar";
 import CarrinhoDrawer from "../../components/CarrinhoDrawer";
+import EnderecoEntrega from "../../components/EnderecoEntrega";
+import MapaEntrega from "../../components/Mapa";
 
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
@@ -33,13 +35,21 @@ const Checkout = () => {
     limparCarrinho
   } = useCarrinho();
 
+  const [enderecoEntrega, setEnderecoEntrega] = useState(null);
+  const [taxaEntrega, setTaxaEntrega] = useState(0);
+  const valorTotalCarrinho = itens.reduce(
+    (total, item) => total + Number(item.valor) * Number(item.quantidade),
+    0
+  );
+
+  const valorTotalPedido = valorTotalCarrinho + taxaEntrega;
+
+
   const [cliente, setCliente] = useState({
     nome: "",
     telefone: "",
-    endereco: "",
     observacao: ""
   });
-
 
   async function finalizarPedido() {
     if (!cliente.nome || !cliente.telefone) {
@@ -47,8 +57,14 @@ const Checkout = () => {
       return;
     }
 
+    if (!enderecoEntrega?.endereco?.rua) {
+      alert("Informe o endereço de entrega no mapa");
+      return;
+    }
+
+
     await criarPedido({
-      cliente,
+      cliente: { ...cliente, enderecoEntrega },
       itens: itens.map(item => ({
         id: item.id,
         nome: item.nome,
@@ -56,7 +72,7 @@ const Checkout = () => {
         quantidade: item.quantidade,
         extras: item.extras ?? null
       })),
-      total,
+      total: valorTotalPedido,
       status: "novo",
       impresso: false,
       criadoEm: new Date()
@@ -66,7 +82,6 @@ const Checkout = () => {
     alert("Pedido realizado com sucesso!!");
     navigate("/");
   }
-
 
   return (
     <Box sx={{ p: 2 }}>
@@ -84,7 +99,7 @@ const Checkout = () => {
       <Card sx={{ mb: 2 }}>
         <CardContent>
           <Typography variant="subtitle1" fontWeight="bold">
-            Seu pedido
+            Seu itens
           </Typography>
 
           <Divider sx={{ my: 1 }} />
@@ -171,7 +186,7 @@ const Checkout = () => {
                       <AddIcon fontSize="small" />
                     </IconButton>
                   </Box>
- 
+
                   <Typography fontWeight="bold">
                     R$ {(item.valor * item.quantidade).toFixed(2)}
                   </Typography>
@@ -189,9 +204,9 @@ const Checkout = () => {
               justifyContent: "space-between"
             }}
           >
-            <Typography fontWeight="bold">Total</Typography>
+            <Typography fontWeight="bold">Total do carrinho</Typography>
             <Typography fontWeight="bold">
-              R$ {total.toFixed(2)}
+              R$ {valorTotalCarrinho.toFixed(2)}
             </Typography>
           </Box>
         </CardContent>
@@ -226,7 +241,7 @@ const Checkout = () => {
               setCliente({ ...cliente, telefone: e.target.value })
             }
           />
-
+          {/* 
           <TextField
             label="Endereço"
             fullWidth
@@ -236,7 +251,16 @@ const Checkout = () => {
             onChange={(e) =>
               setCliente({ ...cliente, endereco: e.target.value })
             }
+          /> */}
+
+
+          <MapaEntrega
+            taxa={taxaEntrega}
+            setTaxa={setTaxaEntrega}
+            enderecoEntrega={enderecoEntrega}
+            setEnderecoEntrega={setEnderecoEntrega}
           />
+
 
           <TextField
             label="Observação"
@@ -250,6 +274,20 @@ const Checkout = () => {
             }
           />
 
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent>
+          <Typography variant="subtitle1" fontWeight="bold">
+            Valor total do Carrinho: R$ {valorTotalCarrinho.toFixed(2)}
+          </Typography>
+          <Typography variant="subtitle1" fontWeight="bold">
+            Valor da Taxa de entrega: R$ {taxaEntrega.toFixed(2)}
+          </Typography>
+          <Typography variant="subtitle1" fontWeight="bold">
+            Valor total do pedido: R$ {valorTotalPedido.toFixed(2)}
+          </Typography>
         </CardContent>
       </Card>
 
