@@ -92,7 +92,7 @@ export default function ModalExtras({
           alignItems: "center"
         }}
       >
-        Personalizar Pizza
+        Extras
         <IconButton onClick={onClose}>
           <Close />
         </IconButton>

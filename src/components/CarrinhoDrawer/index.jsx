@@ -34,8 +34,14 @@ export default function CarrinhoDrawer() {
     decrementar
   } = useCarrinho();
 
-  const { preferencias } = usePreferencias();
-  const aberto = abertoAgora(preferencias?.horarioFuncionamento);
+  const { preferencias, loading } = usePreferencias();
+
+  const aberto = !loading
+    ? abertoAgora(preferencias.horarioFuncionamento)
+    : false;
+
+
+  const totalFormatado = Number(total || 0).toFixed(2);
 
   useEffect(() => {
     setOpenCarrinho(false);
@@ -82,8 +88,9 @@ export default function CarrinhoDrawer() {
             <Box sx={{ flexGrow: 1 }}>
               <Typography fontWeight="bold">{item.nome}</Typography>
               <Typography variant="body2">
-                R$ {item.valor.toFixed(2)}
+                R$ {(item.valor ?? 0).toFixed(2)}
               </Typography>
+
 
               {item.extras?.obs && (
                 <Typography variant="body2" color="text.secondary">
@@ -91,7 +98,7 @@ export default function CarrinhoDrawer() {
                 </Typography>
               )}
 
-               {item.extras?.borda && (
+              {item.extras?.borda && (
                 <Typography variant="body2" color="text.secondary">
                   Borda: {item.extras.borda}
                 </Typography>
@@ -123,8 +130,9 @@ export default function CarrinhoDrawer() {
       {/* FOOTER */}
       <Box sx={{ p: 2, mt: "auto" }}>
         <Typography variant="h6">
-          Total: R$ {total.toFixed(2)}
+          Total: R$ {totalFormatado}
         </Typography>
+
 
         <Button
           fullWidth

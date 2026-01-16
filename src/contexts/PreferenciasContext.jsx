@@ -7,24 +7,24 @@ import {
 const PreferenciasContext = createContext();
 
 export function PreferenciasProvider({ children }) {
-  const [preferencias, setPreferencias] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [preferencias, setPreferencias] = useState({
+    aceitarAutomatico: false,
+    imprimirAutomatico: false,
+    horarioFuncionamento: {}
+  });
+
 
   useEffect(() => {
     async function carregar() {
       const data = await getPreferencias();
-      setPreferencias(
-        data || {
-          aceitarAutomatico: false,
-          imprimirAutomatico: false,
-          horarioFuncionamento: {}
-        }
-      );
+      if (data) setPreferencias(data);
       setLoading(false);
     }
 
     carregar();
   }, []);
+
 
   const atualizarPreferencias = async (novas) => {
     const atualizadas = { ...preferencias, ...novas };

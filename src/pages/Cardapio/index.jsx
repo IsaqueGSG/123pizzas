@@ -46,6 +46,9 @@ export default function Cardapio() {
   );
 
   const selecionarProduto = (produto) => {
+
+    console.log(produto)
+
     // PRODUTO SIMPLES
     if (isProdutoSimples) {
       addItem({
@@ -88,6 +91,10 @@ export default function Cardapio() {
 
 
   const onConfirmPizza = ({ sabores, borda, obs, precoFinal, extras }) => {
+
+    console.log("PREÇO FINAL:", precoFinal, typeof precoFinal);
+
+
     const nomeSabores = sabores.map((s) => s.nome).join(" / ");
 
     const idPizza = `pizza-${categoria}-${sabores

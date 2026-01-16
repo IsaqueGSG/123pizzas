@@ -23,7 +23,7 @@ export default function CardProduto({
   const isPizza = ["pizza", "broto"].includes(produto.tipo);
   const isProdutoSimples = ["bebida", "esfiha"].includes(produto.tipo);
 
-  const precoExibido = produto.valor;
+  const valorExibido = produto.valor;
   const carrinhoId = `${produto.tipo}-${produto.id}`;
 
   const itemCarrinho = itens.find((i) => i.id === carrinhoId);
@@ -32,7 +32,7 @@ export default function CardProduto({
     addItem({
       id: carrinhoId,
       nome: produto.nome,
-      preco: produto.valor,
+      valor: produto.valor,
       quantidade: 1,
       img: produto.img
     });
@@ -48,7 +48,7 @@ export default function CardProduto({
         </Typography>
 
         <Typography color="primary" fontWeight="bold">
-          R$ {precoExibido.toFixed(2)}
+          R$ {valorExibido.toFixed(2)}
         </Typography>
       </CardContent>
 
