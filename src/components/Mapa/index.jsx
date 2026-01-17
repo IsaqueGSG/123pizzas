@@ -66,8 +66,10 @@ const MapaEntrega = ({ taxa, setTaxa, enderecoEntrega, setEnderecoEntrega }) => 
                 const distKm = data.routes[0].distance / 1000;
                 const novaTaxa = distKm * VALOR_KM;
 
+                const TaxaAredondadaParaCima = Math.ceil(novaTaxa)
+
                 setDistancia(distKm);
-                setTaxa(novaTaxa);
+                setTaxa(TaxaAredondadaParaCima);
 
                 // 🔥 BUSCA ENDEREÇO EM TEXTO
                 const endereco = await obterEnderecoPorCoordenadas(lat, lng);
@@ -76,7 +78,7 @@ const MapaEntrega = ({ taxa, setTaxa, enderecoEntrega, setEnderecoEntrega }) => 
                     lat,
                     lng,
                     distancia: distKm,
-                    taxa: novaTaxa,
+                    taxa: TaxaAredondadaParaCima,
                     endereco: {
                         ...endereco,
                         numero: numeroCasa || endereco.numero
@@ -108,7 +110,7 @@ const MapaEntrega = ({ taxa, setTaxa, enderecoEntrega, setEnderecoEntrega }) => 
                 const novaPos = { lat: latitude, lng: longitude };
                 setPosicaoCliente(novaPos);
                 calcularFrete(latitude, longitude);
-                setStatus("Localização encontrada! Ajuste o pino se necessário.");
+                setStatus("Localização encontrada! Ajuste o pino azul se necessário.");
             },
             (error) => {
                 console.error(error);
@@ -159,6 +161,19 @@ const MapaEntrega = ({ taxa, setTaxa, enderecoEntrega, setEnderecoEntrega }) => 
             return null;
         }
     };
+
+
+    const criarMarker = (cor) =>
+        L.divIcon({
+            className: "",
+            html: `
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="${cor}" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/>
+      </svg>
+    `,
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+        });
 
     return (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
@@ -223,20 +238,19 @@ const MapaEntrega = ({ taxa, setTaxa, enderecoEntrega, setEnderecoEntrega }) => 
                     />
                     <ChangeView center={posicaoCliente} />
 
-                    {/* Marcador fixo da Loja */}
-                    <Marker position={LOJA_COORD} interactive={false}>
-                        <Popup>📍 Nossa Loja (Origem)</Popup>
+                    <Marker position={LOJA_COORD} icon={criarMarker("#e53935")}>
+                        <Popup>📍 Nossa Loja</Popup>
                     </Marker>
 
-                    {/* Marcador arrastável do Cliente */}
                     <Marker
-                        draggable={true}
-                        eventHandlers={eventHandlers}
+                        draggable
                         position={posicaoCliente}
+                        icon={criarMarker("#1e88e5")}
                         ref={markerRef}
                     >
-                        <Popup>🏠 Local de Entrega (Arraste-me)</Popup>
+                        <Popup>🏠 Local de Entrega</Popup>
                     </Marker>
+
                 </MapContainer>
             </Paper>
 

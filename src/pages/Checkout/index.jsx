@@ -93,7 +93,7 @@ const Checkout = () => {
 
   useEffect(() => {
     if (itens.length === 0) {
-      alert("Talvez voce tenha recarregado a pagina e por isso não ha nenhum item no carrinho, então você será redirecionado");
+      alert("Talvez voce tenha recarregado a pagina e por isso o carrinho foi esvaziado, !você será redirecionado!");
       navigate("/");
     }
   }, [itens])

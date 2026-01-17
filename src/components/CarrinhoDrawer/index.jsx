@@ -141,7 +141,7 @@ export default function CarrinhoDrawer() {
           disabled={itens.length === 0 || !aberto}
           onClick={() => navigate("/checkout")}
         >
-          Finalizar Pedido
+          { aberto ? "Finalizar Pedido" : "Estamos fechados"}
         </Button>
       </Box>
     </Drawer>
