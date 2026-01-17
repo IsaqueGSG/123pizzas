@@ -8,7 +8,7 @@ import Badge from "@mui/material/Badge";
 
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
-import LocalPizzaIcon from '@mui/icons-material/LocalPizza';
+import StoreIcon from '@mui/icons-material/Store';
 import MenuIcon from '@mui/icons-material/Menu';
 
 import { useCarrinho } from "../../contexts/CarrinhoContext";
@@ -29,7 +29,6 @@ export default function Navbar() {
         "/preferencias"
     ];
 
-
     const isPrivateRoute = privateRoutes.some(route =>
         location.pathname === route ||
         location.pathname.startsWith("/editproduto")
@@ -47,7 +46,7 @@ export default function Navbar() {
                     </IconButton>
                 ) : (
                     <IconButton color="inherit">
-                        <LocalPizzaIcon />
+                        <StoreIcon />
                     </IconButton>
                 )
                 }

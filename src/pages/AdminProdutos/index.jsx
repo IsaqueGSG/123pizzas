@@ -8,8 +8,11 @@ import {
   Avatar,
   Card,
   Switch,
-  Button
+  Button,
+  Tabs,
+  Tab
 } from "@mui/material";
+
 
 import Navbar from "../../components/Navbar";
 import AdminDrawer from "../../components/AdminDrawer";
@@ -24,6 +27,9 @@ import ConfirmDialog from "../../components/ConfirmDialog";
 import ProductMenu from "../../components/MenuOptions";
 
 export default function AdminProdutos() {
+
+  const [abaAtiva, setAbaAtiva] = useState(0);
+
   const navigate = useNavigate();
   const { produtos, loading } = useProducts();
 
@@ -74,6 +80,9 @@ export default function AdminProdutos() {
     return acc;
   }, {});
 
+  const tipos = Object.keys(produtosPorTipo);
+
+
 
   /* ---------- INIT ---------- */
   useEffect(() => {
@@ -95,21 +104,33 @@ export default function AdminProdutos() {
 
       {loading && <CircularProgress sx={{ mt: 3 }} />}
 
+      <Tabs
+        value={abaAtiva}
+        onChange={(e, newValue) => setAbaAtiva(newValue)}
+        sx={{ mb: 3 }}
+        variant="fullWidth"
+        scrollButtons="auto"
+      >
+        {tipos.map((tipo) => (
+          <Tab
+            key={tipo}
+            label={tipo.charAt(0).toUpperCase() + tipo.slice(1)}
+          />
+        ))}
+      </Tabs>
+
+
       {/* ---------- LISTA ---------- */}
-
-
-      {Object.entries(produtosPorTipo).map(([tipo, produtos]) => (
-        <Box key={tipo} sx={{ mb: 4 }}>
-          {/* ---------- TÍTULO DA SEÇÃO ---------- */}
+      {tipos.length > 0 && (
+        <Box sx={{ mb: 4 }}>
           <Typography
             variant="h6"
             fontWeight="bold"
             sx={{ mb: 2, textTransform: "capitalize" }}
           >
-           {`${tipo}s`}
+            {`${tipos[abaAtiva]}s`}
           </Typography>
 
-          {/* ---------- GRID ---------- */}
           <Box
             sx={{
               display: "grid",
@@ -117,81 +138,70 @@ export default function AdminProdutos() {
               gap: 2
             }}
           >
-            {produtos.map((prod) => (
-              <Card
-                key={prod.id}
-                sx={{
-                  p: 2,
-                  borderRadius: 3,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 1
-                }}
-              >
-                {/* IMAGEM */}
-                <Avatar
-                  src={prod.img}
-                  variant="rounded"
-                  sx={{
-                    width: "100%",
-                    height: 140,
-                    mb: 1
-                  }}
-                />
-
-                {/* INFO */}
-                <Box sx={{ flexGrow: 1 }}>
-                  <Typography fontWeight="bold">
-                    {prod.nome}
-                  </Typography>
-
-                  {prod.descricao && (
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ mb: 0.5 }}
-                    >
-                      {prod.descricao}
-                    </Typography>
-                  )}
-
-                  <Typography fontWeight="bold">
-                    R$ {Number(prod.valor).toFixed(2)}
-                  </Typography>
-                </Box>
-
-                {/* STATUS */}
+            {produtosPorTipo[tipos[abaAtiva]]?.map((prod) => (
+              <Card key={prod.id}>
                 <Box
                   sx={{
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "space-between"
+                    p: 1.5,
+                    gap: 1.5
                   }}
                 >
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <Switch
-                      checked={Boolean(prod.status)}
-                      onChange={() => toggleStatus(prod)}
-                    />
-                    <Typography
-                      variant="caption"
-                      color={prod.status ? "success.main" : "error.main"}
-                    >
-                      {prod.status ? "Ativo" : "Inativo"}
+                  {/* IMAGEM */}
+                  <Avatar
+                    src={prod.img}
+                    variant="rounded"
+                    sx={{ width: 56, height: 56 }}
+                  />
+
+                  {/* INFO */}
+                  <Box sx={{ flexGrow: 1 }}>
+                    <Typography fontWeight="bold" fontSize={14}>
+                      {prod.nome}
+                    </Typography>
+
+                    {prod.descricao && (
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ fontSize: 12 }}
+                      >
+                        {prod.descricao}
+                      </Typography>
+                    )}
+
+                    <Typography fontWeight="bold" fontSize={13}>
+                      R$ {Number(prod.valor).toFixed(2)}
                     </Typography>
                   </Box>
 
-                  <ProductMenu
-                    onEdit={() => navigate(`/editproduto/${prod.id}`)}
-                    onDelete={() => abrirConfirmacaoExcluir(prod)}
-                  />
+                  {/* STATUS + MENU */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1
+                    }}
+                  >
+                    <Switch
+                      size="small"
+                      checked={Boolean(prod.status)}
+                      onChange={() => toggleStatus(prod)}
+                    />
+
+                    <ProductMenu
+                      onEdit={() => navigate(`/editproduto/${prod.id}`)}
+                      onDelete={() => abrirConfirmacaoExcluir(prod)}
+                    />
+                  </Box>
                 </Box>
               </Card>
-            ))}
 
+            ))}
           </Box>
         </Box>
-      ))}
+      )}
 
       <Button
         sx={{ mt: 3 }}

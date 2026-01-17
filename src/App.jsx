@@ -3,7 +3,6 @@ import 'leaflet/dist/leaflet.css';
 
 import Cardapio from "./pages/Cardapio";
 import Checkout from "./pages/Checkout";
-import Categorias from "./pages/Categoria";
 import AdminProdutos from "./pages/AdminProdutos";
 import AddProduto from "./pages/AddProduto";
 import EditProduto from "./pages/EditProduto";
@@ -29,8 +28,7 @@ const App = () => {
               <BrowserRouter>
                 <Routes>
                   {/* rotas públicas */}
-                  <Route path="/" element={<Categorias />} />
-                  <Route path="/cardapio/:categoria" element={<Cardapio />} />
+                  <Route path="/" element={<Cardapio />} />
                   <Route path="/checkout" element={<Checkout />} />
                   <Route path="/login" element={<Login />} />
 

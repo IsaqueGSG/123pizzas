@@ -1,7 +1,6 @@
 import { useCarrinho } from "../../contexts/CarrinhoContext";
 import Navbar from "../../components/Navbar";
 import CarrinhoDrawer from "../../components/CarrinhoDrawer";
-import EnderecoEntrega from "../../components/EnderecoEntrega";
 import MapaEntrega from "../../components/Mapa";
 
 import Box from "@mui/material/Box";
@@ -14,6 +13,7 @@ import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Avatar from "@mui/material/Avatar";
 import Toolbar from "@mui/material/Toolbar";
+import { Tab, Tabs } from "@mui/material"
 
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
@@ -62,6 +62,11 @@ const Checkout = () => {
       return;
     }
 
+    if (!enderecoEntrega?.endereco?.numero) {
+      alert("Informe o numero do endereço");
+      return;
+    }
+
 
     await criarPedido({
       cliente: { ...cliente, enderecoEntrega },
@@ -83,6 +88,8 @@ const Checkout = () => {
     navigate("/");
   }
 
+  const [aba, setAba] = useState(0)
+
   return (
     <Box sx={{ p: 2 }}>
 
@@ -90,192 +97,197 @@ const Checkout = () => {
       <Toolbar />
       <CarrinhoDrawer />
 
-
-      <Typography variant="h5" fontWeight="bold" gutterBottom>
-        Resumo do pedido
-      </Typography>
+      <Tabs
+        value={aba}
+        onChange={(_, v) => setAba(v)}
+        variant="fullWidth"
+      >
+        <Tab label="Itens do carrinho" />
+        <Tab label="Dados para entrega" />
+      </Tabs>
 
       {/* LISTA DE ITENS */}
-      <Card sx={{ mb: 2 }}>
-        <CardContent>
-          <Typography variant="subtitle1" fontWeight="bold">
-            Seu itens
-          </Typography>
 
-          <Divider sx={{ my: 1 }} />
+      {
+        aba === 0 && (
 
-          {itens.length === 0 && (
-            <Typography color="text.secondary">
-              Seu carrinho está vazio
-            </Typography>
-          )}
+          <Card sx={{ mb: 2 }}>
+            <CardContent>
+              <Typography variant="subtitle1" fontWeight="bold">
+                Seu itens
+              </Typography>
 
-          {itens.map((item) => (
-            <Card
-              key={item.id}
-              sx={{
-                mb: 1.5,
-                p: 1.5,
-                borderRadius: 2
-              }}
-            >
-              <Box sx={{ display: "flex", gap: 1 }}>
-                {/* IMAGEM */}
-                <Avatar
-                  src={item.img}
-                  variant="rounded"
-                  sx={{ width: 64, height: 64 }}
-                />
+              <Divider sx={{ my: 1 }} />
 
-                {/* CONTEÚDO */}
-                <Box sx={{ flexGrow: 1 }}>
-                  <Typography fontWeight="bold">
-                    {item.nome}
-                  </Typography>
+              {itens.length === 0 && (
+                <Typography color="text.secondary">
+                  Seu carrinho está vazio
+                </Typography>
+              )}
 
-
-                  {/* DESCRIÇÃO */}
-                  {item.descricao && (
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                    >
-                      {item.descricao}
-                    </Typography>
-                  )}
-
-                  {/* EXTRAS / OBS */}
-                  {item.extras && (
-                    <Typography variant="caption" color="text.secondary" display="block">
-                      {item.extras.borda && <>Borda: {item.extras.borda}<br /></>}
-                      {item.extras.adicionais?.length > 0 && (
-                        <>Extras: {item.extras.adicionais.map(e => e.nome).join(", ")}<br /></>
-                      )}
-                      {item.extras.obs && <>Obs: {item.extras.obs}</>}
-                    </Typography>
-                  )}
-
-                </Box>
-
-                {/* CONTROLES */}
-                <Box
+              {itens.map((item) => (
+                <Card
+                  key={item.id}
                   sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "flex-end",
-                    justifyContent: "space-between"
+                    mb: 1.5,
+                    p: 1.5,
+                    borderRadius: 2
                   }}
                 >
-                  {/* CONTROLE QTD */}
-                  <Box sx={{ display: "flex", alignItems: "center" }}>
-                    <IconButton
-                      size="small"
-                      onClick={() => decrementar(item.id)}
-                    >
-                      <RemoveIcon fontSize="small" />
-                    </IconButton>
+                  <Box sx={{ display: "flex", gap: 1 }}>
+                    {/* IMAGEM */}
+                    <Avatar
+                      src={item.img}
+                      variant="rounded"
+                      sx={{ width: 64, height: 64 }}
+                    />
 
-                    <Typography fontWeight="bold">
-                      {item.quantidade}
-                    </Typography>
+                    {/* CONTEÚDO */}
+                    <Box sx={{ flexGrow: 1 }}>
+                      <Typography fontWeight="bold">
+                        {item.nome}
+                      </Typography>
 
-                    <IconButton
-                      size="small"
-                      onClick={() => incrementar(item.id)}
+
+                      {/* DESCRIÇÃO */}
+                      {item.descricao && (
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                        >
+                          {item.descricao}
+                        </Typography>
+                      )}
+
+                      {/* EXTRAS / OBS */}
+                      {item.extras && (
+                        <Typography variant="caption" color="text.secondary" display="block">
+                          {item.extras.borda && <>Borda: {item.extras.borda}<br /></>}
+                          {item.extras.adicionais?.length > 0 && (
+                            <>Extras: {item.extras.adicionais.map(e => e.nome).join(", ")}<br /></>
+                          )}
+                          {item.extras.obs && <>Obs: {item.extras.obs}</>}
+                        </Typography>
+                      )}
+
+                    </Box>
+
+                    {/* CONTROLES */}
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "flex-end",
+                        justifyContent: "space-between"
+                      }}
                     >
-                      <AddIcon fontSize="small" />
-                    </IconButton>
+                      {/* CONTROLE QTD */}
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <IconButton
+                          size="small"
+                          onClick={() => decrementar(item.id)}
+                        >
+                          <RemoveIcon fontSize="small" />
+                        </IconButton>
+
+                        <Typography fontWeight="bold">
+                          {item.quantidade}
+                        </Typography>
+
+                        <IconButton
+                          size="small"
+                          onClick={() => incrementar(item.id)}
+                        >
+                          <AddIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+
+                      <Typography fontWeight="bold">
+                        R$ {(item.valor * item.quantidade).toFixed(2)}
+                      </Typography>
+                    </Box>
                   </Box>
+                </Card>
+              ))}
 
-                  <Typography fontWeight="bold">
-                    R$ {(item.valor * item.quantidade).toFixed(2)}
-                  </Typography>
-                </Box>
+              <Divider sx={{ my: 1 }} />
+
+              {/* TOTAL */}
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between"
+                }}
+              >
+                <Typography fontWeight="bold">Total do carrinho</Typography>
+                <Typography fontWeight="bold">
+                  R$ {valorTotalCarrinho.toFixed(2)}
+                </Typography>
               </Box>
-            </Card>
-          ))}
+            </CardContent>
+          </Card>
+        )
+      }
 
-          <Divider sx={{ my: 1 }} />
-
-          {/* TOTAL */}
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between"
-            }}
-          >
-            <Typography fontWeight="bold">Total do carrinho</Typography>
-            <Typography fontWeight="bold">
-              R$ {valorTotalCarrinho.toFixed(2)}
-            </Typography>
-          </Box>
-        </CardContent>
-      </Card>
 
       {/* DADOS DO CLIENTE */}
-      <Card sx={{ mb: 2 }}>
-        <CardContent>
-          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-            Dados para entrega
-          </Typography>
 
-          <TextField
-            label="Nome"
-            fullWidth
-            size="small"
-            sx={{ mb: 1 }}
-            value={cliente.nome}
-            onChange={(e) =>
-              setCliente({ ...cliente, nome: e.target.value })
-            }
-          />
+      {
+        aba === 1 && (
 
+          <Card sx={{ mb: 2 }}>
+            <CardContent>
+              <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                Dados para entrega
+              </Typography>
 
-          <TextField
-            label="Telefone"
-            fullWidth
-            size="small"
-            sx={{ mb: 1 }}
-            value={cliente.telefone}
-            onChange={(e) =>
-              setCliente({ ...cliente, telefone: e.target.value })
-            }
-          />
-          {/* 
-          <TextField
-            label="Endereço"
-            fullWidth
-            size="small"
-            sx={{ mb: 1 }}
-            value={cliente.endereco}
-            onChange={(e) =>
-              setCliente({ ...cliente, endereco: e.target.value })
-            }
-          /> */}
+              <TextField
+                label="Nome"
+                fullWidth
+                size="small"
+                sx={{ mb: 1 }}
+                value={cliente.nome}
+                onChange={(e) =>
+                  setCliente({ ...cliente, nome: e.target.value })
+                }
+              />
 
 
-          <MapaEntrega
-            taxa={taxaEntrega}
-            setTaxa={setTaxaEntrega}
-            enderecoEntrega={enderecoEntrega}
-            setEnderecoEntrega={setEnderecoEntrega}
-          />
+              <TextField
+                label="Telefone"
+                fullWidth
+                size="small"
+                sx={{ mb: 1 }}
+                value={cliente.telefone}
+                onChange={(e) =>
+                  setCliente({ ...cliente, telefone: e.target.value })
+                }
+              />
 
+              <MapaEntrega
+                taxa={taxaEntrega}
+                setTaxa={setTaxaEntrega}
+                enderecoEntrega={enderecoEntrega}
+                setEnderecoEntrega={setEnderecoEntrega}
+              />
 
-          <TextField
-            label="Observação"
-            fullWidth
-            size="small"
-            multiline
-            rows={2}
-            value={cliente.observacao}
-            onChange={(e) =>
-              setCliente({ ...cliente, observacao: e.target.value })
-            }
-          />
+              <TextField
+                label="Observação"
+                fullWidth
+                size="small"
+                multiline
+                rows={2}
+                value={cliente.observacao}
+                onChange={(e) =>
+                  setCliente({ ...cliente, observacao: e.target.value })
+                }
+              />
 
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+
+        )
+      }
 
       <Card>
         <CardContent>

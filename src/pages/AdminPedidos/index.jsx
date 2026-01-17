@@ -5,7 +5,10 @@ import {
   Card,
   Chip,
   Button,
-  Divider
+  Divider,
+  Tabs,
+  Tab,
+  Toolbar
 } from "@mui/material";
 
 import Navbar from "../../components/Navbar";
@@ -20,6 +23,10 @@ import { tocarAudio } from "../../services/audio.service";
 import campainha from "../../assets/audios/campainha.mp3"
 
 export default function AdminPedidos() {
+  const statusTabs = ["pendente", "aceito", "cancelado", "finalizado"];
+  const [abaAtiva, setAbaAtiva] = useState(0);
+
+
   const [pedidos, setPedidos] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -99,16 +106,36 @@ export default function AdminPedidos() {
     }
   };
 
+  const pedidosFiltrados = pedidos
+    .filter(p => p.status === statusTabs[abaAtiva])
+    .sort((a, b) => b.createdAt.seconds - a.createdAt.seconds);
+
+
 
   return (
     <Box sx={{ p: 2 }}>
       <ModalAtivarAudio />
       <Navbar />
+      <Toolbar />
       <AdminDrawer />
 
       <Typography variant="h5" fontWeight="bold" gutterBottom>
         Pedidos
       </Typography>
+
+      <Tabs
+        value={abaAtiva}
+        onChange={(e, newValue) => setAbaAtiva(newValue)}
+        sx={{ mb: 3 }}
+        variant="fullWidth"
+      >
+        {statusTabs.map((status) => (
+          <Tab
+            key={status}
+            label={`${status.toUpperCase()} (${pedidos.filter(p => p.status === status).length})`}
+          />
+        ))}
+      </Tabs>
 
       {
         loading ? (
@@ -127,7 +154,8 @@ export default function AdminPedidos() {
                 gap: 2
               }}
             >
-              {pedidos.map((pedido) => (
+              {pedidosFiltrados.map((pedido) => (
+
                 <Card
                   key={pedido.id}
                   sx={{

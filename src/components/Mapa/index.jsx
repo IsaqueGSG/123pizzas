@@ -180,6 +180,29 @@ const MapaEntrega = ({ taxa, setTaxa, enderecoEntrega, setEnderecoEntrega }) => 
                 {loading ? "Buscando localização..." : "Usar minha localização atual"}
             </Button>
 
+            <Box sx={{
+                display: "grid",
+                gridTemplateColumns: "2fr 1fr"
+            }} >
+                <TextField
+                    disabled
+                    fullWidth
+                    value={
+                        enderecoEntrega?.endereco
+                            ? `${enderecoEntrega.endereco.rua} - ${enderecoEntrega.endereco.bairro}, ${enderecoEntrega.endereco.cidade}`
+                            : "use a localização atual ou procure no mapa"
+                    }
+                />
+
+                <TextField
+                    fullWidth
+                    label="Número"
+                    value={numeroCasa}
+                    onChange={(e) => setNumeroCasa(e.target.value)}
+                />
+
+            </Box>
+
             {/* Caixa de Status/Instruções */}
             <Box sx={{ bgcolor: '#fff8e1', p: 2, borderRadius: 2, borderLeft: '4px solid #ffc107', display: 'flex', alignItems: 'center', gap: 1.5 }}>
                 <MapIcon color="action" />
@@ -214,29 +237,6 @@ const MapaEntrega = ({ taxa, setTaxa, enderecoEntrega, setEnderecoEntrega }) => 
                     </Marker>
                 </MapContainer>
             </Paper>
-
-            <Box sx={{
-                display: "grid",
-                gridTemplateColumns: "2fr 1fr"
-            }} >
-                <TextField
-                    disabled
-                    fullWidth
-                    value={
-                        enderecoEntrega?.endereco
-                            ? `${enderecoEntrega.endereco.rua} - ${enderecoEntrega.endereco.bairro}, ${enderecoEntrega.endereco.cidade}`
-                            : ""
-                    }
-                />
-
-                <TextField
-                    fullWidth
-                    label="Número"
-                    value={numeroCasa}
-                    onChange={(e) => setNumeroCasa(e.target.value)}
-                />
-
-            </Box>
 
             {/* Área de Resultados */}
             <Box

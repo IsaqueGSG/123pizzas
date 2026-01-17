@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
 
 import { useProducts } from "../../contexts/ProdutosContext";
 import { useCarrinho } from "../../contexts/CarrinhoContext";
@@ -13,12 +12,33 @@ import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import Button from "@mui/material/Button";
 import Toolbar from "@mui/material/Toolbar";
-import Typography from "@mui/material/Typography";
+import Tabs from "@mui/material/Tabs";
+import Tab from "@mui/material/Tab";
 
 export default function Cardapio() {
   const { produtos, loading } = useProducts();
-  const { categoria } = useParams();
   const { addItem } = useCarrinho();
+
+  const [categoriaSelecionada, setCategoriaSelecionada] = useState("");
+
+  const categorias = Array.from(
+    new Set(
+      produtos
+        .filter(
+          p => p.status && p.tipo !== "borda" && p.tipo !== "extra"
+        )
+        .map(p => p.tipo)
+    )
+  );
+
+  useEffect(() => {
+    if (categorias.length > 0 && !categoriaSelecionada) {
+      setCategoriaSelecionada(categorias[0]);
+    }
+  }, [categorias, categoriaSelecionada]);
+
+
+  const categoria = categoriaSelecionada;
 
   const [tipoPizza, setTipoPizza] = useState("inteira");
   const [saboresSelecionados, setSaboresSelecionados] = useState([]);
@@ -34,8 +54,9 @@ export default function Cardapio() {
 
 
   const produtosFiltrados = produtos.filter(
-    (p) => p.tipo === categoria && p.status
+    (p) => p.tipo === categoriaSelecionada && p.status
   );
+
 
   const bordas = produtos.filter(
     (p) => p.tipo === "borda" && p.status
@@ -89,18 +110,17 @@ export default function Cardapio() {
     }
   };
 
-
   const onConfirmPizza = ({ sabores, borda, obs, precoFinal, extras }) => {
 
     console.log("PREÇO FINAL:", precoFinal, typeof precoFinal);
 
-
     const nomeSabores = sabores.map((s) => s.nome).join(" / ");
 
-    const idPizza = `pizza-${categoria}-${sabores
+    const idPizza = `${categoria}-${sabores
       .map((s) => s.id)
       .sort()
       .join("-")}-${borda.id}-${extras.map((e) => e.id).join("-")}`;
+
 
     addItem({
       id: idPizza,
@@ -120,15 +140,41 @@ export default function Cardapio() {
     setSaboresSelecionados([]);
   };
 
+
   return (
     <Box sx={{ p: 2 }}>
       <Navbar />
       <Toolbar />
       <CarrinhoDrawer />
 
-      <Typography variant="h5" fontWeight="bold" gutterBottom>
-        Cardápio de {categoria}
-      </Typography>
+      {loading && (
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+          <CircularProgress />
+        </Box>
+      )}
+
+      {categorias.length > 0 && (
+        <Tabs
+          value={categoriaSelecionada || "pizza"}
+          onChange={(e, newValue) => {
+            setCategoriaSelecionada(newValue);
+            setTipoPizza("inteira");
+            setSaboresSelecionados([]);
+          }}
+          variant="fullWidth"
+          scrollButtons="auto"
+          sx={{ mb: 2 }}
+        >
+          {categorias.map((cat) => (
+            <Tab
+              key={cat}
+              value={cat}
+              label={cat.toUpperCase()}
+            />
+          ))}
+        </Tabs>
+      )}
+
 
       {isPizzaCategoria && (
         <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
@@ -155,8 +201,6 @@ export default function Cardapio() {
           </Button>
         </Box>
       )}
-
-      {loading && <CircularProgress />}
 
       <Box
         sx={{
