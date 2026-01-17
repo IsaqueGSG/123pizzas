@@ -37,10 +37,12 @@ function ChangeView({ center }) {
     return null;
 }
 
+
 const MapaEntrega = ({ taxa, setTaxa, enderecoEntrega, setEnderecoEntrega }) => {
     // --- CONFIGURAÇÕES ---
-    const LOJA_COORD = { lat: -23.5505, lng: -46.6333 }; // Sua loja
-    const VALOR_KM = 2.50; // Preço por KM
+    const LOJA_COORD = { lat: -23.4605278, lng: -46.4170333 }; // Sua loja
+    const VALOR_KM = 5; // valor por km
+
 
     // --- ESTADOS ---
     const [posicaoCliente, setPosicaoCliente] = useState(LOJA_COORD);

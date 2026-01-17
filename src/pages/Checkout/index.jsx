@@ -35,6 +35,7 @@ const Checkout = () => {
     limparCarrinho
   } = useCarrinho();
 
+  const [aba, setAba] = useState(0)
   const [enderecoEntrega, setEnderecoEntrega] = useState(null);
   const [taxaEntrega, setTaxaEntrega] = useState(0);
   const valorTotalCarrinho = itens.reduce(
@@ -44,7 +45,6 @@ const Checkout = () => {
 
   const valorTotalPedido = valorTotalCarrinho + taxaEntrega;
 
-
   const [cliente, setCliente] = useState({
     nome: "",
     telefone: "",
@@ -52,21 +52,24 @@ const Checkout = () => {
   });
 
   async function finalizarPedido() {
-    if (!cliente.nome || !cliente.telefone) {
-      alert("Informe nome e telefone");
-      return;
-    }
 
     if (!enderecoEntrega?.endereco?.rua) {
       alert("Informe o endereço de entrega no mapa");
+      setAba(1);
       return;
     }
 
     if (!enderecoEntrega?.endereco?.numero) {
       alert("Informe o numero do endereço");
+      setAba(1);
       return;
     }
 
+    if (!cliente.nome || !cliente.telefone) {
+      alert("Informe nome e telefone");
+      setAba(2);
+      return;
+    }
 
     await criarPedido({
       cliente: { ...cliente, enderecoEntrega },
@@ -88,10 +91,15 @@ const Checkout = () => {
     navigate("/");
   }
 
-  const [aba, setAba] = useState(0)
+  useEffect(() => {
+    if (itens.length === 0) {
+      alert("Talvez voce tenha recarregado a pagina e por isso não ha nenhum item no carrinho, então você será redirecionado");
+      navigate("/");
+    }
+  }, [itens])
 
   return (
-    <Box sx={{ p: 2 }}>
+    <Box sx={{ p: 2, pb: 22 }}>
 
       <Navbar />
       <Toolbar />
@@ -104,6 +112,7 @@ const Checkout = () => {
       >
         <Tab label="Itens do carrinho" />
         <Tab label="Dados para entrega" />
+        <Tab label="Dados do cliente" />
       </Tabs>
 
       {/* LISTA DE ITENS */}
@@ -111,14 +120,8 @@ const Checkout = () => {
       {
         aba === 0 && (
 
-          <Card sx={{ mb: 2 }}>
+          <Card sx={{ my: 2 }}>
             <CardContent>
-              <Typography variant="subtitle1" fontWeight="bold">
-                Seu itens
-              </Typography>
-
-              <Divider sx={{ my: 1 }} />
-
               {itens.length === 0 && (
                 <Typography color="text.secondary">
                   Seu carrinho está vazio
@@ -230,40 +233,12 @@ const Checkout = () => {
       }
 
 
-      {/* DADOS DO CLIENTE */}
-
+      {/* DADOS DA ENTREGA */}
       {
         aba === 1 && (
 
-          <Card sx={{ mb: 2 }}>
+          <Card sx={{ my: 2 }}>
             <CardContent>
-              <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                Dados para entrega
-              </Typography>
-
-              <TextField
-                label="Nome"
-                fullWidth
-                size="small"
-                sx={{ mb: 1 }}
-                value={cliente.nome}
-                onChange={(e) =>
-                  setCliente({ ...cliente, nome: e.target.value })
-                }
-              />
-
-
-              <TextField
-                label="Telefone"
-                fullWidth
-                size="small"
-                sx={{ mb: 1 }}
-                value={cliente.telefone}
-                onChange={(e) =>
-                  setCliente({ ...cliente, telefone: e.target.value })
-                }
-              />
-
               <MapaEntrega
                 taxa={taxaEntrega}
                 setTaxa={setTaxaEntrega}
@@ -289,30 +264,87 @@ const Checkout = () => {
         )
       }
 
-      <Card>
-        <CardContent>
-          <Typography variant="subtitle1" fontWeight="bold">
-            Valor total do Carrinho: R$ {valorTotalCarrinho.toFixed(2)}
-          </Typography>
-          <Typography variant="subtitle1" fontWeight="bold">
-            Valor da Taxa de entrega: R$ {taxaEntrega.toFixed(2)}
-          </Typography>
-          <Typography variant="subtitle1" fontWeight="bold">
-            Valor total do pedido: R$ {valorTotalPedido.toFixed(2)}
-          </Typography>
-        </CardContent>
-      </Card>
+      {/* DADOS DO CLIENTE */}
+      {
+        aba === 2 && (
 
-      {/* FINALIZAR */}
-      <Button
-        variant="contained"
-        size="large"
-        fullWidth
-        disabled={itens.length === 0}
-        onClick={finalizarPedido}
+          <Card sx={{ my: 2 }}>
+            <CardContent>
+              <TextField
+                label="Nome"
+                fullWidth
+                size="small"
+                sx={{ mb: 1 }}
+                value={cliente.nome}
+                onChange={(e) =>
+                  setCliente({ ...cliente, nome: e.target.value })
+                }
+              />
+
+
+              <TextField
+                label="Telefone"
+                fullWidth
+                size="small"
+                sx={{ mb: 1 }}
+                value={cliente.telefone}
+                onChange={(e) =>
+                  setCliente({ ...cliente, telefone: e.target.value })
+                }
+              />
+
+            </CardContent>
+          </Card>
+
+        )
+      }
+
+      {/* deixar esse box fixo como se fosse um footer */}
+      <Box
+        sx={{
+          position: "fixed",
+          bottom: 0,
+          left: 0,
+          width: "100%",
+          bgcolor: "background.paper",
+          boxShadow: "0 -2px 10px rgba(0,0,0,0.1)",
+          p: 1,
+          zIndex: 1200
+        }}
       >
-        Finalizar pedido
-      </Button>
+
+        <Card>
+          <CardContent>
+            <Typography variant="subtitle1" fontWeight="bold">
+              Valor total do Carrinho: R$ {valorTotalCarrinho.toFixed(2)}
+            </Typography>
+            <Typography variant="subtitle1" fontWeight="bold">
+              Valor da Taxa de entrega: R$ {taxaEntrega.toFixed(2)}
+            </Typography>
+            <Typography variant="subtitle1" fontWeight="bold">
+              Valor total do pedido: R$ {valorTotalPedido.toFixed(2)}
+            </Typography>
+          </CardContent>
+        </Card>
+
+        {/* FINALIZAR */}
+        <Button
+          variant="contained"
+          size="large"
+          fullWidth
+          disabled={itens.length === 0}
+          onClick={() => {
+            if (aba === 2) {
+              finalizarPedido();
+            } else {
+              setAba(aba + 1)
+            }
+          }}
+        >
+          {aba < 2 ? "seguir para finalizar" : "Finalizar pedido"}
+        </Button>
+      </Box>
+
     </Box>
   );
 };
