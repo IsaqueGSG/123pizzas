@@ -37,7 +37,6 @@ function ChangeView({ center }) {
     return null;
 }
 
-
 const MapaEntrega = ({ taxa, setTaxa, enderecoEntrega, setEnderecoEntrega }) => {
     // --- CONFIGURAÇÕES ---
     const LOJA_COORD = { lat: -23.4605278, lng: -46.4170333 }; // Sua loja
@@ -133,7 +132,7 @@ const MapaEntrega = ({ taxa, setTaxa, enderecoEntrega, setEnderecoEntrega }) => 
                 setStatus("Ponto de entrega atualizado.");
             }
         },
-    }), []);
+    }), [calcularFrete]);
 
 
     const obterEnderecoPorCoordenadas = async (lat, lng) => {
@@ -174,6 +173,20 @@ const MapaEntrega = ({ taxa, setTaxa, enderecoEntrega, setEnderecoEntrega }) => 
             iconSize: [32, 32],
             iconAnchor: [16, 32],
         });
+
+
+    useEffect(() => { //atualiza numero do endereco
+        if (!enderecoEntrega) return;
+
+        setEnderecoEntrega(prev => ({
+            ...prev,
+            endereco: {
+                ...prev.endereco,
+                numero: numeroCasa
+            }
+        }));
+    }, [numeroCasa]);
+
 
     return (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
@@ -247,6 +260,7 @@ const MapaEntrega = ({ taxa, setTaxa, enderecoEntrega, setEnderecoEntrega }) => 
                         position={posicaoCliente}
                         icon={criarMarker("#1e88e5")}
                         ref={markerRef}
+                        eventHandlers={eventHandlers}
                     >
                         <Popup>🏠 Local de Entrega</Popup>
                     </Marker>

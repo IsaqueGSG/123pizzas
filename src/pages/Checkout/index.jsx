@@ -22,10 +22,11 @@ import { useNavigate } from "react-router-dom";
 
 import { criarPedido } from "../../services/pedidos.service";
 import { useEffect, useState } from "react";
-
+import { useRef } from "react";
 
 const Checkout = () => {
   const navigate = useNavigate();
+  const pedidoFinalizadoRef = useRef(false);
 
   const {
     itens,
@@ -51,25 +52,41 @@ const Checkout = () => {
     observacao: ""
   });
 
-  async function finalizarPedido() {
+  const validacoes = () => {
 
     if (!enderecoEntrega?.endereco?.rua) {
       alert("Informe o endereço de entrega no mapa");
       setAba(1);
-      return;
+      return false;
     }
 
     if (!enderecoEntrega?.endereco?.numero) {
       alert("Informe o numero do endereço");
       setAba(1);
-      return;
+      return false;
+    }
+
+    if (taxaEntrega <= 0) {
+      alert("Calcule a taxa de entrega");
+      setAba(1);
+      return false;
     }
 
     if (!cliente.nome || !cliente.telefone) {
       alert("Informe nome e telefone");
       setAba(2);
-      return;
+      return false;
     }
+
+    return true;
+  };
+
+
+  async function finalizarPedido() {
+    const ok = validacoes();
+    if (!ok) return;
+
+    pedidoFinalizadoRef.current = true; // 🔥
 
     await criarPedido({
       cliente: { ...cliente, enderecoEntrega },
@@ -91,12 +108,14 @@ const Checkout = () => {
     navigate("/");
   }
 
+
   useEffect(() => {
-    if (itens.length === 0) {
-      alert("Talvez voce tenha recarregado a pagina e por isso o carrinho foi esvaziado, !você será redirecionado!");
+    if (itens.length === 0 && !pedidoFinalizadoRef.current) {
+      alert("!você será redirecionado!\n\nTalvez você tenha recarregado a página e por isso o carrinho foi esvaziado.");
       navigate("/");
     }
-  }, [itens])
+  }, [itens]);
+
 
   return (
     <Box sx={{ p: 2, pb: 22 }}>
@@ -335,11 +354,12 @@ const Checkout = () => {
           disabled={itens.length === 0}
           onClick={() => {
             if (aba === 2) {
-              finalizarPedido();
-            } else {
-              setAba(aba + 1)
+              return finalizarPedido();
             }
+
+            setAba(aba + 1);
           }}
+
         >
           {aba < 2 ? "seguir para finalizar" : "Finalizar pedido"}
         </Button>

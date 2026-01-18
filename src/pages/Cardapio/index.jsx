@@ -19,17 +19,34 @@ export default function Cardapio() {
   const { produtos, loading } = useProducts();
   const { addItem } = useCarrinho();
 
-  const [categoriaSelecionada, setCategoriaSelecionada] = useState("");
+  const ORDEM_CATEGORIAS = [
+    "pizza",
+    "broto",
+    "esfiha",
+    "bebida"
+  ];
 
-  const categorias = Array.from(
+  const [categoriaSelecionada, setCategoriaSelecionada] = useState("");
+  const categoriasExistentes = Array.from(
     new Set(
       produtos
-        .filter(
-          p => p.status && p.tipo !== "borda" && p.tipo !== "extra"
-        )
+        .filter(p => p.status && !["borda", "extra"].includes(p.tipo))
         .map(p => p.tipo)
     )
   );
+
+  // categorias que estão na ordem fixa
+  const categoriasOrdenadas = ORDEM_CATEGORIAS.filter(cat =>
+    categoriasExistentes.includes(cat)
+  );
+
+  // categorias que NÃO estão na ordem fixa → vão pro final
+  const categoriasExtras = categoriasExistentes.filter(
+    cat => !ORDEM_CATEGORIAS.includes(cat)
+  );
+
+  const categorias = [...categoriasOrdenadas, ...categoriasExtras];
+
 
   useEffect(() => {
     if (categorias.length > 0 && !categoriaSelecionada) {
