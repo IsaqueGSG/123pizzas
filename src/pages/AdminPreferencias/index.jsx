@@ -65,7 +65,7 @@ export default function AdminPreferencias() {
       setLoading(false);
     }
     carregar();
-  }, []);
+  }, [idLoja]);
 
   const atualizarHorario = (dia, campo, valor) => {
     setPrefs((prev) => ({

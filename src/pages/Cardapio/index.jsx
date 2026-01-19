@@ -157,7 +157,6 @@ export default function Cardapio() {
     setSaboresSelecionados([]);
   };
 
-
   return (
     <Box sx={{ p: 2 }}>
       <Navbar />
@@ -170,7 +169,9 @@ export default function Cardapio() {
         </Box>
       )}
 
-      {categorias.length > 0 && (
+
+
+      {categorias.length > 0 ? (
         <Tabs
           value={categoriaSelecionada || "pizza"}
           onChange={(e, newValue) => {
@@ -190,8 +191,9 @@ export default function Cardapio() {
             />
           ))}
         </Tabs>
+      ) : (
+        <h1>Ainda nao há produtos nessa Loja</h1>
       )}
-
 
       {isPizzaCategoria && (
         <Box sx={{ display: "flex", gap: 1, mb: 2 }}>

@@ -41,8 +41,9 @@ export const AuthProvider = ({ children }) => {
         return () => unsubscribe();
     }, [idLoja]);
 
-    const login = async (idLoja) => {
+    const login = async () => {
         const user = await loginWithGoogle();
+
         const allowed = await isUserAllowed(idLoja, user.email);
 
         if (!allowed) {

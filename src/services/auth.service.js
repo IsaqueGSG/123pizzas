@@ -11,16 +11,18 @@ export const logout = async () => {
   await signOut(auth);
 };
 
-// 🔐 verifica se email existe em QUALQUER doc
 export const isUserAllowed = async (idLoja, email) => {
-  const ref = collection(
+
+  if (idLoja === "demo") return true;
+
+  const ref = doc(
     db,
     "clientes123pedidos",
     idLoja,
-    "usuarios"
+    "usuarios",
+    email
   );
 
-  const snap = await getDocs(ref);
-
-  return snap.docs.some(doc => doc.data().email === email);
+  const snap = await getDoc(ref);
+  return snap.exists();
 };
