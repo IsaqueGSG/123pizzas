@@ -75,3 +75,10 @@ export function escutarPedidos(callback) {
   });
 }
 
+export async function marcarComoImpresso(pedidoId) {
+  await updateDoc(
+    doc(db, "clientes123pedidos", "chavao", "pedidos", pedidoId),
+    { impresso: true }
+  );
+}
+

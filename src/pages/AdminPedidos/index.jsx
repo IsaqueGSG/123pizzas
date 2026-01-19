@@ -16,8 +16,8 @@ import AdminDrawer from "../../components/AdminDrawer";
 import ModalAtivarAudio from "../../components/ModalAtivarAudio";
 import ConfirmDialog from "../../components/ConfirmDialog";
 
-import { updatePedidoStatus, aceitarPedido, escutarPedidos, deletarPedido } from "../../services/pedidos.service";
-import { geraComandaHTML80mm, imprimir, marcarComoImpresso } from "../../services/impressora.service";
+import { updatePedidoStatus, aceitarPedido, escutarPedidos, deletarPedido, marcarComoImpresso } from "../../services/pedidos.service";
+import { geraComandaHTML80mm, imprimir } from "../../services/impressora.service";
 import { enviarMensagem } from "../../services/whatsapp.service";
 import { tocarAudio } from "../../services/audio.service";
 import campainha from "../../assets/audios/campainha.mp3"

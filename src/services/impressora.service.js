@@ -1,17 +1,3 @@
-import {
-  collection,
-  getDocs,
-  doc,
-  updateDoc,
-  query,
-  where,
-  onSnapshot
-} from "firebase/firestore";
-
-import { db } from "../config/firebase";
-
-
-
 
 export function geraComandaHTML80mm(pedido) {
   const data = pedido.createdAt?.seconds
@@ -178,16 +164,6 @@ export function gerarComandaHTML(pedido) {
       <br/><br/>
     </div>
   `;
-}
-
-/**
- * Marca pedido como impresso
- */
-export async function marcarComoImpresso(pedidoId) {
-  await updateDoc(
-    doc(db, "clientes123pedidos", "chavao", "pedidos", pedidoId),
-    { impresso: true }
-  );
 }
 
 export function imprimir(html) {
