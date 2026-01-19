@@ -1,21 +1,26 @@
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../config/firebase";
 
-const REF = doc(
-  db,
-  "clientes123pedidos",
-  "chavao",
-  "configuracoes",
-  "preferencias"
-);
 
-export async function getPreferencias() {
-  const snap = await getDoc(REF);
+export async function getPreferencias(idLoja) {
+  const snap = await getDoc(doc(
+    db,
+    "clientes123pedidos",
+    idLoja,
+    "configuracoes",
+    "preferencias"
+  ));
   return snap.exists() ? snap.data() : null;
 }
 
-export async function salvarPreferencias(preferencias) {
-  await setDoc(REF, preferencias, { merge: true });
+export async function salvarPreferencias(idLoja, preferencias) {
+  await setDoc(doc(
+    db,
+    "clientes123pedidos",
+    idLoja,
+    "configuracoes",
+    "preferencias"
+  ), preferencias, { merge: true });
 }
 
 

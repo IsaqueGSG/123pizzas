@@ -11,9 +11,9 @@ import {
 } from "firebase/firestore";
 import { db } from "../config/firebase";
 
-export async function criarPedido({ cliente, itens, total }) {
+export async function criarPedido(idLoja, { cliente, itens, total }) {
   return addDoc(
-    collection(db, "clientes123pedidos", "chavao", "pedidos"),
+    collection(db, "clientes123pedidos", idLoja, "pedidos"),
     {
       cliente,
       itens,
@@ -25,11 +25,11 @@ export async function criarPedido({ cliente, itens, total }) {
   );
 }
 
-export async function updatePedidoStatus(pedidoId, status) {
+export async function updatePedidoStatus(idLoja, pedidoId, status) {
   const ref = doc(
     db,
     "clientes123pedidos",
-    "chavao",
+    idLoja,
     "pedidos",
     pedidoId
   );
@@ -37,11 +37,11 @@ export async function updatePedidoStatus(pedidoId, status) {
   await updateDoc(ref, { status });
 }
 
-export async function aceitarPedido(pedidoId) {
+export async function aceitarPedido(idLoja, pedidoId) {
   const ref = doc(
     db,
     "clientes123pedidos",
-    "chavao",
+    idLoja,
     "pedidos",
     pedidoId
   );
@@ -52,11 +52,11 @@ export async function aceitarPedido(pedidoId) {
   });
 }
 
-export async function deletarPedido(pedidoId) {
+export async function deletarPedido(idLoja, pedidoId) {
   const ref = doc(
     db,
     "clientes123pedidos",
-    "chavao",
+    idLoja,
     "pedidos",
     pedidoId
   );
@@ -64,9 +64,9 @@ export async function deletarPedido(pedidoId) {
   await deleteDoc(ref);
 }
 
-export function escutarPedidos(callback) {
+export function escutarPedidos(idLoja, callback) {
   const q = query(
-    collection(db, "clientes123pedidos", "chavao", "pedidos"),
+    collection(db, "clientes123pedidos", idLoja, "pedidos"),
     orderBy("createdAt", "desc")
   );
 
@@ -75,9 +75,9 @@ export function escutarPedidos(callback) {
   });
 }
 
-export async function marcarComoImpresso(pedidoId) {
+export async function marcarComoImpresso(idLoja, pedidoId) {
   await updateDoc(
-    doc(db, "clientes123pedidos", "chavao", "pedidos", pedidoId),
+    doc(db, "clientes123pedidos", idLoja, "pedidos", pedidoId),
     { impresso: true }
   );
 }

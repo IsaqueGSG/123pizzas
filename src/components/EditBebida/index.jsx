@@ -2,7 +2,12 @@ import { useState } from "react";
 import { Box, TextField, Button, Typography } from "@mui/material";
 import { updateProduto } from "../../services/produtos.service";
 
+import { useLoja } from "../../contexts/LojaContext";
+
+
 export default function EditBebida({ produto, onSaved }) {
+  const { idLoja } = useLoja()
+
   const [bebida, setBebida] = useState({ ...produto });
 
   const salvar = async () => {
@@ -11,7 +16,7 @@ export default function EditBebida({ produto, onSaved }) {
       return;
     }
 
-    await updateProduto(bebida.id, {
+    await updateProduto(idLoja, bebida.id, {
       nome: bebida.nome,
       descricao: bebida.descricao,
       img: bebida.img,

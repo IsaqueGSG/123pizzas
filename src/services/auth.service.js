@@ -12,11 +12,11 @@ export const logout = async () => {
 };
 
 // 🔐 verifica se email existe em QUALQUER doc
-export const isUserAllowed = async (email) => {
+export const isUserAllowed = async (idLoja, email) => {
   const ref = collection(
     db,
     "clientes123pedidos",
-    "chavao",
+    idLoja,
     "usuarios"
   );
 

@@ -4,16 +4,14 @@ import {
   Box,
   TextField,
   Button,
-  Toolbar,
-  Typography
 } from "@mui/material";
 
-import Navbar from "../../components/Navbar";
-import AdminDrawer from "../../components/AdminDrawer";
 
 import { addProduto } from "../../services/produtos.service";
+import { useLoja } from "../../contexts/LojaContext";
 
 export default function AddBebida() {
+  const { idLoja } = useLoja()
 
   const [bebida, setBebida] = useState({
     nome: "",
@@ -37,7 +35,7 @@ export default function AddBebida() {
       status: true
     };
 
-    await addProduto(produto);
+    await addProduto(idLoja, produto);
 
     setBebida({
       nome: "",

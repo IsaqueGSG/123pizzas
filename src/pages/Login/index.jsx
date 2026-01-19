@@ -1,22 +1,23 @@
 import { Button, CircularProgress } from "@mui/material";
-import { useAuth } from "../../contexts/AuthContext";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+
+import { useAuth } from "../../contexts/AuthContext";
+import { useLoja } from "../../contexts/LojaContext";
 
 const Login = () => {
   const { login, user, loading } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
 
-  // rota de origem (se existir)
-  const from = location.state?.from?.pathname || "/produtos";
+  const navigate = useNavigate();
+
+  const { idLoja } = useLoja();
 
   useEffect(() => {
     if (user) {
-      navigate(from, { replace: true });
+      navigate(`/${idLoja}/produtos`, { replace: true });
     }
-  }, [user, from, navigate]);
-
+  }, [user, idLoja, navigate]);
+  
   return (
     <div
       style={{

@@ -22,7 +22,11 @@ import { enviarMensagem } from "../../services/whatsapp.service";
 import { tocarAudio } from "../../services/audio.service";
 import campainha from "../../assets/audios/campainha.mp3"
 
+import { useLoja } from "../../contexts/LojaContext";
+
 export default function AdminPedidos() {
+  const { idLoja } = useLoja()
+
   const statusTabs = ["pendente", "aceito", "cancelado", "finalizado"];
   const [abaAtiva, setAbaAtiva] = useState(0);
 
@@ -36,7 +40,7 @@ export default function AdminPedidos() {
   const firstLoad = useRef(true);
 
   useEffect(() => {
-    const unsub = escutarPedidos((snapshot) => {
+    const unsub = escutarPedidos(idLoja, (snapshot) => {
       snapshot.docChanges().forEach(change => {
         if (
           change.type === "added" &&
@@ -61,7 +65,7 @@ export default function AdminPedidos() {
   const handleAceitar = async (pedido) => {
     try {
       // 1️⃣ Atualiza status
-      await aceitarPedido(pedido.id);
+      await aceitarPedido(idLoja, pedido.id);
 
       // 2️⃣ WhatsApp
       enviarMensagem(pedido);
@@ -76,7 +80,7 @@ export default function AdminPedidos() {
       imprimir(html);
 
       // 5️⃣ Marca como impresso
-      await marcarComoImpresso(pedido.id);
+      await marcarComoImpresso(idLoja, pedido.id);
 
     } catch (error) {
       console.error("Erro ao aceitar pedido:", error);
@@ -85,7 +89,7 @@ export default function AdminPedidos() {
   };
 
   const handleCancelar = async (pedido) => {
-    await updatePedidoStatus(pedido.id, "cancelado");
+    await updatePedidoStatus(idLoja, pedido.id, "cancelado");
   };
 
   const handleExcluir = async () => {
@@ -99,7 +103,7 @@ export default function AdminPedidos() {
     }
 
     try {
-      await deletarPedido(pedidoSelecionado.id);
+      await deletarPedido(idLoja, pedidoSelecionado.id);
     } catch (error) {
       console.error("Erro ao excluir pedido:", error);
       alert("Erro ao excluir pedido");

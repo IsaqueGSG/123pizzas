@@ -20,10 +20,13 @@ import SettingsIcon from "@mui/icons-material/Settings";
 
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { useLoja } from "../../contexts/LojaContext";
 
 const drawerWidth = 320;
 
 export default function AdminDrawer() {
+  const { idLoja } = useLoja();
+
   const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
@@ -64,28 +67,28 @@ export default function AdminDrawer() {
       <List sx={{ flexGrow: 1 }}>
 
         <ListItem disablePadding>
-          <ListItemButton onClick={() => navigate("/pedidos")}>
+          <ListItemButton onClick={() => navigate(`/${idLoja}/pedidos`, { replace: true })}>
             <FoodBankIcon sx={{ mr: 2 }} />
             <ListItemText primary="Gerenciar Pedidos" />
           </ListItemButton>
         </ListItem>
 
         <ListItem disablePadding>
-          <ListItemButton onClick={() => navigate("/addproduto")}>
+          <ListItemButton onClick={() => navigate(`/${idLoja}/addproduto`, { replace: true })}>
             <AddIcon sx={{ mr: 2 }} />
             <ListItemText primary="Adicionar Produto" />
           </ListItemButton>
         </ListItem>
 
         <ListItem disablePadding>
-          <ListItemButton onClick={() => navigate("/produtos")}>
+          <ListItemButton onClick={() => navigate(`/${idLoja}/produtos`, { replace: true })}>
             <AutoStoriesIcon sx={{ mr: 2 }} />
             <ListItemText primary="Gerenciar Produtos" />
           </ListItemButton>
         </ListItem>
 
         <ListItem disablePadding>
-          <ListItemButton onClick={() => navigate("/preferencias")}>
+          <ListItemButton onClick={() => navigate(`/${idLoja}/preferencias`, { replace: true })}>
             <SettingsIcon sx={{ mr: 2 }} />
             <ListItemText primary="Ajustar Preferencias" />
           </ListItemButton>

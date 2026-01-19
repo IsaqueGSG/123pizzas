@@ -9,7 +9,10 @@ import {
 
 import { updateProduto } from "../../services/produtos.service";
 
+import { useLoja } from "../../contexts/LojaContext";
+
 export default function EditSabor({ produto, onSaved }) {
+  const {idLoja} = useLoja()
 
   const [sabor, setSabor] = useState({
     nome: produto.nome || "",
@@ -24,7 +27,7 @@ export default function EditSabor({ produto, onSaved }) {
       return;
     }
 
-    await updateProduto(produto.id, {
+    await updateProduto(idLoja, produto.id, {
       nome: sabor.nome,
       img: sabor.img,
       descricao: sabor.descricao,

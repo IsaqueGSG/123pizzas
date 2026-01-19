@@ -10,8 +10,11 @@ import {
 } from "@mui/material";
 
 import { addProduto } from "../../services/produtos.service";
+import { useLoja } from "../../contexts/LojaContext";
 
 export default function AddSabor() {
+
+    const { idLoja } = useLoja()
 
     // Dados comuns ao sabor
     const [sabor, setSabor] = useState({
@@ -67,7 +70,7 @@ export default function AddSabor() {
         }
 
         for (const produto of produtos) {
-            await addProduto(produto);
+            await addProduto(idLoja, produto);
         }
 
         // reset

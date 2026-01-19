@@ -7,9 +7,14 @@ import {
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../config/firebase";
 
+import { useLoja } from "../contexts/LojaContext"
+
 const AuthContext = createContext({});
 
 export const AuthProvider = ({ children }) => {
+    const { idLoja } = useLoja();
+    console.log(idLoja)
+
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [openAdminDrawer, setOpenAdminDrawer] = useState(false);
@@ -18,7 +23,7 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             if (firebaseUser) {
-                const allowed = await isUserAllowed(firebaseUser.email);
+                const allowed = await isUserAllowed(idLoja, firebaseUser.email);
 
                 if (!allowed) {
                     await logout();
@@ -34,11 +39,11 @@ export const AuthProvider = ({ children }) => {
         });
 
         return () => unsubscribe();
-    }, []);
+    }, [idLoja]);
 
-    const login = async () => {
+    const login = async (idLoja) => {
         const user = await loginWithGoogle();
-        const allowed = await isUserAllowed(user.email);
+        const allowed = await isUserAllowed(idLoja, user.email);
 
         if (!allowed) {
             await logout();

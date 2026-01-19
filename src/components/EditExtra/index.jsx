@@ -2,7 +2,10 @@ import { useState } from "react";
 import { Box, TextField, Button, Typography } from "@mui/material";
 import { updateProduto } from "../../services/produtos.service";
 
+import { useLoja } from "../../contexts/LojaContext";
+
 export default function EditExtra({ produto, onSaved }) {
+  const { idLoja } = useLoja()
   const [extra, setExtra] = useState({ ...produto });
 
   const salvar = async () => {
@@ -11,7 +14,7 @@ export default function EditExtra({ produto, onSaved }) {
       return;
     }
 
-    await updateProduto(extra.id, {
+    await updateProduto(idLoja, extra.id, {
       nome: extra.nome,
       valor: Number(extra.valor)
     });

@@ -6,8 +6,11 @@ import {
 } from "@mui/material";
 
 import { addProduto } from "../../services/produtos.service";
+import { useLoja } from "../../contexts/LojaContext";
 
 export default function AddExtra() {
+  const { idLoja } = useLoja()
+
   const [extra, setExtra] = useState({
     nome: "",
     valor: ""
@@ -26,7 +29,7 @@ export default function AddExtra() {
       status: true
     };
 
-    await addProduto(produto);
+    await addProduto(idLoja, produto);
 
     setExtra({ nome: "", valor: "" });
     alert("Extra adicionado com sucesso!");

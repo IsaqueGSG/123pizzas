@@ -22,6 +22,8 @@ import {
   salvarPreferencias
 } from "../../services/preferencias.service";
 
+import { useLoja } from "../../contexts/LojaContext";
+
 const DIAS_SEMANA = [
   "segunda",
   "terca",
@@ -50,13 +52,15 @@ const DEFAULT_PREFS = {
 };
 
 export default function AdminPreferencias() {
+  const {idLoja} = useLoja()
+
   const [prefs, setPrefs] = useState(DEFAULT_PREFS);
   const [loading, setLoading] = useState(true);
   const [salvando, setSalvando] = useState(false);
 
   useEffect(() => {
     async function carregar() {
-      const data = await getPreferencias();
+      const data = await getPreferencias(idLoja);
       if (data) setPrefs({ ...DEFAULT_PREFS, ...data });
       setLoading(false);
     }
@@ -78,7 +82,7 @@ export default function AdminPreferencias() {
 
   const salvar = async () => {
     setSalvando(true);
-    await salvarPreferencias(prefs);
+    await salvarPreferencias(idLoja, prefs);
     setSalvando(false);
     alert("Preferências salvas com sucesso!");
   };

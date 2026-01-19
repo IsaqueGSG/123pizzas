@@ -13,72 +13,80 @@ import MenuIcon from '@mui/icons-material/Menu';
 
 import { useCarrinho } from "../../contexts/CarrinhoContext";
 import { useAuth } from "../../contexts/AuthContext";
+import { useLoja } from "../../contexts/LojaContext";
 
 const AppBar = styled(MuiAppBar)({});
 
 export default function Navbar() {
     const { user, setOpenAdminDrawer } = useAuth();
+    const { idLoja } = useLoja();
+
     const navigate = useNavigate();
     const location = useLocation();
     const { quantidadeTotal, setOpenCarrinho } = useCarrinho();
 
-    const privateRoutes = [
-        "/produtos",
-        "/addproduto",
-        "/pedidos",
-        "/preferencias"
+    const privatePrefixes = [
+        `/${idLoja}/produtos`,
+        `/${idLoja}/addproduto`,
+        `/${idLoja}/editproduto`,
+        `/${idLoja}/pedidos`,
+        `/${idLoja}/preferencias`,
     ];
 
-    const isPrivateRoute = privateRoutes.some(route =>
-        location.pathname === route ||
-        location.pathname.startsWith("/editproduto")
+    const isPrivateRoute = user && privatePrefixes.some(prefix =>
+        location.pathname.startsWith(prefix)
     );
 
+    const showBack = location.pathname !== `/${idLoja}`;
 
-    const showBack = location.pathname !== "/";
+    const handleBack = () => {
+        // window.history.length > 1 indica que existe página anterior
+        if (window.history.length > 1) {
+            navigate(-1);
+        } else {
+            navigate(`/${idLoja}`, { replace: true });
+        }
+    };
 
     return (
         <AppBar position="fixed">
             <Toolbar>
+
                 {showBack ? (
-                    <IconButton color="inherit" onClick={() => navigate(-1)}>
+                    <IconButton color="inherit" onClick={handleBack}>
                         <ArrowBackIcon />
                     </IconButton>
                 ) : (
                     <IconButton color="inherit">
                         <StoreIcon />
                     </IconButton>
-                )
-                }
+                )}
 
                 <Typography
                     variant="h6"
                     sx={{ flexGrow: 1, cursor: "pointer" }}
-                    onClick={() => navigate("/")}
+                    onClick={() => navigate(`/${idLoja}`)}
                 >
                     123Pedidos
                 </Typography>
 
-                {
-                    (user && isPrivateRoute) ? (
-                        <IconButton color="inherit" onClick={() => setOpenAdminDrawer(true)}>
-                            <MenuIcon />
-                        </IconButton>
-                    ) : (
-                        <IconButton color="inherit" onClick={() => setOpenCarrinho(true)}>
-                            <Badge
-                                badgeContent={quantidadeTotal}
-                                color="error"
-                                invisible={quantidadeTotal === 0}
-                            >
-                                <ShoppingCartIcon />
-                            </Badge>
-                        </IconButton>
-                    )
-                }
+                {(user && isPrivateRoute) ? (
+                    <IconButton color="inherit" onClick={() => setOpenAdminDrawer(true)}>
+                        <MenuIcon />
+                    </IconButton>
+                ) : (
+                    <IconButton color="inherit" onClick={() => setOpenCarrinho(true)}>
+                        <Badge
+                            badgeContent={quantidadeTotal}
+                            color="error"
+                            invisible={quantidadeTotal === 0}
+                        >
+                            <ShoppingCartIcon />
+                        </Badge>
+                    </IconButton>
+                )}
 
             </Toolbar>
-        </AppBar >
+        </AppBar>
     );
 }
-

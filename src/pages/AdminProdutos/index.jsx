@@ -16,17 +16,19 @@ import {
 
 import Navbar from "../../components/Navbar";
 import AdminDrawer from "../../components/AdminDrawer";
-import { useProducts } from "../../contexts/ProdutosContext";
+import ConfirmDialog from "../../components/ConfirmDialog";
+import ProductMenu from "../../components/MenuOptions";
+
 import {
   updateProdutoStatusBatch,
   deleteProduto,
 } from "../../services/produtos.service";
 
-
-import ConfirmDialog from "../../components/ConfirmDialog";
-import ProductMenu from "../../components/MenuOptions";
+import { useProducts } from "../../contexts/ProdutosContext";
+import { useLoja } from "../../contexts/LojaContext";
 
 export default function AdminProdutos() {
+  const { idLoja } = useLoja()
 
   const [abaAtiva, setAbaAtiva] = useState(0);
 
@@ -63,7 +65,7 @@ export default function AdminProdutos() {
     if (!produtosAlterados.length) return;
 
     try {
-      await updateProdutoStatusBatch(produtosAlterados);
+      await updateProdutoStatusBatch(idLoja, produtosAlterados);
 
       setProdutosOriginais(cloneProdutos.map((p) => ({ ...p })));
       console.log("Status atualizados com sucesso!");
@@ -191,7 +193,7 @@ export default function AdminProdutos() {
                     />
 
                     <ProductMenu
-                      onEdit={() => navigate(`/editproduto/${prod.id}`)}
+                      onEdit={() => navigate(`/${idLoja}/editproduto/${prod.id}`)}
                       onDelete={() => abrirConfirmacaoExcluir(prod)}
                     />
                   </Box>
@@ -221,7 +223,7 @@ export default function AdminProdutos() {
         funcao={async () => {
           if (!produtoSelecionado) return;
 
-          await deleteProduto(produtoSelecionado.id);
+          await deleteProduto(idLoja, produtoSelecionado.id);
 
           // 🔥 REMOVE DO ESTADO LOCAL
           setCloneProdutos((prev) =>

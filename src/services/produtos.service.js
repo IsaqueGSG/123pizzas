@@ -11,15 +11,14 @@ import {
 } from "firebase/firestore";
 import { db } from "../config/firebase";
 
-const produtosRef = collection(
-  db,
-  "clientes123pedidos",
-  "chavao",
-  "produtos"
-);
 
-export async function getProdutos() {
-  const snapshot = await getDocs(produtosRef);
+export async function getProdutos(idLoja) {
+  const snapshot = await getDocs(collection(
+    db,
+    "clientes123pedidos",
+    idLoja,
+    "produtos"
+  ));
 
   return snapshot.docs.map(doc => ({
     id: doc.id,
@@ -27,8 +26,13 @@ export async function getProdutos() {
   }));
 }
 
-export async function getProdutosPorTipo(tipo) {
-  const q = query(produtosRef, where("tipo", "==", tipo));
+export async function getProdutosPorTipo(idLoja, tipo) {
+  const q = query(collection(
+    db,
+    "clientes123pedidos",
+    idLoja,
+    "produtos"
+  ), where("tipo", "==", tipo));
   const snapshot = await getDocs(q);
 
   return snapshot.docs.map(doc => ({
@@ -37,26 +41,46 @@ export async function getProdutosPorTipo(tipo) {
   }));
 }
 
-export async function addProduto(produto) {
-  const docRef = await addDoc(produtosRef, produto);
+export async function addProduto(idLoja, produto) {
+  const docRef = await addDoc(collection(
+    db,
+    "clientes123pedidos",
+    idLoja,
+    "produtos"
+  ), produto);
   return docRef.id;
 }
 
-export async function updateProduto(id, novosDados) {
-  await updateDoc(doc(produtosRef, id), novosDados);
+export async function updateProduto(idLoja, idProduto, novosDados) {
+  await updateDoc(doc(collection(
+    db,
+    "clientes123pedidos",
+    idLoja,
+    "produtos"
+  ), idProduto), novosDados);
 }
 
-export async function deleteProduto(id) {
-  await deleteDoc(doc(produtosRef, id));
+export async function deleteProduto(idLoja, idProduto) {
+  await deleteDoc(doc(collection(
+    db,
+    "clientes123pedidos",
+    idLoja,
+    "produtos"
+  ), idProduto));
 }
 
-export async function updateProdutoStatusBatch(produtos) {
+export async function updateProdutoStatusBatch(idLoja, produtos) {
   if (!produtos?.length) return;
 
   const batch = writeBatch(db);
 
   produtos.forEach((produto) => {
-    batch.update(doc(produtosRef, produto.id), {
+    batch.update(doc(collection(
+      db,
+      "clientes123pedidos",
+      idLoja,
+      "produtos"
+    ), produto.id), {
       status: produto.status
     });
   });

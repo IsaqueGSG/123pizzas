@@ -18,9 +18,13 @@ import { usePreferencias } from "../../contexts/PreferenciasContext";
 import { abertoAgora } from "../../services/preferencias.service";
 import { useEffect } from "react";
 
+import { useLoja } from "../../contexts/LojaContext";
+
 const drawerWidth = 320;
 
 export default function CarrinhoDrawer() {
+  const { idLoja } = useLoja();
+
   const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
@@ -139,10 +143,11 @@ export default function CarrinhoDrawer() {
           variant="contained"
           sx={{ mt: 1 }}
           disabled={itens.length === 0 || !aberto}
-          onClick={() => navigate("/checkout")}
+          onClick={() => navigate(`/${idLoja}/checkout`)}
         >
-          { aberto ? "Finalizar Pedido" : "Estamos fechados"}
+          {aberto ? "Finalizar Pedido" : "Estamos fechados"}
         </Button>
+
       </Box>
     </Drawer>
   );

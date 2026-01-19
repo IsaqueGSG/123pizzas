@@ -15,77 +15,72 @@ import { ProdutosProvider } from "./contexts/ProdutosContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { PreferenciasProvider } from "./contexts/PreferenciasContext";
 import { EntregaProvider } from "./contexts/EntregaContext";
+import { LojaProvider } from "./contexts/LojaContext";
 
 import PrivateRoute from "./components/PrivateRoute";
 
 const App = () => {
   return (
-    <AuthProvider>
-      <PreferenciasProvider>
-        <CartProvider>
-          <EntregaProvider>
-            <ProdutosProvider>
-              <BrowserRouter>
-                <Routes>
-                  {/* rotas públicas */}
-                  <Route path="/" element={<Cardapio />} />
-                  <Route path="/checkout" element={<Checkout />} />
-                  <Route path="/login" element={<Login />} />
+    <BrowserRouter>
+      <Routes>
 
-                  {/* rotas privadas */}
-                  <Route
-                    path="/produtos"
-                    element={
-                      <PrivateRoute>
-                        <AdminProdutos />
-                      </PrivateRoute>
-                    }
-                  />
+        {/* ROTA DA LOJA */}
+        <Route
+          path="/:idLoja/*"
+          element={
+            <LojaProvider>
+              <AuthProvider>
+                <PreferenciasProvider>
+                  <CartProvider>
+                    <EntregaProvider>
+                      <ProdutosProvider>
+                        <Routes>
 
-                  <Route
-                    path="/addproduto"
-                    element={
-                      <PrivateRoute>
-                        <AddProduto />
-                      </PrivateRoute>
-                    }
-                  />
+                          <Route index element={<Cardapio />} />
+                          <Route path="checkout" element={<Checkout />} />
+                          <Route path="login" element={<Login />} />
 
-                  <Route
-                    path="/editproduto/:IDproduto"
-                    element={
-                      <PrivateRoute>
-                        <EditProduto />
-                      </PrivateRoute>
-                    }
-                  />
+                          <Route
+                            path="produtos"
+                            element={<PrivateRoute><AdminProdutos /></PrivateRoute>}
+                          />
+                          <Route
+                            path="addproduto"
+                            element={<PrivateRoute><AddProduto /></PrivateRoute>}
+                          />
+                          <Route
+                            path="editproduto/:IDproduto"
+                            element={<PrivateRoute><EditProduto /></PrivateRoute>}
+                          />
+                          <Route
+                            path="pedidos"
+                            element={<PrivateRoute><AdminPedidos /></PrivateRoute>}
+                          />
+                          <Route
+                            path="preferencias"
+                            element={<PrivateRoute><AdminPreferencias /></PrivateRoute>}
+                          />
 
-                  <Route
-                    path="/pedidos"
-                    element={
-                      <PrivateRoute>
-                        <AdminPedidos />
-                      </PrivateRoute>
-                    }
-                  />
+                        </Routes>
+                      </ProdutosProvider>
+                    </EntregaProvider>
+                  </CartProvider>
+                </PreferenciasProvider>
+              </AuthProvider>
+            </LojaProvider>
+          }
+        />
 
-                  <Route
-                    path="/preferencias"
-                    element={
-                      <PrivateRoute>
-                        <AdminPreferencias />
-                      </PrivateRoute>
-                    }
-                  />
+        {/* ROTA PADRÃO */}
+        <Route
+          path="/"
+          element={<div>Por favor, acesse uma loja válida.</div>}
+        />
 
-                </Routes>
-              </BrowserRouter>
-            </ProdutosProvider>
-          </EntregaProvider>
-        </CartProvider>
-      </PreferenciasProvider>
-    </AuthProvider >
+      </Routes>
+    </BrowserRouter>
   );
 };
+
 
 export default App;

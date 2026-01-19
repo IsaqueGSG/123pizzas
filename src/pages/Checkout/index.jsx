@@ -24,7 +24,11 @@ import { criarPedido } from "../../services/pedidos.service";
 import { useEffect, useState } from "react";
 import { useRef } from "react";
 
+import { useLoja } from "../../contexts/LojaContext";
+
 const Checkout = () => {
+  const { idLoja } = useLoja()
+
   const navigate = useNavigate();
   const pedidoFinalizadoRef = useRef(false);
 
@@ -88,7 +92,7 @@ const Checkout = () => {
 
     pedidoFinalizadoRef.current = true; // 🔥
 
-    await criarPedido({
+    await criarPedido(idLoja, {
       cliente: { ...cliente, enderecoEntrega },
       itens: itens.map(item => ({
         id: item.id,
@@ -105,16 +109,22 @@ const Checkout = () => {
 
     limparCarrinho();
     alert("Pedido realizado com sucesso!!");
-    navigate("/");
+    navigate(`/${idLoja}`);
   }
 
 
   useEffect(() => {
     if (itens.length === 0 && !pedidoFinalizadoRef.current) {
       alert("!você será redirecionado!\n\nTalvez você tenha recarregado a página e por isso o carrinho foi esvaziado.");
-      navigate("/");
+      navigate(`/${idLoja}`);
     }
   }, [itens]);
+
+  const getTextoBotao = () => {
+    if (aba === 0) return "Continuar para entrega";
+    if (aba === 1) return "Continuar para dados do cliente";
+    return "Finalizar pedido";
+  };
 
 
   return (
@@ -361,7 +371,7 @@ const Checkout = () => {
           }}
 
         >
-          {aba < 2 ? "seguir para finalizar" : "Finalizar pedido"}
+          {getTextoBotao()}
         </Button>
       </Box>
 

@@ -6,8 +6,11 @@ import {
 } from "@mui/material";
 
 import { addProduto } from "../../services/produtos.service";
+import { useLoja } from "../../contexts/LojaContext";
 
 export default function AddBorda() {
+  const { idLoja } = useLoja()
+
   const [borda, setBorda] = useState({
     nome: "",
     valor: ""
@@ -26,7 +29,7 @@ export default function AddBorda() {
       status: true
     };
 
-    await addProduto(produto);
+    await addProduto(idLoja, produto);
 
     setBorda({ nome: "", valor: "" });
     alert("Borda adicionada com sucesso!");
