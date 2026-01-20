@@ -1,7 +1,7 @@
 import { useCarrinho } from "../../contexts/CarrinhoContext";
 import Navbar from "../../components/Navbar";
 import CarrinhoDrawer from "../../components/CarrinhoDrawer";
-import MapaEntrega from "../../components/Mapa";
+import MapaEntrega from "../../components/EnderecoEntega";
 
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
@@ -53,7 +53,6 @@ const Checkout = () => {
   const [cliente, setCliente] = useState({
     nome: "",
     telefone: "",
-    observacao: ""
   });
 
   const validacoes = () => {
@@ -126,6 +125,9 @@ const Checkout = () => {
     return "Finalizar pedido";
   };
 
+  useEffect(() => {
+    console.log(enderecoEntrega)
+  }, [enderecoEntrega])
 
   return (
     <Box sx={{ p: 2, pb: 22 }}>
@@ -274,22 +276,8 @@ const Checkout = () => {
                 enderecoEntrega={enderecoEntrega}
                 setEnderecoEntrega={setEnderecoEntrega}
               />
-
-              <TextField
-                label="Observação"
-                fullWidth
-                size="small"
-                multiline
-                rows={2}
-                value={cliente.observacao}
-                onChange={(e) =>
-                  setCliente({ ...cliente, observacao: e.target.value })
-                }
-              />
-
             </CardContent>
           </Card>
-
         )
       }
 
@@ -336,7 +324,7 @@ const Checkout = () => {
           left: 0,
           width: "100%",
           bgcolor: "background.paper",
-          boxShadow: "0 -2px 10px rgba(0,0,0,0.1)",
+          boxShadow: "0 -2px 10px rgba(0,0,0,0.5)",
           p: 1,
           zIndex: 1200
         }}
