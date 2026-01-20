@@ -9,20 +9,12 @@ export const loginWithGoogle = async () => {
 
 export const logout = async () => {
   await signOut(auth);
+
 };
 
 export const isUserAllowed = async (idLoja, email) => {
-
   if (idLoja === "demo") return true;
-
-  const ref = doc(
-    db,
-    "clientes123pedidos",
-    idLoja,
-    "usuarios",
-    email
-  );
-
-  const snap = await getDoc(ref);
-  return snap.exists();
+  const ref = collection(db, "clientes123pedidos", idLoja, "usuarios");
+  const snap = await getDocs(ref);
+  return snap.docs.some(doc => doc.data().email === email);
 };

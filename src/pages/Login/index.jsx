@@ -13,11 +13,12 @@ const Login = () => {
   const { idLoja } = useLoja();
 
   useEffect(() => {
-    if (user) {
+    if (user && !loading) {
       navigate(`/${idLoja}/produtos`, { replace: true });
     }
-  }, [user, idLoja, navigate]);
-  
+  }, [user, loading, idLoja, navigate]);
+
+
   return (
     <div
       style={{

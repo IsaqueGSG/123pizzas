@@ -41,19 +41,19 @@ export const AuthProvider = ({ children }) => {
         return () => unsubscribe();
     }, [idLoja]);
 
-    const login = async () => {
-        const user = await loginWithGoogle();
 
-        const allowed = await isUserAllowed(idLoja, user.email);
+    const login = async () => {
+        const firebaseUser = await loginWithGoogle();
+
+        const allowed = await isUserAllowed(idLoja, firebaseUser.email);
 
         if (!allowed) {
             await logout();
             alert("Acesso não autorizado");
             return;
         }
-
-        setUser(user);
     };
+
 
     const signOut = async () => {
         await logout();
