@@ -58,7 +58,7 @@ export default function Navbar() {
                     </IconButton>
                 ) : (
                     <IconButton color="inherit">
-                        <StoreIcon />
+                        <StoreIcon fontSize={60} />
                     </IconButton>
                 )}
 

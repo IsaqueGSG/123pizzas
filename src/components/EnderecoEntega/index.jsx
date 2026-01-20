@@ -74,7 +74,7 @@ export default function MapaEntrega({
         return data;
     }
 
-    async function geocodeComFallback({
+    function montarTentativasEndereco({
         logradouro,
         numero,
         bairro,
@@ -82,29 +82,102 @@ export default function MapaEntrega({
         uf,
         cep
     }) {
-        const tentativas = [
+        return [
             `${logradouro}, ${numero} - ${bairro}, ${cidade} - ${uf}, Brasil`,
             `${logradouro} - ${bairro}, ${cidade} - ${uf}, Brasil`,
             `${cep}, ${cidade} - ${uf}, Brasil`
-        ];
-
-        for (const endereco of tentativas) {
-            const res = await fetch(
-                `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
-                    endereco
-                )}&key=${VITE_GOOGLE_GEO_API_KEY}`
-            );
-
-            const data = await res.json();
-
-            if (data.status === "OK") {
-                return data.results[0].geometry.location;
-            }
-        }
-
-        throw new Error("Não foi possível localizar o endereço no mapa");
+        ].filter(Boolean);
     }
 
+    async function geocodeNominatim(query) {
+        const res = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`,
+            {
+                headers: {
+                    "Accept": "application/json",
+                    "User-Agent": "SistemaEntrega/1.0"
+                }
+            }
+        );
+
+        const data = await res.json();
+
+        if (!data.length) throw new Error("Nominatim sem resultado");
+
+        return {
+            lat: parseFloat(data[0].lat),
+            lng: parseFloat(data[0].lon)
+        };
+    }
+
+    async function geocodePhoton(query) {
+        const res = await fetch(
+            `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=1`
+        );
+
+        const data = await res.json();
+
+        if (!data.features?.length) throw new Error("Photon sem resultado");
+
+        const [lng, lat] = data.features[0].geometry.coordinates;
+
+        return { lat, lng };
+    }
+
+    async function geocodeGoogle(query) {
+        const res = await fetch(
+            `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${VITE_GOOGLE_GEO_API_KEY}`
+        );
+
+        const data = await res.json();
+
+        if (data.status !== "OK") throw new Error("Google sem resultado");
+
+        return data.results[0].geometry.location;
+    }
+
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+
+    async function geocodeComTentativasFallback(dadosEndereco) {
+        const tentativas = montarTentativasEndereco(dadosEndereco);
+
+        for (const tentativa of tentativas) {
+            // Nominatim
+            try {
+                return await geocodeNominatim(tentativa);
+            } catch (e) {
+                console.log("erro Nominatim");
+            }
+
+            await sleep(400);
+
+            // Photon
+            try {
+                return await geocodePhoton(tentativa);
+            } catch (e) {
+                console.log("erro Photon");
+            }
+
+            await sleep(400);
+
+            // Google (pago, último recurso)
+            if (VITE_GOOGLE_GEO_API_KEY) {
+                try {
+                    return await geocodeGoogle(tentativa);
+                } catch (e) {
+                    console.log("erro Google");
+                }
+            }
+
+            await sleep(400);
+        }
+
+
+        throw new Error("Endereço não localizado por nenhum serviço");
+    }
 
     async function calcularEntrega() {
         try {
@@ -124,7 +197,7 @@ export default function MapaEntrega({
             // setOrigem([geoOrigem.lat, geoOrigem.lng]);
             setOrigem([ENDERECO_LOJA.lat, ENDERECO_LOJA.lng]);
 
-            const geoDestino = await geocodeComFallback({
+            const geoDestino = await geocodeComTentativasFallback({
                 logradouro: cepData.logradouro,
                 numero,
                 bairro: cepData.bairro,
@@ -408,7 +481,7 @@ export default function MapaEntrega({
 
             {
                 dadosCep && (
-                    <Typography variant="caption" sx={{  display: "block" }}>
+                    <Typography variant="caption" sx={{ display: "block" }}>
                         {dadosCep.logradouro} - {dadosCep.bairro}, {dadosCep.localidade}/{dadosCep.uf}
                     </Typography>
                 )
