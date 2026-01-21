@@ -72,8 +72,8 @@ const Checkout = () => {
       return false;
     }
 
-    if (taxaEntrega <= 0) {
-      alert("Calcule a taxa de entrega");
+    if (!enderecoEntrega || taxaEntrega <= 0) {
+      alert("Calcule a taxa de entrega antes de continuar");
       setAba(1);
       return false;
     }
@@ -97,6 +97,8 @@ const Checkout = () => {
       alert("Informe o valor para troco");
       return false;
     }
+
+
 
     return true;
   };

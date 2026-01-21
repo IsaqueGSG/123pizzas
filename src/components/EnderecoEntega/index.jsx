@@ -140,7 +140,6 @@ export default function MapaEntrega({
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-
     async function geocodeComTentativasFallback(dadosEndereco) {
         const tentativas = montarTentativasEndereco(dadosEndereco);
 
@@ -381,7 +380,6 @@ export default function MapaEntrega({
 
                     setCep(endereco.cep);
                     setDadosCep(endereco);
-                    setNumero("");
 
                     // Origem fixa (loja)
                     setOrigem([ENDERECO_LOJA.lat, ENDERECO_LOJA.lng]);
@@ -411,11 +409,13 @@ export default function MapaEntrega({
                     const valorTaxa = Math.max(5, km * precoPorKm);
                     setTaxa(Number(valorTaxa.toFixed(2)));
 
-                    setEnderecoEntrega({
+                    setEnderecoEntrega(prev => ({
+                        ...prev,
                         endereco: {
+                            ...prev?.endereco,
                             cep: endereco.cep,
                             rua: endereco.logradouro,
-                            numero: numero || "",
+                            numero,
                             bairro: endereco.bairro,
                             cidade: endereco.localidade,
                             uf: endereco.uf,
@@ -424,7 +424,8 @@ export default function MapaEntrega({
                         latlng: { lat, lng },
                         distanciaKm: km,
                         observacao
-                    });
+                    }));
+
 
                 } catch (err) {
                     setErro(err.message);
@@ -442,8 +443,21 @@ export default function MapaEntrega({
     }
 
     useEffect(() => {
-        setNumero(enderecoEntrega?.endereco?.numero || "");
-    }, [enderecoEntrega]);
+        if (!enderecoEntrega) return;
+
+        setEnderecoEntrega(prev => ({
+            ...prev,
+            endereco: {
+                ...prev.endereco,
+                numero
+            }
+        }));
+    }, [numero]);
+
+    const precisaRecalcular =
+        enderecoEntrega?.endereco?.tipo === "localizacao_atual" &&
+        taxa === 0;
+
 
     return (
         <>
@@ -507,8 +521,9 @@ export default function MapaEntrega({
                 onClick={usarLocAtual ? usarLocalizacaoAtual : calcularEntrega}
                 disabled={loading}
             >
-                Calcular taxa
+                {precisaRecalcular ? "Recalcular taxa" : "Calcular taxa"}
             </Button>
+
 
             {
                 loading && (
