@@ -13,7 +13,7 @@ import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Avatar from "@mui/material/Avatar";
 import Toolbar from "@mui/material/Toolbar";
-import { Tab, Tabs } from "@mui/material"
+import { Tab, Tabs, MenuItem } from "@mui/material"
 
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
@@ -53,12 +53,15 @@ const Checkout = () => {
   const [cliente, setCliente] = useState({
     nome: "",
     telefone: "",
+    formaPagamento: {
+      forma: "", obsPagamento: ""
+    }
   });
 
   const validacoes = () => {
 
     if (!enderecoEntrega?.endereco?.rua) {
-      alert("Informe o endereço de entrega no mapa");
+      alert("Informe o endereço de entrega");
       setAba(1);
       return false;
     }
@@ -81,6 +84,20 @@ const Checkout = () => {
       return false;
     }
 
+    if (!cliente.formaPagamento.forma) {
+      alert("Selecione a forma de pagamento");
+      setAba(2);
+      return false;
+    }
+
+    if (
+      cliente.formaPagamento.forma === "DINHEIRO" &&
+      !cliente.formaPagamento.obsPagamento
+    ) {
+      alert("Informe o valor para troco");
+      return false;
+    }
+
     return true;
   };
 
@@ -89,7 +106,7 @@ const Checkout = () => {
     const ok = validacoes();
     if (!ok) return;
 
-    pedidoFinalizadoRef.current = true; 
+    pedidoFinalizadoRef.current = true;
 
     await criarPedido(idLoja, {
       cliente: { ...cliente, enderecoEntrega },
@@ -128,6 +145,8 @@ const Checkout = () => {
   useEffect(() => {
     console.log(enderecoEntrega)
   }, [enderecoEntrega])
+
+  const formasPagamento = ["PIX", "DINHEIRO", "CARTÃO"]
 
   return (
     <Box sx={{ p: 2, pb: 22 }}>
@@ -310,6 +329,62 @@ const Checkout = () => {
                 }
               />
 
+              <TextField
+                label="Forma de pagamento"
+                select
+                fullWidth
+                size="small"
+                sx={{ mb: 1 }}
+                value={cliente.formaPagamento.forma}
+                onChange={(e) =>
+                  setCliente({
+                    ...cliente,
+                    formaPagamento: {
+                      ...cliente.formaPagamento,
+                      forma: e.target.value,
+                      obsPagamento: "" // limpa ao trocar
+                    }
+                  })
+                }
+              >
+                {formasPagamento.map((f) => (
+                  <MenuItem key={f} value={f}>
+                    {f}
+                  </MenuItem>
+                ))}
+              </TextField>
+
+
+              {cliente.formaPagamento.forma === "DINHEIRO" && (
+                <TextField
+                  label="Troco para quanto?"
+                  fullWidth
+                  size="small"
+                  value={cliente.formaPagamento.obsPagamento}
+                  onChange={(e) =>
+                    setCliente({
+                      ...cliente,
+                      formaPagamento: {
+                        ...cliente.formaPagamento,
+                        obsPagamento: e.target.value
+                      }
+                    })
+                  }
+                />
+              )}
+
+              {cliente.formaPagamento.forma === "PIX" && (
+                <Typography sx={{ mt: 1 }} color="text.secondary">
+                  PIX será enviado após confirmação do pedido
+                </Typography>
+              )}
+
+              {cliente.formaPagamento.forma === "CARTÃO" && (
+                <Typography sx={{ mt: 1 }} color="text.secondary">
+                  Levar maquininha de cartão
+                </Typography>
+              )}
+
             </CardContent>
           </Card>
 
@@ -363,7 +438,7 @@ const Checkout = () => {
         </Button>
       </Box>
 
-    </Box>
+    </Box >
   );
 };
 
