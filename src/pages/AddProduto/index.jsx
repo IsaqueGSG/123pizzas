@@ -6,7 +6,8 @@ import {
     Checkbox,
     FormControlLabel,
     Divider,
-    Typography
+    Typography,
+    Toolbar
 } from "@mui/material";
 
 import Navbar from "../../components/Navbar";

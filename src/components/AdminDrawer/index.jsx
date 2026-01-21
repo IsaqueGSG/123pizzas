@@ -18,7 +18,7 @@ import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import FoodBankIcon from '@mui/icons-material/FoodBank';
 import SettingsIcon from "@mui/icons-material/Settings";
 
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useLoja } from "../../contexts/LojaContext";
 
@@ -29,19 +29,20 @@ export default function AdminDrawer() {
 
   const theme = useTheme();
   const navigate = useNavigate();
-  const location = useLocation();
   const { signOut, openAdminDrawer, setOpenAdminDrawer } = useAuth();
 
-  // fecha o drawer ao trocar de rota
-  useEffect(() => {
-    setOpenAdminDrawer(false);
-  }, [location.pathname, setOpenAdminDrawer]);
-
   return (
+    openAdminDrawer &&
     <Drawer
-      variant="persistent"
+      disableEnforceFocus
+      disableRestoreFocus
+      ModalProps={{
+        keepMounted: false
+      }}
+      variant="temporary"
       anchor="right"
       open={openAdminDrawer}
+      onClose={() => setOpenAdminDrawer(false)}
       sx={{
         width: drawerWidth,
         "& .MuiDrawer-paper": {

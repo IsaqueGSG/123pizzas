@@ -89,7 +89,7 @@ const Checkout = () => {
     const ok = validacoes();
     if (!ok) return;
 
-    pedidoFinalizadoRef.current = true; // 🔥
+    pedidoFinalizadoRef.current = true; 
 
     await criarPedido(idLoja, {
       cliente: { ...cliente, enderecoEntrega },

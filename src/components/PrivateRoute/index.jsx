@@ -1,22 +1,17 @@
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { useLoja } from "../../contexts/LojaContext";
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
-  const location = useLocation();
+  const { idLoja } = useLoja();
 
   if (loading) {
     return <p>Carregando...</p>;
   }
 
   if (!user) {
-    return (
-      <Navigate
-        to="/login"
-        replace
-        state={{ from: location }}
-      />
-    );
+    return <Navigate to={`/${idLoja}/login`} replace />;
   }
 
   return children;

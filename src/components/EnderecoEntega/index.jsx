@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     Box,
     TextField,
@@ -238,18 +238,17 @@ export default function MapaEntrega({
                 endereco: {
                     cep: cepData.cep,
                     rua: cepData.logradouro,
-                    numero,
+                    numero: numero || "",
                     bairro: cepData.bairro,
                     cidade: cepData.localidade,
-                    uf: cepData.uf
+                    uf: cepData.uf,
+                    tipo: "manual"
                 },
-                latlng: {
-                    lat: geoDestino.lat,
-                    lng: geoDestino.lng
-                },
+                latlng: { lat: geoDestino.lat, lng: geoDestino.lng },
                 distanciaKm: km,
                 observacao
             });
+
         } catch (err) {
             setErro(err.message);
             setTaxa(0);
@@ -416,7 +415,7 @@ export default function MapaEntrega({
                         endereco: {
                             cep: endereco.cep,
                             rua: endereco.logradouro,
-                            numero,
+                            numero: numero || "",
                             bairro: endereco.bairro,
                             cidade: endereco.localidade,
                             uf: endereco.uf,
@@ -426,6 +425,7 @@ export default function MapaEntrega({
                         distanciaKm: km,
                         observacao
                     });
+
                 } catch (err) {
                     setErro(err.message);
                     setTaxa(0);
@@ -441,6 +441,9 @@ export default function MapaEntrega({
         );
     }
 
+    useEffect(() => {
+        setNumero(enderecoEntrega?.endereco?.numero || "");
+    }, [enderecoEntrega]);
 
     return (
         <>

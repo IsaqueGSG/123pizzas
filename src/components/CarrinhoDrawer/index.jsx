@@ -27,7 +27,6 @@ export default function CarrinhoDrawer() {
 
   const theme = useTheme();
   const navigate = useNavigate();
-  const location = useLocation();
 
   const {
     openCarrinho,
@@ -47,15 +46,18 @@ export default function CarrinhoDrawer() {
 
   const totalFormatado = Number(total || 0).toFixed(2);
 
-  useEffect(() => {
-    setOpenCarrinho(false);
-  }, [location.pathname]);
-
   return (
+    openCarrinho &&
     <Drawer
-      variant="persistent"
+      disableEnforceFocus
+      disableRestoreFocus
+      ModalProps={{
+        keepMounted: false
+      }}
+      variant="temporary"
       anchor="right"
       open={openCarrinho}
+      onClose={() => setOpenCarrinho(false)}
       sx={{
         width: drawerWidth,
         "& .MuiDrawer-paper": {
@@ -143,7 +145,10 @@ export default function CarrinhoDrawer() {
           variant="contained"
           sx={{ mt: 1 }}
           disabled={itens.length === 0 || !aberto}
-          onClick={() => navigate(`/${idLoja}/checkout`)}
+          onClick={() => {
+            setOpenCarrinho(false)
+            navigate(`/${idLoja}/checkout`)
+          }}
         >
           {aberto ? "Finalizar Pedido" : "Estamos fechados"}
         </Button>
