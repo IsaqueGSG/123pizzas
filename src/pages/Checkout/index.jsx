@@ -25,9 +25,11 @@ import { useEffect, useState } from "react";
 import { useRef } from "react";
 
 import { useLoja } from "../../contexts/LojaContext";
+import { useEntrega } from "../../contexts/EntregaContext";
 
-const Checkout = () => {
+export default function Checkout() {
   const { idLoja } = useLoja()
+  const { endereco, clearEndereco } = useEntrega()
 
   const navigate = useNavigate();
   const pedidoFinalizadoRef = useRef(false);
@@ -41,14 +43,12 @@ const Checkout = () => {
   } = useCarrinho();
 
   const [aba, setAba] = useState(0)
-  const [enderecoEntrega, setEnderecoEntrega] = useState(null);
-  const [taxaEntrega, setTaxaEntrega] = useState(0);
   const valorTotalCarrinho = itens.reduce(
     (total, item) => total + Number(item.valor) * Number(item.quantidade),
     0
   );
 
-  const valorTotalPedido = valorTotalCarrinho + taxaEntrega;
+  const valorTotalPedido = valorTotalCarrinho + endereco.taxaEntrega;
 
   const [cliente, setCliente] = useState({
     nome: "",
@@ -60,19 +60,19 @@ const Checkout = () => {
 
   const validacoes = () => {
 
-    if (!enderecoEntrega?.endereco?.rua) {
+    if (!endereco?.rua) {
       alert("Informe o endereço de entrega");
       setAba(1);
       return false;
     }
 
-    if (!enderecoEntrega?.endereco?.numero) {
+    if (!endereco?.numero) {
       alert("Informe o numero do endereço");
       setAba(1);
       return false;
     }
 
-    if (!enderecoEntrega || taxaEntrega <= 0) {
+    if (!endereco || endereco.taxaEntrega <= 0) {
       alert("Calcule a taxa de entrega antes de continuar");
       setAba(1);
       return false;
@@ -98,8 +98,6 @@ const Checkout = () => {
       return false;
     }
 
-
-
     return true;
   };
 
@@ -111,7 +109,7 @@ const Checkout = () => {
     pedidoFinalizadoRef.current = true;
 
     await criarPedido(idLoja, {
-      cliente: { ...cliente, enderecoEntrega },
+      cliente: { ...cliente, endereco },
       itens: itens.map(item => ({
         id: item.id,
         nome: item.nome,
@@ -126,6 +124,7 @@ const Checkout = () => {
     });
 
     limparCarrinho();
+    clearEndereco();
     alert("Pedido realizado com sucesso!!");
     navigate(`/${idLoja}`);
   }
@@ -143,10 +142,6 @@ const Checkout = () => {
     if (aba === 1) return "Continuar para dados do cliente";
     return "Finalizar pedido";
   };
-
-  useEffect(() => {
-    console.log(enderecoEntrega)
-  }, [enderecoEntrega])
 
   const formasPagamento = ["PIX", "DINHEIRO", "CARTÃO"]
 
@@ -291,12 +286,7 @@ const Checkout = () => {
 
           <Card sx={{ my: 2 }}>
             <CardContent>
-              <MapaEntrega
-                taxa={taxaEntrega}
-                setTaxa={setTaxaEntrega}
-                enderecoEntrega={enderecoEntrega}
-                setEnderecoEntrega={setEnderecoEntrega}
-              />
+              <MapaEntrega />
             </CardContent>
           </Card>
         )
@@ -318,7 +308,6 @@ const Checkout = () => {
                   setCliente({ ...cliente, nome: e.target.value })
                 }
               />
-
 
               <TextField
                 label="Telefone"
@@ -413,7 +402,7 @@ const Checkout = () => {
               Valor total do Carrinho: R$ {valorTotalCarrinho.toFixed(2)}
             </Typography>
             <Typography variant="subtitle1" fontWeight="bold">
-              Valor da Taxa de entrega: R$ {taxaEntrega.toFixed(2)}
+              Valor da Taxa de entrega: R$ {endereco.taxaEntrega.toFixed(2)}
             </Typography>
             <Typography variant="subtitle1" fontWeight="bold">
               Valor total do pedido: R$ {valorTotalPedido.toFixed(2)}
@@ -444,4 +433,4 @@ const Checkout = () => {
   );
 };
 
-export default Checkout;
+

@@ -1,117 +1,194 @@
-// Haversine para calcular distância em km
-export function calcularDistancia(lat1, lon1, lat2, lon2) {
-    if (lat1 == null || lon1 == null || lat2 == null || lon2 == null) return 0;
 
-    const R = 6371; // raio da Terra em km
-    const dLat = ((lat2 - lat1) * Math.PI) / 180;
-    const dLon = ((lon2 - lon1) * Math.PI) / 180;
-    const a =
-        Math.sin(dLat / 2) ** 2 +
-        Math.cos((lat1 * Math.PI) / 180) *
-        Math.cos((lat2 * Math.PI) / 180) *
-        Math.sin(dLon / 2) ** 2;
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-}
+async function buscarCep(cep) {
+    const cepLimpo = cep.replace(/\D/g, "");
 
-// 1️⃣ Busca dados do CEP via ViaCEP
-export async function getDadosCep(cep) {
-    const url = `https://viacep.com.br/ws/${cep}/json/`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error("CEP inválido ou não encontrado");
+    if (cepLimpo.length !== 8) {
+        throw new Error("CEP inválido");
+    }
+
+    const res = await fetch(
+        `https://viacep.com.br/ws/${cepLimpo}/json/`
+    );
     const data = await res.json();
-    if (data.erro) throw new Error("CEP não encontrado");
 
-    // Adiciona campos extras para facilitar
-    return {
-        cep: data.cep,
-        logradouro: data.logradouro,
-        complemento: data.complemento,
-        bairro: data.bairro,
-        localidade: data.localidade,
-        uf: data.uf,
-        estado: estadoPorUF(data.uf), // opcional
-        regiao: regiaoPorUF(data.uf),  // opcional
-        ibge: data.ibge,
-        gia: data.gia,
-        ddd: data.ddd,
-        siafi: data.siafi
-    };
+    if (data.erro) {
+        throw new Error("CEP não encontrado");
+    }
+
+    return data;
 }
 
-// Auxiliares para estado e região
-function estadoPorUF(uf) {
-    const map = {
-        AC: "Acre", AL: "Alagoas", AP: "Amapá", AM: "Amazonas",
-        BA: "Bahia", CE: "Ceará", DF: "Distrito Federal", ES: "Espírito Santo",
-        GO: "Goiás", MA: "Maranhão", MT: "Mato Grosso", MS: "Mato Grosso do Sul",
-        MG: "Minas Gerais", PA: "Pará", PB: "Paraíba", PR: "Paraná",
-        PE: "Pernambuco", PI: "Piauí", RJ: "Rio de Janeiro", RN: "Rio Grande do Norte",
-        RS: "Rio Grande do Sul", RO: "Rondônia", RR: "Roraima", SC: "Santa Catarina",
-        SP: "São Paulo", SE: "Sergipe", TO: "Tocantins"
-    };
-    return map[uf] || "";
+async function geocodeGoogle(apiKey, cep) {
+
+    const res = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${cep}&key=${apiKey}`
+    );
+
+    const data = await res.json();
+
+    if (data.status !== "OK") throw new Error("Google sem resultado");
+
+    return data.results[0].geometry.location;
 }
 
-function regiaoPorUF(uf) {
-    const regiao = {
-        N: ["AC", "AP", "AM", "PA", "RO", "RR", "TO"],
-        NE: ["AL", "BA", "CE", "MA", "PB", "PE", "PI", "RN", "SE"],
-        SE: ["ES", "MG", "RJ", "SP"],
-        S: ["PR", "RS", "SC"],
-        CO: ["DF", "GO", "MT", "MS"]
-    };
-    for (let r in regiao) if (regiao[r].includes(uf)) return r;
-    return "";
-}
+async function calcularEntrega() {
 
-// 2️⃣ Geocoding via OpenStreetMap / Nominatim
-export async function geocodeEnderecoOSM(endereco) {
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-        endereco
-    )}&limit=1`;
     try {
-        const res = await fetch(url, {
-            headers: { "User-Agent": "123pedidos" } // obrigatório pelo Nominatim
+        if (!cep || !numero) {
+            return setErro("Informe CEP e número");
+        }
+
+        setLoading(true);
+        setErro("");
+
+        // ViaCEP
+        const cepData = await buscarCep(cep);
+        setDadosCep(cepData);
+
+        // Geocode
+        setOrigem([ENDERECO_LOJA.lat, ENDERECO_LOJA.lng]);
+
+        const geoDestino = await geocodeComTentativasFallback({
+            logradouro: cepData.logradouro,
+            numero,
+            bairro: cepData.bairro,
+            cidade: cepData.localidade,
+            uf: cepData.uf,
+            cep: cepData.cep
         });
+        setDestino([geoDestino.lat, geoDestino.lng]);
+
+        // OSRM
+        const url = `https://router.project-osrm.org/route/v1/driving/` +
+            `${ENDERECO_LOJA.lng},${ENDERECO_LOJA.lat};` +
+            `${geoDestino.lng},${geoDestino.lat}` +
+            `?overview=full&geometries=geojson`;
+
+
+        const res = await fetch(url);
         const data = await res.json();
-        if (!data || data.length === 0) return null; // não encontrou
-        return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+
+        if (!data.routes?.length) {
+            throw new Error("Não foi possível calcular a rota");
+        }
+
+        const route = data.routes[0];
+
+        setRota(route.geometry.coordinates.map(([lng, lat]) => [lat, lng]));
+
+        const km = route.distance / 1000;
+        setDistancia(km.toFixed(2));
+
+        // regra de taxa
+        const precoPorKm = 5;
+        const valorTaxaParaCima = Math.ceil(km * precoPorKm);
+
+        setTaxa(Number(valorTaxaParaCima.toFixed(2)));
+
+        setEnderecoEntrega({
+            endereco: {
+                cep: cepData.cep,
+                rua: cepData.logradouro,
+                numero: numero || "",
+                bairro: cepData.bairro,
+                cidade: cepData.localidade,
+                uf: cepData.uf,
+                tipo: "manual"
+            },
+            latlng: { lat: geoDestino.lat, lng: geoDestino.lng },
+            distanciaKm: km,
+            observacao
+        });
+
     } catch (err) {
-        console.error("Erro no geocodeOSM:", err);
-        return null;
+        setErro(err.message);
+        setTaxa(0);
+    } finally {
+        setLoading(false);
     }
 }
 
+async function usarLocalizacaoAtual() {
+    if (!navigator.geolocation) {
+        setErro("Geolocalização não suportada");
+        return;
+    }
+
+    setLoading(true);
+    setErro("");
+
+    navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+            try {
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+
+                const endereco = await reverseGeocodeOSM(lat, lng);
+
+                if (!endereco.cep) {
+                    throw new Error("CEP não identificado pela localização");
+                }
+
+                setCep(endereco.cep);
+                setDadosCep(endereco);
+
+                // Origem fixa (loja)
+                setOrigem([ENDERECO_LOJA.lat, ENDERECO_LOJA.lng]);
+                setDestino([lat, lng]);
+
+                // OSRM
+                const url =
+                    `https://router.project-osrm.org/route/v1/driving/` +
+                    `${ENDERECO_LOJA.lng},${ENDERECO_LOJA.lat};` +
+                    `${lng},${lat}?overview=full&geometries=geojson`;
+
+                const res = await fetch(url);
+                const data = await res.json();
+
+                if (!data.routes?.length) {
+                    throw new Error("Não foi possível calcular a rota");
+                }
+
+                const route = data.routes[0];
+
+                setRota(route.geometry.coordinates.map(([lng, lat]) => [lat, lng]));
+
+                const km = route.distance / 1000;
+                setDistancia(km.toFixed(2));
+
+                const precoPorKm = 3;
+                const valorTaxa = Math.max(5, km * precoPorKm);
+                setTaxa(Number(valorTaxa.toFixed(2)));
+
+                setEnderecoEntrega(prev => ({
+                    ...prev,
+                    endereco: {
+                        ...prev?.endereco,
+                        cep: endereco.cep,
+                        rua: endereco.logradouro,
+                        numero,
+                        bairro: endereco.bairro,
+                        cidade: endereco.localidade,
+                        uf: endereco.uf,
+                        tipo: "localizacao_atual"
+                    },
+                    latlng: { lat, lng },
+                    distanciaKm: km,
+                    observacao
+                }));
 
 
-// 3️⃣ Calcula taxa de entrega
-export function calcularTaxaEntrega(lojaLat, lojaLon, clienteLat, clienteLon, valorPorKm = 2) {
-    const distancia = calcularDistancia(lojaLat, lojaLon, clienteLat, clienteLon);
-    const taxa = distancia * valorPorKm;
-    return { distancia, taxa };
-}
-
-// 4️⃣ Função completa para calcular taxa a partir do CEP + número
-export async function calcularEntregaPorCep(cep, numero, lojaLat, lojaLon, valorPorKm = 2) {
-    // 1️⃣ pega dados do CEP
-    const dadosCep = await getDadosCep(cep);
-
-    // 2️⃣ monta endereço completo
-    const enderecoCompleto = `${dadosCep.logradouro}, ${numero}, ${dadosCep.bairro}, ${dadosCep.localidade}, ${dadosCep.uf}, Brasil`;
-
-    // 3️⃣ geocode
-    const { lat, lon } = await geocodeEnderecoOSM(enderecoCompleto);
-
-    // 4️⃣ calcula taxa
-    const { distancia, taxa } = calcularTaxaEntrega(lojaLat, lojaLon, lat, lon, valorPorKm);
-
-    return {
-        dadosCep,
-        enderecoCompleto,
-        lat,
-        lon,
-        distancia,
-        taxa
-    };
+            } catch (err) {
+                setErro(err.message);
+                setTaxa(0);
+            } finally {
+                setLoading(false);
+            }
+        },
+        () => {
+            setErro("Permissão de localização negada");
+            setLoading(false);
+        },
+        { enableHighAccuracy: true }
+    );
 }

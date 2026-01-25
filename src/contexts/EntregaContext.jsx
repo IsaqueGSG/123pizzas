@@ -1,102 +1,146 @@
 import { createContext, useContext, useState } from "react";
-import {
-  getDadosCep,
-  geocodeEnderecoOSM,
-  calcularTaxaEntrega
-} from "../services/entrega.service";
 
 const EntregaContext = createContext();
 
-export function EntregaProvider({ children }) {
-  const [cep, setCep] = useState("");
-  const [numero, setNumero] = useState("");
-  const [dadosCep, setDadosCep] = useState(null);
-  const [enderecoCompleto, setEnderecoCompleto] = useState("");
-  const [lat, setLat] = useState(null);
-  const [lon, setLon] = useState(null);
-  const [distancia, setDistancia] = useState(0);
-  const [taxa, setTaxa] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [erro, setErro] = useState("");
+const ENDERECO_LOJA = {
+  lat: -23.460380170938265,
+  lng: -46.41701184232687
+};
 
-  // Função para montar endereço para geocoding
-  function montarEnderecoParaGeocode(dadosCep, numero) {
-    const partes = [
-      dadosCep.logradouro,
-      numero || "",
-      dadosCep.bairro,
-      dadosCep.localidade,
-      dadosCep.uf,
-      "Brasil"
-    ].filter(Boolean); // remove strings vazias
-    return partes.join(", ");
+const GEO_KEY = import.meta.env.VITE_GOOGLE_GEO_API_KEY;
+
+const estadoInicial = {
+  cep: "",
+  numero: "",
+  rua: "",
+  bairro: "",
+  cidade: "",
+  uf: "",
+
+  lat: null,
+  lng: null,
+
+  distanciaKm: 0,
+  taxaEntrega: 0,
+
+  loading: false,
+  erro: "",
+  observacao: ""
+};
+
+export function EntregaProvider({ children }) {
+
+  const [endereco, setEndereco] = useState(estadoInicial);
+  const [rota, setRota] = useState([]);
+
+  const clearEndereco = () => setEndereco(estadoInicial);
+
+  function atualizarCampo(campo, valor) {
+    setEndereco(prev => ({ ...prev, [campo]: valor }));
   }
 
-  // Função principal para atualizar endereço e calcular taxa
-  const atualizarEntrega = async (novoCep, novoNumero, lojaLat, lojaLon, valorPorKm = 2) => {
+  async function buscarCep(cep) {
+    const cepLimpo = cep.replace(/\D/g, "");
+    if (cepLimpo.length !== 8) throw new Error("CEP inválido");
+
+    const res = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+    const data = await res.json();
+
+    if (data.erro) throw new Error("CEP não encontrado");
+
+    return data;
+  }
+
+  async function geocodeGoogle(enderecoTexto) {
+    const res = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+        enderecoTexto
+      )}&key=${GEO_KEY}`
+    );
+
+    const data = await res.json();
+    if (data.status !== "OK") throw new Error("Endereço não localizado");
+
+    return data.results[0].geometry.location;
+  }
+
+  async function calcularEntrega() {
     try {
-      setLoading(true);
-      setErro("");
-      setCep(novoCep);
-      setNumero(novoNumero);
+      setEndereco(prev => ({ ...prev, loading: true, erro: "" }));
 
-      // 1️⃣ Busca dados do CEP
-      const dados = await getDadosCep(novoCep);
-      setDadosCep(dados);
+      const cepData = await buscarCep(endereco.cep);
 
-      // 2️⃣ Tenta localizar com número
-      const enderecoComNumero = montarEnderecoParaGeocode(dados, novoNumero);
-      let coords = await geocodeEnderecoOSM(enderecoComNumero);
+      const enderecoCompleto =
+        `${cepData.logradouro}, ${endereco.numero}, ` +
+        `${cepData.localidade} - ${cepData.uf}`;
 
-      let enderecoFinal = enderecoComNumero;
+      const geo = await geocodeGoogle(enderecoCompleto);
 
-      // 3️⃣ Se não encontrar, fallback sem número
-      if (!coords) {
-        const enderecoSemNumero = montarEnderecoParaGeocode(dados, "");
-        coords = await geocodeEnderecoOSM(enderecoSemNumero);
+      const lojaLng = Number(ENDERECO_LOJA.lng);
+      const lojaLat = Number(ENDERECO_LOJA.lat);
+      const destinoLng = Number(geo.lng);
+      const destinoLat = Number(geo.lat);
 
-        if (!coords) throw new Error("Endereço não encontrado ou não localizado pelo OSM");
+      const url =
+        `https://router.project-osrm.org/route/v1/driving/` +
+        `${lojaLng},${lojaLat};${destinoLng},${destinoLat}` +
+        `?overview=full&geometries=geojson`;
 
-        enderecoFinal = enderecoSemNumero;
-      }
+      console.log("URL OSRM:", url); // debug
 
-      setEnderecoCompleto(enderecoFinal);
-      setLat(coords.lat);
-      setLon(coords.lon);
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Erro ao calcular rota");
 
-      // 4️⃣ Calcula taxa de entrega
-      const resultado = calcularTaxaEntrega(lojaLat, lojaLon, coords.lat, coords.lon, valorPorKm);
-      setDistancia(resultado.distancia);
-      setTaxa(resultado.taxa);
+      const data = await res.json();
+      if (!data.routes?.length) throw new Error("Rota não encontrada");
+
+      const route = data.routes[0];
+      const km = route.distance / 1000;
+      const taxa = Math.ceil(km * 5);
+
+      setEndereco(prev => ({
+        ...prev,
+        rua: cepData.logradouro,
+        bairro: cepData.bairro,
+        cidade: cepData.localidade,
+        uf: cepData.uf,
+
+        lat: destinoLat,
+        lng: destinoLng,
+
+        distanciaKm: km,
+        taxaEntrega: taxa,
+
+        rota: route.geometry.coordinates.map(
+          ([lng, lat]) => [lat, lng]
+        ),
+
+        loading: false
+      }));
+
+      setRota(route.geometry.coordinates.map(
+        ([lng, lat]) => ({ lat, lng })
+      ));
 
     } catch (err) {
-      console.error(err);
-      setErro(err.message || "Erro ao calcular entrega");
-      setDadosCep(null);
-      setEnderecoCompleto("");
-      setLat(null);
-      setLon(null);
-      setDistancia(0);
-      setTaxa(0);
-    } finally {
-      setLoading(false);
+      setEndereco(prev => ({
+        ...prev,
+        erro: err.message,
+        loading: false,
+        taxaEntrega: 0
+      }));
     }
-  };
+  }
+
 
   return (
     <EntregaContext.Provider
       value={{
-        cep,
-        numero,
-        dadosCep,
-        enderecoCompleto,
-        lat,
-        lon,
-        distancia,
-        taxa,
-        loading,
-        erro,
-        atualizarEntrega
+        endereco,
+        rota,
+        clearEndereco,
+        atualizarCampo,
+        calcularEntrega
       }}
     >
       {children}
@@ -105,7 +149,5 @@ export function EntregaProvider({ children }) {
 }
 
 export function useEntrega() {
-  const ctx = useContext(EntregaContext);
-  if (!ctx) throw new Error("useEntrega deve estar dentro do EntregaProvider");
-  return ctx;
+  return useContext(EntregaContext);
 }
