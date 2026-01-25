@@ -110,11 +110,7 @@ export function EntregaProvider({ children }) {
 
         distanciaKm: km,
         taxaEntrega: taxa,
-
-        rota: route.geometry.coordinates.map(
-          ([lng, lat]) => [lat, lng]
-        ),
-
+        
         loading: false
       }));
 

@@ -108,7 +108,7 @@ export default function Checkout() {
 
     pedidoFinalizadoRef.current = true;
 
-    await criarPedido(idLoja, {
+    const pedido = {
       cliente: { ...cliente, endereco },
       itens: itens.map(item => ({
         id: item.id,
@@ -121,7 +121,10 @@ export default function Checkout() {
       status: "novo",
       impresso: false,
       criadoEm: new Date()
-    });
+    }
+
+    await criarPedido(idLoja, pedido);
+    console.log("Pedido criado:", pedido);
 
     limparCarrinho();
     clearEndereco();

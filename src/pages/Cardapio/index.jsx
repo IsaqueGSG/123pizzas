@@ -91,7 +91,7 @@ export default function Cardapio() {
     if (isProdutoSimples) {
       addItem({
         id: `${produto.tipo}-${produto.id}`,
-        nome: produto.nome,
+        nome: `(${produto.tipo}) ${produto.nome}`,
         valor: produto.valor,
         img: produto.img,
         tipo: produto.tipo,
@@ -168,8 +168,6 @@ export default function Cardapio() {
           <CircularProgress />
         </Box>
       )}
-
-
 
       {categorias.length > 0 ? (
         <Tabs

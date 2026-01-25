@@ -30,57 +30,58 @@ export default function CardProduto({
 
   const adicionarProdutoSimples = () => {
     addItem({
-      id: carrinhoId,
-      nome: produto.nome,
+      id: `${produto.tipo}-${produto.id}`,
+      nome: `(${produto.tipo}) ${produto.nome}`,
       valor: produto.valor,
-      quantidade: 1,
-      img: produto.img
-    });
-  };
+      img: produto.img,
+      tipo: produto.tipo,
+      descricao: produto.descricao
+  });
+};
 
-  return (
-    <Card>
-      <CardMedia component="img" height="160" image={produto.img} />
+return (
+  <Card>
+    <CardMedia component="img" height="160" image={produto.img} />
 
-      <CardContent>
-        <Typography fontWeight="bold">
-          {produto.nome}
-        </Typography>
+    <CardContent>
+      <Typography fontWeight="bold">
+        {produto.nome}
+      </Typography>
 
-        <Typography color="primary" fontWeight="bold">
-          R$ {valorExibido.toFixed(2)}
-        </Typography>
-      </CardContent>
+      <Typography color="primary" fontWeight="bold">
+        R$ {valorExibido.toFixed(2)}
+      </Typography>
+    </CardContent>
 
-      {isPizza ? (
-        <Button
-          fullWidth
-          variant={selecionado ? "outlined" : "contained"}
-          onClick={onSelecionar}
-        >
-          {tipoPizza === "1/2" && produto.tipo === "pizza"
-            ? selecionado
-              ? "Remover sabor"
-              : "Escolher sabor"
-            : "Adicionar"}
-        </Button>
-      ) : !itemCarrinho ? (
-        <Button fullWidth variant="contained" onClick={adicionarProdutoSimples}>
-          Adicionar
-        </Button>
-      ) : (
-        <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 1 }}>
-          <IconButton onClick={() => decrementar(carrinhoId)}>
-            <RemoveIcon />
-          </IconButton>
+    {isPizza ? (
+      <Button
+        fullWidth
+        variant={selecionado ? "outlined" : "contained"}
+        onClick={onSelecionar}
+      >
+        {tipoPizza === "1/2" && produto.tipo === "pizza"
+          ? selecionado
+            ? "Remover sabor"
+            : "Escolher sabor"
+          : "Adicionar"}
+      </Button>
+    ) : !itemCarrinho ? (
+      <Button fullWidth variant="contained" onClick={adicionarProdutoSimples}>
+        Adicionar
+      </Button>
+    ) : (
+      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 1 }}>
+        <IconButton onClick={() => decrementar(carrinhoId)}>
+          <RemoveIcon />
+        </IconButton>
 
-          <Typography>{itemCarrinho.quantidade}</Typography>
+        <Typography>{itemCarrinho.quantidade}</Typography>
 
-          <IconButton onClick={() => incrementar(carrinhoId)}>
-            <AddIcon />
-          </IconButton>
-        </Box>
-      )}
-    </Card>
-  );
+        <IconButton onClick={() => incrementar(carrinhoId)}>
+          <AddIcon />
+        </IconButton>
+      </Box>
+    )}
+  </Card>
+);
 }

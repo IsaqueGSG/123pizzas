@@ -114,7 +114,7 @@ export default function AdminPedidos() {
     .filter(p => p.status === statusTabs[abaAtiva])
     .sort((a, b) => b.createdAt.seconds - a.createdAt.seconds);
 
-
+    console.log(pedidosFiltrados)
 
   return (
     <Box sx={{ p: 2 }}>

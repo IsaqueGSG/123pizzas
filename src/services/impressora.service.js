@@ -2,143 +2,110 @@
 export function geraComandaHTML80mm(pedido) {
   const data = pedido.createdAt?.seconds
     ? new Date(pedido.createdAt.seconds * 1000).toLocaleString()
-    : "";
+    : new Date().toLocaleString();
+
+  const endereco = pedido.cliente?.endereco || {};
+  const pagamento = pedido.cliente?.formaPagamento || {};
+
+  const itensPorTipo = pedido.itens.reduce((acc, item) => {
+    const tipo = item.tipo || "";
+    if (!acc[tipo]) acc[tipo] = [];
+    acc[tipo].push(item);
+    return acc;
+  }, {});
 
   return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>Comanda</title>
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+<style>
+  body {
+    width: 302px;
+    margin: 0;
+    padding: 6px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    line-height: 1.3;
+  }
+  .center { text-align: center; }
+  .bold { font-weight: bold; }
+  .divider { border-top: 1px dashed #000; margin: 6px 0; }
+  .item { margin-bottom: 6px; }
+  .sub { font-size: 11px; margin-left: 6px; }
+  .total { font-size: 16px; font-weight: bold; text-align: right; }
+</style>
 
-    body {
-      width: 302px; /* 80mm real */
-      margin: 0;
-      padding: 6px;
-      font-family: Arial, Helvetica, sans-serif;
-      font-size: 12px;
-      line-height: 1.3;
-    }
+<div class="center">
+  <div class="bold">${pedido.cliente?.nome || ""}</div>
+  <div>${pedido.cliente?.telefone || ""}</div>
+  <div style="font-size:11px">${data}</div>
+  <div class="bold">${pedido.status.toUpperCase()}</div>
+</div>
 
-    .header {
-      text-align: center;
-      margin-bottom: 6px;
-    }
+<div class="divider"></div>
 
-    .cliente {
-      font-weight: bold;
-      font-size: 14px;
-    }
+<div class="bold">Entrega:</div>
+<div>
+  ${endereco.rua || ""}, ${endereco.numero || ""}<br/>
+  ${endereco.bairro || ""} - ${endereco.cidade || ""}/${endereco.uf || ""}
+</div>
 
-    .data {
-      font-size: 11px;
-      color: #555;
-    }
+${endereco.observacao ? `<div class="sub">Obs: ${endereco.observacao}</div>` : ""}
 
-    .status {
-      margin-top: 4px;
-      font-size: 11px;
-      font-weight: bold;
-      padding: 2px 6px;
-      display: inline-block;
-      border-radius: 3px;
-      color: #fff;
-      background: ${pedido.status === "pendente"
-      ? "#ff9800"
-      : pedido.status === "aceito"
-        ? "#4caf50"
-        : "#9e9e9e"
-    };
-    }
+<div class="divider"></div>
 
-    .divider {
-      border-top: 1px dashed #000;
-      margin: 6px 0;
-    }
+${Object.entries(itensPorTipo).map(([tipo, itens]) => `
+  <div class="bold" style="margin-top:8px">
+    ${tipo.toUpperCase()}
+  </div>
 
-    .item {
-      margin-bottom: 4px;
-    }
+  ${itens.map(item => {
+    const borda =
+      typeof item.extras?.borda === "string"
+        ? item.extras.borda
+        : item.extras?.borda?.nome;
 
-    .item-nome {
-      font-weight: bold;
-      font-size: 13px;
-    }
-
-    .obs {
-      font-size: 11px;
-      margin-left: 4px;
-    }
-
-    .total {
-      font-weight: bold;
-      font-size: 16px;
-      text-align: right;
-      margin-top: 6px;
-    }
-
-    .footer {
-      text-align: center;
-      font-size: 10px;
-      margin-top: 6px;
-    }
-
-    @media print {
-      body {
-        margin: 0;
+    return `
+      <div class="item">
+        <div class="bold">${item.quantidade}x ${item.nome}</div>
+        ${borda ? `<div class="sub">Borda: ${borda}</div>` : ""}
+        ${item.extras?.adicionais?.length
+        ? `<div class="sub">
+              Extras: ${item.extras.adicionais
+          .map(e => `${e.nome} (+R$ ${e.valor.toFixed(2)})`)
+          .join(", ")}
+            </div>`
+        : ""
       }
+        ${item.extras?.obs ? `<div class="sub">Obs: ${item.extras.obs}</div>` : ""}
+      </div>
+    `;
+  }).join("")}
+`).join("")}
+
+<div class="divider"></div>
+
+<div class="bold">Pagamento:</div>
+<div>${pagamento.forma || ""}</div>
+
+${pagamento.forma === "DINHEIRO" && pagamento.obsPagamento
+      ? `<div class="sub">Troco para: R$ ${pagamento.obsPagamento}</div>`
+      : ""
     }
-  </style>
-</head>
-<body>
 
-  <!-- CABEÇALHO -->
-  <div class="header">
-    <div class="cliente">${pedido.cliente?.nome || ""}</div>
-    <div class="data">${data}</div>
-    <div class="status">${pedido.status.toUpperCase()}</div>
-  </div>
+<div class="divider"></div>
 
-  <div class="divider"></div>
+<div class="total">
+  TOTAL: R$ ${pedido.total.toFixed(2)}
+</div>
 
-  <!-- ITENS -->
-  ${pedido.itens.map(item => `
-    <div class="item">
-      <div class="item-nome">
-       ${item.quantidade}x ${item.nome} 
-      </div>
-      <div class="obs">
-        Borda: ${item.extras?.borda || "Sem borda"}
-      </div>
-      ${item.obs ? `<div class="obs">Obs: ${item.obs}</div>` : ""}
-    </div>
-  `).join("")}
+<div class="divider"></div>
 
-  <div class="divider"></div>
-
-  <!-- TOTAL -->
-  <div class="total">
-    TOTAL: R$ ${pedido.total.toFixed(2)}
-  </div>
-
-  <div class="divider"></div>
-
-  <div class="footer">
-    Obrigado pela preferência
-  </div>
-
-</body>
-</html>
+<div class="center" style="font-size:10px">
+  Obrigado pela preferência ❤️
+</div>
 `;
 }
 
-/**
- * HTML simples para impressora térmica (58mm)
- */
+
+
 export function gerarComandaHTML(pedido) {
   return `
     <div style="font-family: monospace; width: 280px;">
