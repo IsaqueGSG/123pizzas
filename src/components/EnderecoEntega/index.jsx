@@ -3,12 +3,14 @@ import {
     TextField,
     Button,
     Typography,
-    CircularProgress
+    CircularProgress,
+    FormControlLabel,
+    Checkbox
 } from "@mui/material";
 import { MapContainer, TileLayer, Marker, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 // FIX ÍCONE LEAFLET
 delete L.Icon.Default.prototype._getIconUrl;
@@ -29,7 +31,30 @@ const ENDERECO_LOJA = {
 };
 
 export default function MapaEntrega() {
-    const { endereco, rota, atualizarCampo, calcularEntrega } = useEntrega();
+    const { endereco, rota, atualizarCampo, calcularEntrega, calcularEntregaPorLocalizacao } = useEntrega();
+
+
+    const [useLocalizacao, setUseLocalizacao] = useState(false);
+    function usarLocalizacaoAtual() {
+        if (!navigator.geolocation) {
+            alert("Geolocalização não suportada");
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                const { latitude, longitude } = pos.coords;
+                calcularEntregaPorLocalizacao(latitude, longitude);
+            },
+            () => {
+                alert("Não foi possível obter sua localização");
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000
+            }
+        );
+    }
 
     function AjustarZoom({ rota }) {
         const map = useMap();
@@ -55,6 +80,7 @@ export default function MapaEntrega() {
                     size="small"
                     value={endereco.cep}
                     onChange={e => atualizarCampo("cep", e.target.value)}
+                    disabled={endereco.loading || useLocalizacao}
                 />
 
                 <TextField
@@ -76,15 +102,32 @@ export default function MapaEntrega() {
                 />
             </Box>
 
+            <FormControlLabel
+                control={
+                    <Checkbox
+                        checked={useLocalizacao}
+                        onChange={(e) => setUseLocalizacao(e.target.checked)}
+                    />
+                }
+                label="Usar localização atual"
+            />
+
             <Button
                 sx={{ mt: 1 }}
                 variant="contained"
                 fullWidth
-                onClick={calcularEntrega}
+                onClick={() => {
+                    if (useLocalizacao) {
+                        usarLocalizacaoAtual();
+                    } else {
+                        calcularEntrega();
+                    }
+                }}
                 disabled={endereco.loading}
             >
                 Calcular taxa
             </Button>
+
 
             {endereco.loading && (
                 <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
@@ -101,7 +144,11 @@ export default function MapaEntrega() {
             {rota.length > 0 && (
                 <>
                     <Typography sx={{ mt: 1 }}>
-                        {endereco.rua} - {endereco.bairro}, {endereco.cidade}/{endereco.uf} 📏 {endereco.distanciaKm.toFixed(2)} km — 💰 R$ {endereco.taxaEntrega.toFixed(2)}
+                        {(endereco.rua && endereco.bairro && endereco.cidade && endereco.uf)
+                            ? `${endereco.rua} - ${endereco.bairro}, ${endereco.cidade}/${endereco.uf} `
+                            : "Localização atual "
+                         }
+                        📏 {endereco.distanciaKm.toFixed(2)} km — 💰 R$ {endereco.taxaEntrega.toFixed(2)}
                     </Typography>
 
                     <Box sx={{ height: 280, mt: 1 }}>

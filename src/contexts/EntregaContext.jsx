@@ -132,6 +132,50 @@ export function EntregaProvider({ children }) {
     }
   }
 
+  async function calcularEntregaPorLocalizacao(lat, lng) {
+    try {
+      setEndereco(prev => ({ ...prev, loading: true, erro: "" }));
+
+      const lojaLng = Number(ENDERECO_LOJA.lng);
+      const lojaLat = Number(ENDERECO_LOJA.lat);
+
+      const url =
+        `https://router.project-osrm.org/route/v1/driving/` +
+        `${lojaLng},${lojaLat};${lng},${lat}` +
+        `?overview=full&geometries=geojson`;
+
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Erro ao calcular rota");
+
+      const data = await res.json();
+      if (!data.routes?.length) throw new Error("Rota não encontrada");
+
+      const route = data.routes[0];
+      const km = route.distance / 1000;
+      const taxa = Math.ceil(km * 5);
+
+      setEndereco(prev => ({
+        ...prev,
+        lat,
+        lng,
+        distanciaKm: km,
+        taxaEntrega: taxa,
+        loading: false
+      }));
+
+      setRota(
+        route.geometry.coordinates.map(([lng, lat]) => ({ lat, lng }))
+      );
+
+    } catch (err) {
+      setEndereco(prev => ({
+        ...prev,
+        erro: err.message,
+        loading: false,
+        taxaEntrega: 0
+      }));
+    }
+  }
 
   return (
     <EntregaContext.Provider
@@ -140,7 +184,8 @@ export function EntregaProvider({ children }) {
         rota,
         clearEndereco,
         atualizarCampo,
-        calcularEntrega
+        calcularEntrega,
+        calcularEntregaPorLocalizacao
       }}
     >
       {children}
