@@ -42,6 +42,8 @@ export default function Checkout() {
     limparCarrinho
   } = useCarrinho();
 
+  console.log("Itens no carrinho:", itens);
+
   const [aba, setAba] = useState(0)
   const valorTotalCarrinho = itens.reduce(
     (total, item) => total + Number(item.valor) * Number(item.quantidade),
@@ -110,18 +112,13 @@ export default function Checkout() {
 
     const pedido = {
       cliente: { ...cliente, endereco },
-      itens: itens.map(item => ({
-        id: item.id,
-        nome: item.nome,
-        valor: item.valor,
-        quantidade: item.quantidade,
-        extras: item.extras ?? null
-      })),
+      itens: itens.map(item => ({ ...item })), 
       total: valorTotalPedido,
       status: "novo",
       impresso: false,
       criadoEm: new Date()
     }
+
 
     await criarPedido(idLoja, pedido);
     console.log("Pedido criado:", pedido);
@@ -213,13 +210,15 @@ export default function Checkout() {
                       )}
 
                       {/* EXTRAS / OBS */}
-                      {item.extras && (
+                      {item.extras && item.extras.length > 0 && (
                         <Typography variant="caption" color="text.secondary" display="block">
-                          {item.extras.borda && <>Borda: {item.extras.borda}<br /></>}
-                          {item.extras.adicionais?.length > 0 && (
-                            <>Extras: {item.extras.adicionais.map(e => e.nome).join(", ")}<br /></>
-                          )}
-                          {item.extras.obs && <>Obs: {item.extras.obs}</>}
+                          Extras: {item.extras.map(e => e.nome).join(", ")}<br />
+                        </Typography>
+                      )}
+
+                      {item.obs && (
+                        <Typography variant="caption" color="text.secondary" display="block">
+                          Obs: {item.obs}
                         </Typography>
                       )}
 

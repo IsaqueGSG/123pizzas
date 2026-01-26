@@ -16,146 +16,92 @@ import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 
 export default function Cardapio() {
-  const { produtos, loading } = useProducts();
+  const { produtos, categorias, loading } = useProducts();
   const { addItem } = useCarrinho();
 
-  const ORDEM_CATEGORIAS = [
-    "pizza",
-    "broto",
-    "esfiha",
-    "bebida"
-  ];
-
-  const [categoriaSelecionada, setCategoriaSelecionada] = useState("");
-  const categoriasExistentes = Array.from(
-    new Set(
-      produtos
-        .filter(p => p.status && !["borda", "extra"].includes(p.tipo))
-        .map(p => p.tipo)
-    )
-  );
-
-  // categorias que estão na ordem fixa
-  const categoriasOrdenadas = ORDEM_CATEGORIAS.filter(cat =>
-    categoriasExistentes.includes(cat)
-  );
-
-  // categorias que NÃO estão na ordem fixa → vão pro final
-  const categoriasExtras = categoriasExistentes.filter(
-    cat => !ORDEM_CATEGORIAS.includes(cat)
-  );
-
-  const categorias = [...categoriasOrdenadas, ...categoriasExtras];
-
-
-  useEffect(() => {
-    if (categorias.length > 0 && !categoriaSelecionada) {
-      setCategoriaSelecionada(categorias[0]);
-    }
-  }, [categorias, categoriaSelecionada]);
-
-
-  const categoria = categoriaSelecionada;
-
-  const [tipoPizza, setTipoPizza] = useState("inteira");
+  const [modoMisto, setModoMisto] = useState(false);
   const [saboresSelecionados, setSaboresSelecionados] = useState([]);
+  const [produtoSelecionado, setProdutoSelecionado] = useState(null);
   const [openModal, setOpenModal] = useState(false);
-
-  const isPizzaCategoria = ["pizza", "broto"].includes(categoria);
-  const isProdutoSimples = ["bebida", "esfiha"].includes(categoria);
+  const [categoriaSelecionada, setCategoriaSelecionada] = useState(null);
 
   useEffect(() => {
-    setTipoPizza("inteira");
-    setSaboresSelecionados([]);
-  }, [categoria]);
+    if (categorias.length && !categoriaSelecionada) {
+      setCategoriaSelecionada(categorias[0].id);
+    }
+    console.log(categorias);
+  }, [categorias]);
 
+  const categoriaAtual = categorias.find(
+    c => c.id === categoriaSelecionada
+  );
 
   const produtosFiltrados = produtos.filter(
-    (p) => p.tipo === categoriaSelecionada && p.status
+    p => p.categoriaId === categoriaSelecionada
   );
 
 
-  const bordas = produtos.filter(
-    (p) => p.tipo === "borda" && p.status
-  );
-
-  const extrasDisponiveis = produtos.filter(
-    (p) => p.tipo === "extra" && p.status
-  );
-
-  const selecionarProduto = (produto) => {
-
-    console.log(produto)
-
-    // PRODUTO SIMPLES
-    if (isProdutoSimples) {
-      addItem({
-        id: `${produto.tipo}-${produto.id}`,
-        nome: `(${produto.tipo}) ${produto.nome}`,
-        valor: produto.valor,
-        img: produto.img,
-        tipo: produto.tipo,
-        descricao: produto.descricao
-      });
-      return;
-    }
-
-    // PIZZA INTEIRA (pizza ou broto)
-    if (tipoPizza === "inteira") {
-      setSaboresSelecionados([produto]);
+  const abrirModalOuAdicionar = (produto) => {
+    if (produto.categoria?.extras?.length) {
+      setProdutoSelecionado(produto);
       setOpenModal(true);
       return;
     }
 
-    // PIZZA / BROTO 1/2
-    const existe = saboresSelecionados.find((s) => s.id === produto.id);
+    addItem({
+      id: produto.id,
+      nome: produto.nome,
+      valor: produto.valor,
+      img: produto.img
+    });
+  };
 
-    if (existe) {
-      setSaboresSelecionados(
-        saboresSelecionados.filter((s) => s.id !== produto.id)
-      );
+
+  const selecionarProduto = (produto) => {
+    // PRODUTO INTEIRO
+    if (!modoMisto) {
+      abrirModalOuAdicionar(produto);
       return;
     }
 
-    if (saboresSelecionados.length < 2) {
-      const novos = [...saboresSelecionados, produto];
-      setSaboresSelecionados(novos);
+    // PRODUTO MISTO
+    setSaboresSelecionados(prev => {
+      // desmarca se clicar de novo
+      if (prev.some(p => p.id === produto.id)) {
+        return prev.filter(p => p.id !== produto.id);
+      }
 
+      // máximo 2 sabores
+      if (prev.length === 2) return prev;
+
+      const novos = [...prev, produto];
+
+      // quando fechar 2 sabores → abrir modal
       if (novos.length === 2) {
+        const [p1, p2] = novos;
+
+        const produtoMisto = {
+          id: `misto-${p1.id}-${p2.id}`,
+          nome: `${p1.nome} / ${p2.nome}`,
+          valor: Math.max(p1.valor, p2.valor),
+          img: p1.img,
+          misto: true,
+          sabores: [p1, p2],
+          categoria: categoriaAtual // importante para extras
+        };
+
+        setProdutoSelecionado(produtoMisto);
         setOpenModal(true);
       }
-    }
-  };
 
-  const onConfirmPizza = ({ sabores, borda, obs, precoFinal, extras }) => {
-
-    console.log("PREÇO FINAL:", precoFinal, typeof precoFinal);
-
-    const nomeSabores = sabores.map((s) => s.nome).join(" / ");
-
-    const idPizza = `${categoria}-${sabores
-      .map((s) => s.id)
-      .sort()
-      .join("-")}-${borda.id}-${extras.map((e) => e.id).join("-")}`;
-
-
-    addItem({
-      id: idPizza,
-      nome: `(${categoria}) ${nomeSabores}`,
-      valor: precoFinal,
-      img: sabores[0].img,
-      tipo: categoria,
-      extras: {
-        borda: borda.nome,
-        adicionais: extras,
-        obs
-      }
+      return novos;
     });
-
-
-    setOpenModal(false);
-    setSaboresSelecionados([]);
   };
+
+  useEffect(() => {
+    setModoMisto(false);
+    setSaboresSelecionados([]);
+  }, [categoriaSelecionada]);
 
   return (
     <Box sx={{ p: 2 }}>
@@ -169,23 +115,16 @@ export default function Cardapio() {
         </Box>
       )}
 
-      {categorias.length > 0 ? (
+      {(categorias.length > 0 && categoriaSelecionada) ? (
         <Tabs
-          value={categoriaSelecionada || "pizza"}
-          onChange={(e, newValue) => {
-            setCategoriaSelecionada(newValue);
-            setTipoPizza("inteira");
-            setSaboresSelecionados([]);
-          }}
-          variant="fullWidth"
-          scrollButtons="auto"
-          sx={{ mb: 2 }}
+          value={categoriaSelecionada}
+          onChange={(e, newValue) => setCategoriaSelecionada(newValue)}
         >
-          {categorias.map((cat) => (
+          {categorias.map(cat => (
             <Tab
-              key={cat}
-              value={cat}
-              label={cat.toUpperCase()}
+              key={cat.id}
+              value={cat.id}
+              label={cat.nome}
             />
           ))}
         </Tabs>
@@ -193,13 +132,13 @@ export default function Cardapio() {
         <h1>Ainda nao há produtos nessa Loja</h1>
       )}
 
-      {isPizzaCategoria && (
+      {categoriaAtual?.permiteMisto && (
         <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
           <Button
             fullWidth
-            variant={tipoPizza === "inteira" ? "contained" : "outlined"}
+            variant={!modoMisto ? "contained" : "outlined"}
             onClick={() => {
-              setTipoPizza("inteira");
+              setModoMisto(false);
               setSaboresSelecionados([]);
             }}
           >
@@ -208,9 +147,9 @@ export default function Cardapio() {
 
           <Button
             fullWidth
-            variant={tipoPizza === "1/2" ? "contained" : "outlined"}
+            variant={modoMisto ? "contained" : "outlined"}
             onClick={() => {
-              setTipoPizza("1/2");
+              setModoMisto(true);
               setSaboresSelecionados([]);
             }}
           >
@@ -228,31 +167,44 @@ export default function Cardapio() {
       >
         {produtosFiltrados.map((produto) => (
           <CardProduto
-            key={produto.id}
             produto={produto}
-            tipoPizza={tipoPizza}
-            selecionado={saboresSelecionados.some(
-              (s) => s.id === produto.id
-            )}
+            key={produto.id}
+            selecionado={saboresSelecionados.some(s => s.id === produto.id)}
             onSelecionar={() => selecionarProduto(produto)}
           />
         ))}
       </Box>
 
-      {openModal && isPizzaCategoria && saboresSelecionados.length > 0 && (
+      {openModal && produtoSelecionado && (
         <ModalExtras
           open={openModal}
           onClose={() => {
             setOpenModal(false);
+            setProdutoSelecionado(null);
             setSaboresSelecionados([]);
           }}
-          onConfirm={onConfirmPizza}
-          sabores={saboresSelecionados}
-          bordas={bordas}
-          extrasDisponiveis={extrasDisponiveis}
-        />
 
+          produto={produtoSelecionado}
+          extrasDisponiveis={produtoSelecionado.categoria.extras}
+          onConfirm={({ extras, obs, precoFinal }) => {
+            addItem({
+              id: produtoSelecionado.id + "-" + extras.map(e => e.id).join("-"),
+              nome: produtoSelecionado.nome,
+              valor: precoFinal,
+              img: produtoSelecionado.img,
+              extras,
+              obs,
+              misto: produtoSelecionado.misto || false,
+              sabores: produtoSelecionado.sabores || []
+            });
+
+            setOpenModal(false);
+            setProdutoSelecionado(null);
+            setSaboresSelecionados([]);
+          }}
+        />
       )}
+
     </Box>
   );
 }

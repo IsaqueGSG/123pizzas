@@ -75,6 +75,13 @@ export default function AdminDrawer() {
         </ListItem>
 
         <ListItem disablePadding>
+          <ListItemButton onClick={() => navigate(`/${idLoja}/produtos`, { replace: true })}>
+            <AutoStoriesIcon sx={{ mr: 2 }} />
+            <ListItemText primary="Gerenciar Produtos" />
+          </ListItemButton>
+        </ListItem>
+
+        <ListItem disablePadding>
           <ListItemButton onClick={() => navigate(`/${idLoja}/addproduto`, { replace: true })}>
             <AddIcon sx={{ mr: 2 }} />
             <ListItemText primary="Adicionar Produto" />
@@ -82,9 +89,9 @@ export default function AdminDrawer() {
         </ListItem>
 
         <ListItem disablePadding>
-          <ListItemButton onClick={() => navigate(`/${idLoja}/produtos`, { replace: true })}>
-            <AutoStoriesIcon sx={{ mr: 2 }} />
-            <ListItemText primary="Gerenciar Produtos" />
+          <ListItemButton onClick={() => navigate(`/${idLoja}/addcategoria`, { replace: true })}>
+            <AddIcon sx={{ mr: 2 }} />
+            <ListItemText primary="Adicionar Categoria" />
           </ListItemButton>
         </ListItem>
 

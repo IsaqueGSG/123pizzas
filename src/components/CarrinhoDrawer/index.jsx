@@ -43,7 +43,6 @@ export default function CarrinhoDrawer() {
     ? abertoAgora(preferencias.horarioFuncionamento)
     : false;
 
-
   const totalFormatado = Number(total || 0).toFixed(2);
 
   return (
@@ -98,24 +97,25 @@ export default function CarrinhoDrawer() {
               </Typography>
 
 
-              {item.extras?.obs && (
-                <Typography variant="body2" color="text.secondary">
-                  Obs: {item.extras.obs}
-                </Typography>
-              )}
+              <Typography
+                variant="body2"
+                color="text.secondary"
+              >
+                Extras: {
+                  item.extras.map(extra => extra.nome).join(", ") || "Nenhum"
+                }
+              </Typography>
 
-              {item.extras?.borda && (
-                <Typography variant="body2" color="text.secondary">
-                  Borda: {item.extras.borda}
-                </Typography>
-              )}
 
-              {item.extras?.adicionais?.length > 0 && (
-                <Typography variant="body2" color="text.secondary">
-                  Extras:{" "}
-                  {item.extras.adicionais.map((e) => e.nome).join(", ")}
-                </Typography>
-              )}
+              <Typography
+                variant="body2"
+                color="text.secondary"
+              >
+                obs: {
+                  item.observacao || "Nenhuma"
+                }
+              </Typography>
+
             </Box>
 
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
@@ -127,11 +127,12 @@ export default function CarrinhoDrawer() {
                 <AddIcon />
               </IconButton>
             </Box>
+
+            <Divider />
           </Box>
         ))}
       </List>
 
-      <Divider />
 
       {/* FOOTER */}
       <Box sx={{ p: 2, mt: "auto" }}>

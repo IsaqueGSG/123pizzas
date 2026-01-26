@@ -7,6 +7,7 @@ export const CartProvider = ({ children }) => {
   const [openCarrinho, setOpenCarrinho] = useState(false);
 
   const addItem = (item) => {
+    console.log("Adicionando item ao carrinho:", item);
     setItens((prev) => {
       const existe = prev.find((i) => i.id === item.id);
 

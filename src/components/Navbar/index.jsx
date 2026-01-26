@@ -26,10 +26,11 @@ export default function Navbar() {
     const location = useLocation();
 
     const privatePrefixes = [
+        `/${idLoja}/pedidos`,
         `/${idLoja}/produtos`,
         `/${idLoja}/addproduto`,
+        `/${idLoja}/addcategoria`,
         `/${idLoja}/editproduto`,
-        `/${idLoja}/pedidos`,
         `/${idLoja}/preferencias`,
     ];
 

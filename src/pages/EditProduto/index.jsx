@@ -17,15 +17,7 @@ import AdminDrawer from "../../components/AdminDrawer";
 import { useProducts } from "../../contexts/ProdutosContext";
 import { useLoja } from "../../contexts/LojaContext";
 import { updateProduto } from "../../services/produtos.service";
-
-const TIPOS = [
-  { key: "pizza", label: "Pizza" },
-  { key: "broto", label: "Broto" },
-  { key: "esfiha", label: "Esfiha" },
-  { key: "bebida", label: "Bebida" },
-  { key: "extra", label: "Extra" },
-  { key: "borda", label: "Borda" }
-];
+import { getCategorias } from "../../services/categorias.service";
 
 export default function EditProduto() {
   const { IDproduto } = useParams();
@@ -33,14 +25,20 @@ export default function EditProduto() {
   const { idLoja } = useLoja();
 
   const [produto, setProduto] = useState(null);
+  const [categorias, setCategorias] = useState([]);
 
   const [form, setForm] = useState({
     nome: "",
     img: "",
     valor: 0,
     descricao: "",
-    tipo: ""
+    categoriaId: ""
   });
+
+  // 🔹 carrega categorias
+  useEffect(() => {
+    getCategorias(idLoja).then(setCategorias);
+  }, [idLoja]);
 
   // 🔹 busca o produto
   useEffect(() => {
@@ -48,10 +46,9 @@ export default function EditProduto() {
 
     const encontrado = produtos.find(p => p.id === IDproduto);
     if (encontrado) setProduto(encontrado);
-
   }, [IDproduto, produtos, loading]);
 
-  // 🔹 popula o formulário quando o produto carregar
+  // 🔹 popula o formulário
   useEffect(() => {
     if (!produto) return;
 
@@ -60,23 +57,15 @@ export default function EditProduto() {
       img: produto.img || "",
       valor: produto.valor || 0,
       descricao: produto.descricao || "",
-      tipo: produto.tipo || ""
+      categoriaId: produto.categoriaId || ""
     });
   }, [produto]);
 
   const salvar = async () => {
-    if (!form.nome.trim()) {
-      alert("Informe o nome");
-      return;
-    }
+    const { nome, valor, categoriaId } = form;
 
-    if (!form.tipo) {
-      alert("Selecione o tipo");
-      return;
-    }
-
-    if (form.valor <= 0) {
-      alert("Informe um valor válido");
+    if (!nome.trim() || !categoriaId || valor <= 0) {
+      alert("Preencha todos os campos corretamente");
       return;
     }
 
@@ -85,7 +74,7 @@ export default function EditProduto() {
       img: form.img,
       valor: Number(form.valor),
       descricao: form.descricao,
-      tipo: form.tipo
+      categoriaId: form.categoriaId
     });
 
     alert("Produto atualizado com sucesso!");
@@ -125,18 +114,20 @@ export default function EditProduto() {
         />
 
         <TextField
-          label="Tipo"
+          label="Categoria"
           select
-          value={form.tipo}
+          value={form.categoriaId}
           onChange={e =>
-            setForm(f => ({ ...f, tipo: e.target.value }))
+            setForm(f => ({ ...f, categoriaId: e.target.value }))
           }
         >
-          {TIPOS.map(t => (
-            <MenuItem key={t.key} value={t.key}>
-              {t.label}
-            </MenuItem>
-          ))}
+          {categorias
+            .filter(c => c.status)
+            .map(cat => (
+              <MenuItem key={cat.id} value={cat.id}>
+                {cat.nome}
+              </MenuItem>
+            ))}
         </TextField>
 
         <TextField

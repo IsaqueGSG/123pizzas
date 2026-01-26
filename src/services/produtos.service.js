@@ -42,6 +42,7 @@ export async function getProdutosPorTipo(idLoja, tipo) {
 }
 
 export async function addProduto(idLoja, produto) {
+  console.log("Adicionando produto:", produto);
   const docRef = await addDoc(collection(
     db,
     "clientes123pedidos",
