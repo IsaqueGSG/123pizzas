@@ -13,31 +13,23 @@ import {
   Tab
 } from "@mui/material";
 
-
 import Navbar from "../../components/Navbar";
 import AdminDrawer from "../../components/AdminDrawer";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import ProductMenu from "../../components/MenuOptions";
 
-import {
-  updateProdutoStatusBatch,
-  deleteProduto,
-} from "../../services/produtos.service";
-
+import { updateProdutoStatusBatch, deleteProduto } from "../../services/produtos.service";
 import { useProducts } from "../../contexts/ProdutosContext";
 import { useLoja } from "../../contexts/LojaContext";
 
 export default function AdminProdutos() {
-  const { idLoja } = useLoja()
+  const { idLoja } = useLoja();
+  const navigate = useNavigate();
+  const { produtos, categorias, loading } = useProducts();
 
   const [abaAtiva, setAbaAtiva] = useState(0);
-
-  const navigate = useNavigate();
-  const { produtos, loading } = useProducts();
-
   const [produtosOriginais, setProdutosOriginais] = useState([]);
   const [cloneProdutos, setCloneProdutos] = useState([]);
-
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
   const [produtoSelecionado, setProdutoSelecionado] = useState(null);
 
@@ -50,9 +42,7 @@ export default function AdminProdutos() {
   /* ---------- STATUS ---------- */
   const toggleStatus = (prod) => {
     setCloneProdutos((prev) =>
-      prev.map((p) =>
-        p.id === prod.id ? { ...p, status: !p.status } : p
-      )
+      prev.map((p) => (p.id === prod.id ? { ...p, status: !p.status } : p))
     );
   };
 
@@ -66,7 +56,6 @@ export default function AdminProdutos() {
 
     try {
       await updateProdutoStatusBatch(idLoja, produtosAlterados);
-
       setProdutosOriginais(cloneProdutos.map((p) => ({ ...p })));
       console.log("Status atualizados com sucesso!");
     } catch (error) {
@@ -74,22 +63,17 @@ export default function AdminProdutos() {
     }
   };
 
-  const produtosPorTipo = cloneProdutos.reduce((acc, prod) => {
-    if (!acc[prod.tipo]) {
-      acc[prod.tipo] = [];
-    }
-    acc[prod.tipo].push(prod);
+  /* ---------- AGRUPAR POR CATEGORIA ---------- */
+  const produtosPorCategoria = cloneProdutos.reduce((acc, prod) => {
+    const catNome = prod.categoria?.nome || "Sem Categoria";
+    if (!acc[catNome]) acc[catNome] = [];
+    acc[catNome].push(prod);
     return acc;
   }, {});
-
-  const tipos = Object.keys(produtosPorTipo);
-
-
 
   /* ---------- INIT ---------- */
   useEffect(() => {
     if (!produtos.length || cloneProdutos.length) return;
-
     setProdutosOriginais(produtos.map((p) => ({ ...p })));
     setCloneProdutos(produtos.map((p) => ({ ...p })));
   }, [produtos]);
@@ -106,31 +90,28 @@ export default function AdminProdutos() {
 
       {loading && <CircularProgress sx={{ mt: 3 }} />}
 
+      {/* ---------- ABAS ---------- */}
       <Tabs
         value={abaAtiva}
         onChange={(e, newValue) => setAbaAtiva(newValue)}
         sx={{ mb: 3 }}
-        variant="fullWidth"
+        variant="scrollable"
         scrollButtons="auto"
       >
-        {tipos.map((tipo) => (
-          <Tab
-            key={tipo}
-            label={tipo.charAt(0).toUpperCase() + tipo.slice(1)}
-          />
+        {categorias.map((cat, i) => (
+          <Tab key={cat.id} label={cat.nome} />
         ))}
       </Tabs>
 
-
-      {/* ---------- LISTA ---------- */}
-      {tipos.length > 0 && (
+      {/* ---------- LISTA DE PRODUTOS ---------- */}
+      {categorias.length > 0 && (
         <Box sx={{ mb: 4 }}>
           <Typography
             variant="h6"
             fontWeight="bold"
             sx={{ mb: 2, textTransform: "capitalize" }}
           >
-            {`${tipos[abaAtiva]}s`}
+            {categorias[abaAtiva].nome}
           </Typography>
 
           <Box
@@ -140,7 +121,7 @@ export default function AdminProdutos() {
               gap: 2
             }}
           >
-            {produtosPorTipo[tipos[abaAtiva]]?.map((prod) => (
+            {produtosPorCategoria[categorias[abaAtiva].nome]?.map((prod) => (
               <Card key={prod.id}>
                 <Box
                   sx={{
@@ -179,13 +160,7 @@ export default function AdminProdutos() {
                   </Box>
 
                   {/* STATUS + MENU */}
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 1
-                    }}
-                  >
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                     <Switch
                       size="small"
                       checked={Boolean(prod.status)}
@@ -199,7 +174,6 @@ export default function AdminProdutos() {
                   </Box>
                 </Box>
               </Card>
-
             ))}
           </Box>
         </Box>
@@ -210,6 +184,7 @@ export default function AdminProdutos() {
         variant="contained"
         fullWidth
         onClick={salvarStatus}
+        disabled={JSON.stringify(produtosOriginais) === JSON.stringify(cloneProdutos)}
       >
         Salvar status dos Produtos
       </Button>
@@ -225,15 +200,8 @@ export default function AdminProdutos() {
 
           await deleteProduto(idLoja, produtoSelecionado.id);
 
-          // 🔥 REMOVE DO ESTADO LOCAL
-          setCloneProdutos((prev) =>
-            prev.filter((p) => p.id !== produtoSelecionado.id)
-          );
-
-          setProdutosOriginais((prev) =>
-            prev.filter((p) => p.id !== produtoSelecionado.id)
-          );
-
+          setCloneProdutos((prev) => prev.filter((p) => p.id !== produtoSelecionado.id));
+          setProdutosOriginais((prev) => prev.filter((p) => p.id !== produtoSelecionado.id));
           setOpenConfirmDialog(false);
         }}
       />
