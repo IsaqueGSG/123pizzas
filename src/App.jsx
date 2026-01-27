@@ -6,9 +6,11 @@ import Cardapio from "./pages/Cardapio";
 import Checkout from "./pages/Checkout";
 import Login from "./pages/Login";
 import AdminProdutos from "./pages/AdminProdutos";
+import AdminCategorias from "./pages/AdminCategorias";
 import AddProduto from "./pages/AddProduto";
 import AddCategoria from "./pages/AddCategoria";
 import EditProduto from "./pages/EditProduto";
+import EditCategoria from "./pages/EditCategoria";
 import AdminPedidos from "./pages/AdminPedidos";
 import AdminPreferencias from "./pages/AdminPreferencias";
 
@@ -37,8 +39,16 @@ const App = () => {
             element={<PrivateRoute><AddCategoria /></PrivateRoute>}
           />
           <Route
+            path="categorias"
+            element={<PrivateRoute><AdminCategorias /></PrivateRoute>}
+          />
+          <Route
             path="editproduto/:IDproduto"
             element={<PrivateRoute><EditProduto /></PrivateRoute>}
+          />
+          <Route
+            path="editcategoria/:categoriaId"
+            element={<PrivateRoute><EditCategoria /></PrivateRoute>}
           />
           <Route
             path="pedidos"

@@ -17,6 +17,8 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import FoodBankIcon from '@mui/icons-material/FoodBank';
 import SettingsIcon from "@mui/icons-material/Settings";
+import RoomServiceIcon from '@mui/icons-material/RoomService';
+import CategoryIcon from '@mui/icons-material/Category';
 
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
@@ -69,7 +71,7 @@ export default function AdminDrawer() {
 
         <ListItem disablePadding>
           <ListItemButton onClick={() => navigate(`/${idLoja}/pedidos`, { replace: true })}>
-            <FoodBankIcon sx={{ mr: 2 }} />
+            <RoomServiceIcon sx={{ mr: 2 }} />
             <ListItemText primary="Gerenciar Pedidos" />
           </ListItemButton>
         </ListItem>
@@ -82,16 +84,9 @@ export default function AdminDrawer() {
         </ListItem>
 
         <ListItem disablePadding>
-          <ListItemButton onClick={() => navigate(`/${idLoja}/addproduto`, { replace: true })}>
-            <AddIcon sx={{ mr: 2 }} />
-            <ListItemText primary="Adicionar Produto" />
-          </ListItemButton>
-        </ListItem>
-
-        <ListItem disablePadding>
-          <ListItemButton onClick={() => navigate(`/${idLoja}/addcategoria`, { replace: true })}>
-            <AddIcon sx={{ mr: 2 }} />
-            <ListItemText primary="Adicionar Categoria" />
+          <ListItemButton onClick={() => navigate(`/${idLoja}/categorias`, { replace: true })}>
+            <CategoryIcon sx={{ mr: 2 }} />
+            <ListItemText primary="Gerenciar Categorias" />
           </ListItemButton>
         </ListItem>
 

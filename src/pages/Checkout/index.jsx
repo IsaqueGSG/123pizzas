@@ -112,7 +112,7 @@ export default function Checkout() {
 
     const pedido = {
       cliente: { ...cliente, endereco },
-      itens: itens.map(item => ({ ...item })), 
+      itens: itens.map(item => ({ ...item })),
       total: valorTotalPedido,
       status: "novo",
       impresso: false,
@@ -210,15 +210,21 @@ export default function Checkout() {
                       )}
 
                       {/* EXTRAS / OBS */}
-                      {item.extras && item.extras.length > 0 && (
+                      {item?.extras.length > 0 && (
                         <Typography variant="caption" color="text.secondary" display="block">
                           Extras: {item.extras.map(e => e.nome).join(", ")}<br />
                         </Typography>
                       )}
 
-                      {item.obs && (
+                      {item?.borda && (
                         <Typography variant="caption" color="text.secondary" display="block">
-                          Obs: {item.obs}
+                          Borda: {item.borda.nome}
+                        </Typography>
+                      )}
+
+                      {item?.observacao && (
+                        <Typography variant="caption" color="text.secondary" display="block">
+                          Observação: {item.observacao}
                         </Typography>
                       )}
 

@@ -102,7 +102,7 @@ export default function MapaEntrega() {
                 />
             </Box>
 
-            <FormControlLabel
+            {/* <FormControlLabel
                 control={
                     <Checkbox
                         checked={useLocalizacao}
@@ -110,7 +110,7 @@ export default function MapaEntrega() {
                     />
                 }
                 label="Usar localização atual"
-            />
+            /> */}
 
             <Button
                 sx={{ mt: 1 }}

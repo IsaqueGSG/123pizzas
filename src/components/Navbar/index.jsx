@@ -32,6 +32,8 @@ export default function Navbar() {
         `/${idLoja}/addcategoria`,
         `/${idLoja}/editproduto`,
         `/${idLoja}/preferencias`,
+        `/${idLoja}/categorias`,
+        `/${idLoja}/editcategoria`,
     ];
 
     const isPrivateRoute = user && privatePrefixes.some(prefix =>
@@ -43,7 +45,6 @@ export default function Navbar() {
         setOpenAdminDrawer(false);
         setOpenCarrinho(false);
     }, [location.pathname, setOpenAdminDrawer, setOpenCarrinho]);
-
 
 
     return (

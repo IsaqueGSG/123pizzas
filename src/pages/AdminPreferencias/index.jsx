@@ -154,7 +154,7 @@ export default function AdminPreferencias() {
       </Card>
 
       {/* PEDIDOS */}
-      <Card sx={{ p: 2, mb: 3 }}>
+      {/* <Card sx={{ p: 2, mb: 3 }}>
         <Typography fontWeight="bold" gutterBottom>
           🤖 Pedidos
         </Typography>
@@ -173,10 +173,10 @@ export default function AdminPreferencias() {
           }
           label="Aceitar pedidos automaticamente"
         />
-      </Card>
+      </Card> */}
 
       {/* IMPRESSORA */}
-      <Card sx={{ p: 2, mb: 3 }}>
+      {/* <Card sx={{ p: 2, mb: 3 }}>
         <Typography fontWeight="bold" gutterBottom>
           🖨️ Impressora
         </Typography>
@@ -222,7 +222,7 @@ export default function AdminPreferencias() {
             <MenuItem value="80mm">80mm</MenuItem>
           </Select>
         </Box>
-      </Card>
+      </Card> */}
 
       <Button
         variant="contained"

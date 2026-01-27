@@ -26,6 +26,7 @@ export default function AddProduto() {
         img: "",
         valor: "",
         categoriaId: "",
+        observacao: "",
         status: true
     });
 

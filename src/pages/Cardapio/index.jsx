@@ -17,6 +17,10 @@ import Tab from "@mui/material/Tab";
 
 export default function Cardapio() {
   const { produtos, categorias, loading } = useProducts();
+
+  console.log("Categorias:", categorias);
+  console.log("Produtos:", produtos);
+
   const { addItem } = useCarrinho();
 
   const [modoMisto, setModoMisto] = useState(false);
@@ -29,7 +33,6 @@ export default function Cardapio() {
     if (categorias.length && !categoriaSelecionada) {
       setCategoriaSelecionada(categorias[0].id);
     }
-    console.log(categorias);
   }, [categorias]);
 
   const categoriaAtual = categorias.find(
@@ -39,7 +42,6 @@ export default function Cardapio() {
   const produtosFiltrados = produtos.filter(
     p => p.categoriaId === categoriaSelecionada
   );
-
 
   const abrirModalOuAdicionar = (produto) => {
     if (produto.categoria?.extras?.length) {
@@ -117,6 +119,8 @@ export default function Cardapio() {
 
       {(categorias.length > 0 && categoriaSelecionada) ? (
         <Tabs
+          sx={{ mb: 2 }}
+          variant="fullWidth"
           value={categoriaSelecionada}
           onChange={(e, newValue) => setCategoriaSelecionada(newValue)}
         >
@@ -183,17 +187,18 @@ export default function Cardapio() {
             setProdutoSelecionado(null);
             setSaboresSelecionados([]);
           }}
-
           produto={produtoSelecionado}
           extrasDisponiveis={produtoSelecionado.categoria.extras}
-          onConfirm={({ extras, obs, precoFinal }) => {
+          bordasDisponiveis={produtoSelecionado.categoria.bordas} // <--- bordas aqui
+          onConfirm={({ extras, borda, observacao, precoFinal }) => {
             addItem({
-              id: produtoSelecionado.id + "-" + extras.map(e => e.id).join("-"),
+              id: produtoSelecionado.id + "-" + extras.map(e => e.id).join("-") + (borda?.id ? `-${borda.id}` : ""),
               nome: produtoSelecionado.nome,
               valor: precoFinal,
               img: produtoSelecionado.img,
               extras,
-              obs,
+              borda,
+              observacao,
               misto: produtoSelecionado.misto || false,
               sabores: produtoSelecionado.sabores || []
             });
@@ -203,6 +208,7 @@ export default function Cardapio() {
             setSaboresSelecionados([]);
           }}
         />
+
       )}
 
     </Box>

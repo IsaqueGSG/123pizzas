@@ -1,9 +1,5 @@
-import { useState } from "react";
-import { doc, setDoc, getDoc } from "firebase/firestore";
-
-import { db } from "../../config/firebase";
-import { useLoja } from "../../contexts/LojaContext";
-
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   Box,
   TextField,
@@ -14,19 +10,27 @@ import {
   Paper,
   Toolbar,
   IconButton,
-  Divider
+  Divider,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 
 import Navbar from "../../components/Navbar";
 import AdminDrawer from "../../components/AdminDrawer";
 
-export default function AddCategoria() {
+import { useLoja } from "../../contexts/LojaContext";
+import { useProducts } from "../../contexts/ProdutosContext";
+import { doc, setDoc } from "firebase/firestore";
+import { db } from "../../config/firebase";
+
+export default function EditCategoria() {
 
   const [suportaExtra, setSuportaExtra] = useState(false);
   const [suportaBorda, setSuportaBorda] = useState(false);
 
   const { idLoja } = useLoja();
+  const { categorias, setCategorias } = useProducts();
+  const { categoriaId } = useParams(); // pega o id da URL
+  const navigate = useNavigate();
 
   const [nome, setNome] = useState("");
   const [permiteMisto, setPermiteMisto] = useState(false);
@@ -41,7 +45,30 @@ export default function AddCategoria() {
   const [novaBordaNome, setNovaBordaNome] = useState("");
   const [novaBordaValor, setNovaBordaValor] = useState("");
 
+  // ------------------------------
+  // Carregar categoria do context
+  // ------------------------------
+  useEffect(() => {
+    if (!categoriaId || !categorias.length) return;
 
+    const categoria = categorias.find(c => c.id === categoriaId);
+    if (!categoria) {
+      alert("Categoria não encontrada");
+      navigate(-1); // volta se não encontrar
+      return;
+    }
+
+    setNome(categoria.nome || "");
+    setPermiteMisto(categoria.permiteMisto || false);
+    setExtras(categoria.extras || []);
+    setBordas(categoria.bordas || []);
+    setSuportaExtra((categoria.extras || []).length > 0);
+    setSuportaBorda((categoria.bordas || []).length > 0);
+  }, [categoriaId, categorias, navigate]);
+
+  // ------------------------------
+  // Helpers
+  // ------------------------------
   function gerarSlug(texto) {
     return texto
       .toLowerCase()
@@ -55,10 +82,8 @@ export default function AddCategoria() {
   const adicionarExtra = () => {
     const nomeExtra = novoExtraNome.trim();
     const valorExtra = parseFloat(novoExtraValor);
-    if (!nomeExtra || isNaN(valorExtra)) {
-      alert("Preencha nome e valor válidos para o extra");
-      return;
-    }
+    if (!nomeExtra || isNaN(valorExtra)) return;
+
     const idExtra = gerarSlug(nomeExtra);
     setExtras(prev => [...prev, { id: idExtra, nome: nomeExtra, valor: valorExtra, status: true }]);
     setNovoExtraNome("");
@@ -72,64 +97,56 @@ export default function AddCategoria() {
   const adicionarBorda = () => {
     const nomeBorda = novaBordaNome.trim();
     const valorBorda = parseFloat(novaBordaValor);
-    if (!nomeBorda || isNaN(valorBorda)) {
-      alert("Preencha nome e valor válidos para a borda");
-      return;
-    }
+    if (!nomeBorda || isNaN(valorBorda)) return;
+
     const idBorda = gerarSlug(nomeBorda);
     setBordas(prev => [...prev, { id: idBorda, nome: nomeBorda, valor: valorBorda, status: true }]);
     setNovaBordaNome("");
     setNovaBordaValor("");
   };
 
-  const removerBorda = (id) => {
-    setBordas(prev => prev.filter(b => b.id !== id));
+  const removerBorda = (idBorda) => {
+    setBordas(prev => prev.filter(b => b.id !== idBorda));
   };
 
+  // ------------------------------
+  // Salvar alterações
+  // ------------------------------
   const salvarCategoria = async () => {
     const nomeFinal = nome.trim();
     if (!nomeFinal) return;
 
-    const idCategoria = gerarSlug(nomeFinal);
-
     try {
       setLoading(true);
+      const ref = doc(db, "clientes123pedidos", idLoja, "categorias", categoriaId);
 
-      const ref = doc(
-        db,
-        "clientes123pedidos",
-        idLoja,
-        "categorias",
-        idCategoria
-      );
-
-      const existe = await getDoc(ref);
-      if (existe.exists()) {
-        alert("Já existe uma categoria com esse nome");
-        throw new Error("CATEGORIA_DUPLICADA");
-      }
-
-      await setDoc(ref, {
+      const categoriaAtualizada = {
         nome: nomeFinal,
         permiteMisto,
         status: true,
-        extras,   // array de extras
-        bordas,   // array de bordas
-        createdAt: new Date()
-      });
+        extras,
+        bordas,
+        updatedAt: new Date(),
+        id: categoriaId, // necessário para manter o id
+      };
 
-      setNome("");
-      setPermiteMisto(false);
-      setExtras([]);
-      alert("Categoria criada com sucesso!");
+      await setDoc(ref, categoriaAtualizada);
+
+      // Atualizar o estado do context
+      setCategorias(prev => prev.map(c => c.id === categoriaId ? categoriaAtualizada : c));
+
+      alert("Categoria atualizada com sucesso!");
     } catch (err) {
       console.error(err);
-      alert("Erro ao criar categoria");
+      alert("Erro ao atualizar categoria");
     } finally {
       setLoading(false);
     }
   };
 
+  // ------------------------------
+  // JSX
+  // ------------------------------
   return (
     <Box sx={{ p: 2 }}>
       <Navbar />
@@ -138,7 +155,7 @@ export default function AddCategoria() {
 
       <Paper sx={{ p: 3 }}>
         <Typography variant="h6" gutterBottom>
-          Nova Categoria
+          Editar Categoria
         </Typography>
 
         <TextField
@@ -150,7 +167,7 @@ export default function AddCategoria() {
         />
 
         <Divider sx={{ my: 2 }} />
-        
+
         <FormControlLabel
           control={
             <Switch
@@ -158,7 +175,7 @@ export default function AddCategoria() {
               onChange={e => setPermiteMisto(e.target.checked)}
             />
           }
-          label="Permitir produto misto (1/2) - indicado para pizzas"
+          label="Permitir produto (1/2) - indicado para pizzas e brotos"
         />
 
         <Divider sx={{ my: 2 }} />
@@ -180,7 +197,6 @@ export default function AddCategoria() {
               <TextField fullWidth label="Valor" type="number" value={novoExtraValor} onChange={e => setNovoExtraValor(e.target.value)} />
               <Button fullWidth variant="contained" onClick={adicionarExtra}>Adicionar</Button>
             </Box>
-
             {extras.map(extra => (
               <Box key={extra.id} sx={{ display: 'flex', justifyContent: 'space-between', mb: 1, p: 1, border: '1px solid #ccc', borderRadius: 1 }}>
                 <Typography>{extra.nome} - R$ {extra.valor.toFixed(2)}</Typography>
@@ -191,8 +207,6 @@ export default function AddCategoria() {
         )}
 
         <Divider sx={{ my: 2 }} />
-
-
 
         {/* Bordas */}
         <FormControlLabel
@@ -206,13 +220,11 @@ export default function AddCategoria() {
         />
         {suportaBorda && (
           <>
-
             <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
               <TextField fullWidth label="Nome da borda" value={novaBordaNome} onChange={e => setNovaBordaNome(e.target.value)} />
               <TextField fullWidth label="Valor" type="number" value={novaBordaValor} onChange={e => setNovaBordaValor(e.target.value)} />
               <Button fullWidth variant="contained" onClick={adicionarBorda}>Adicionar</Button>
             </Box>
-
             {bordas.map(borda => (
               <Box key={borda.id} sx={{ display: 'flex', justifyContent: 'space-between', mb: 1, p: 1, border: '1px solid #ccc', borderRadius: 1 }}>
                 <Typography>{borda.nome} - R$ {borda.valor.toFixed(2)}</Typography>
@@ -222,6 +234,7 @@ export default function AddCategoria() {
           </>
         )}
 
+
         <Button
           fullWidth
           variant="contained"
@@ -229,7 +242,7 @@ export default function AddCategoria() {
           disabled={loading}
           onClick={salvarCategoria}
         >
-          Salvar Categoria
+          Salvar Alterações
         </Button>
       </Paper>
     </Box>

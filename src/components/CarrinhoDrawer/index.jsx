@@ -96,26 +96,38 @@ export default function CarrinhoDrawer() {
                 R$ {(item.valor ?? 0).toFixed(2)}
               </Typography>
 
+              {item?.extras.length > 0 && (
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                >
+                  Extras: {
+                    item.extras.map(extra => extra.nome).join(", ")
+                  }
+                </Typography>
+              )}
 
-              <Typography
-                variant="body2"
-                color="text.secondary"
-              >
-                Extras: {
-                  item.extras.map(extra => extra.nome).join(", ") || "Nenhum"
-                }
-              </Typography>
+              {item?.borda && (
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                >
+                  Borda: {
+                    item.borda.nome
+                  }
+                </Typography>
+              )}
 
-
-              <Typography
-                variant="body2"
-                color="text.secondary"
-              >
-                obs: {
-                  item.observacao || "Nenhuma"
-                }
-              </Typography>
-
+              {item?.observacao && (
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                >
+                  observação: {
+                    item.observacao
+                  }
+                </Typography>
+              )}
             </Box>
 
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
@@ -128,18 +140,17 @@ export default function CarrinhoDrawer() {
               </IconButton>
             </Box>
 
-            <Divider />
           </Box>
         ))}
       </List>
 
+      <Divider />
 
       {/* FOOTER */}
       <Box sx={{ p: 2, mt: "auto" }}>
         <Typography variant="h6">
           Total: R$ {totalFormatado}
         </Typography>
-
 
         <Button
           fullWidth

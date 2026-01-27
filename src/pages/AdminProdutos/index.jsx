@@ -10,7 +10,8 @@ import {
   Switch,
   Button,
   Tabs,
-  Tab
+  Tab,
+  Divider
 } from "@mui/material";
 
 import Navbar from "../../components/Navbar";
@@ -84,35 +85,40 @@ export default function AdminProdutos() {
       <Toolbar />
       <AdminDrawer />
 
-      <Typography variant="h5" fontWeight="bold" gutterBottom>
-        Gestão de Produtos
-      </Typography>
+
+      <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+        <Typography variant="h5" fontWeight="bold" gutterBottom>
+          Gestão de Produtos
+        </Typography>
+
+        <Button
+          variant="contained"
+          onClick={() => navigate(`/${idLoja}/addproduto`)}
+        >
+          Adicionar Novo produto
+        </Button>
+      </Box>
+
 
       {loading && <CircularProgress sx={{ mt: 3 }} />}
+      <Divider sx={{ mt: 2 }} />
 
       {/* ---------- ABAS ---------- */}
       <Tabs
         value={abaAtiva}
         onChange={(e, newValue) => setAbaAtiva(newValue)}
-        sx={{ mb: 3 }}
-        variant="scrollable"
-        scrollButtons="auto"
+        sx={{ mb: 2 }}
+        variant="fullWidth"
       >
         {categorias.map((cat, i) => (
           <Tab key={cat.id} label={cat.nome} />
         ))}
       </Tabs>
 
+
       {/* ---------- LISTA DE PRODUTOS ---------- */}
       {categorias.length > 0 && (
         <Box sx={{ mb: 4 }}>
-          <Typography
-            variant="h6"
-            fontWeight="bold"
-            sx={{ mb: 2, textTransform: "capitalize" }}
-          >
-            {categorias[abaAtiva].nome}
-          </Typography>
 
           <Box
             sx={{
