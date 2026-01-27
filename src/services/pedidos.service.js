@@ -37,21 +37,6 @@ export async function updatePedidoStatus(idLoja, pedidoId, status) {
   await updateDoc(ref, { status });
 }
 
-export async function aceitarPedido(idLoja, pedidoId) {
-  const ref = doc(
-    db,
-    "clientes123pedidos",
-    idLoja,
-    "pedidos",
-    pedidoId
-  );
-
-  await updateDoc(ref, {
-    status: "aceito",
-    impresso: false
-  });
-}
-
 export async function deletarPedido(idLoja, pedidoId) {
   const ref = doc(
     db,

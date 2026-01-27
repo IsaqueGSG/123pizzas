@@ -16,7 +16,7 @@ import AdminDrawer from "../../components/AdminDrawer";
 import ModalAtivarAudio from "../../components/ModalAtivarAudio";
 import ConfirmDialog from "../../components/ConfirmDialog";
 
-import { updatePedidoStatus, aceitarPedido, escutarPedidos, deletarPedido, marcarComoImpresso } from "../../services/pedidos.service";
+import { updatePedidoStatus, escutarPedidos, deletarPedido, marcarComoImpresso } from "../../services/pedidos.service";
 import { geraComandaHTML80mm, imprimir } from "../../services/impressora.service";
 import { enviarMensagem } from "../../services/whatsapp.service";
 import { tocarAudio } from "../../services/audio.service";
@@ -27,9 +27,8 @@ import { useLoja } from "../../contexts/LojaContext";
 export default function AdminPedidos() {
   const { idLoja } = useLoja()
 
-  const statusTabs = ["pendente", "aceito", "cancelado", "finalizado"];
+  const statusTabs = ["pendente", "preparando", "finalizado", "cancelado"];
   const [abaAtiva, setAbaAtiva] = useState(0);
-
 
   const [pedidos, setPedidos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -62,31 +61,38 @@ export default function AdminPedidos() {
   }, []);
 
 
-  const handleAceitar = async (pedido) => {
+  const handlePreparar = async (pedido) => {
     try {
-      // 1️⃣ Atualiza status
-      await aceitarPedido(idLoja, pedido.id);
+      await updatePedidoStatus(idLoja, pedido.id, "preparando");
 
-      // 2️⃣ WhatsApp
-      enviarMensagem(pedido);
+      const texto = `
+🍕 *123Pedidos*
+Olá ${pedido.cliente.nome}!
 
-      // 3️⃣ Gera comanda
+Seu pedido entrou em *PREPARO* 👨‍🍳🔥
+Total: R$ ${pedido.total.toFixed(2)}
+
+Assim que finalizar, avisamos você.
+Obrigado pela preferência!
+`;
+
+      enviarMensagem(pedido, texto);
+
       const html = geraComandaHTML80mm({
         ...pedido,
-        status: "aceito"
+        status: "preparando"
       });
 
-      // 4️⃣ Imprime
       imprimir(html);
 
-      // 5️⃣ Marca como impresso
       await marcarComoImpresso(idLoja, pedido.id);
 
     } catch (error) {
-      console.error("Erro ao aceitar pedido:", error);
-      alert("Erro ao aceitar pedido");
+      console.error("Erro ao iniciar preparo:", error);
+      alert("Erro ao iniciar preparo");
     }
   };
+
 
   const handleCancelar = async (pedido) => {
     await updatePedidoStatus(idLoja, pedido.id, "cancelado");
@@ -95,10 +101,10 @@ export default function AdminPedidos() {
   const handleExcluir = async () => {
     if (!pedidoSelecionado) return;
 
-    const podeExcluir = !["pendente", "aceito"].includes(pedidoSelecionado.status);
+    const podeExcluir = !["pendente", "preparando"].includes(pedidoSelecionado.status);
 
     if (!podeExcluir) {
-      alert("Pedidos pendentes ou aceitos não podem ser excluídos.");
+      alert("Pedidos pendentes ou em preparo não podem ser excluídos.");
       return;
     }
 
@@ -114,7 +120,7 @@ export default function AdminPedidos() {
     .filter(p => p.status === statusTabs[abaAtiva])
     .sort((a, b) => b.createdAt.seconds - a.createdAt.seconds);
 
-    console.log(pedidosFiltrados)
+  console.log(pedidosFiltrados)
 
   return (
     <Box sx={{ p: 2 }}>
@@ -188,11 +194,14 @@ export default function AdminPedidos() {
                       color={
                         pedido.status === "pendente"
                           ? "warning"
-                          : pedido.status === "aceito"
-                            ? "success"
-                            : "default"
+                          : pedido.status === "preparando"
+                            ? "info"
+                            : pedido.status === "finalizado"
+                              ? "success"
+                              : "default"
                       }
                     />
+
                   </Box>
 
                   <Divider sx={{ my: 1 }} />
@@ -208,25 +217,24 @@ export default function AdminPedidos() {
                         Valor unitário: R$ {item.valor.toFixed(2)}
                       </Typography>
 
-                      {item.extras?.borda && (
+                      {item?.borda && (
                         <Typography variant="body2">
-                          Borda: {item.extras?.borda?.nome || "Sem borda"}
+                          Borda: {item.borda.nome}
                         </Typography>
-
                       )}
 
-                      {item.extras?.adicionais?.length > 0 && (
+                      {item?.extras.length > 0 && (
                         <Typography variant="body2">
                           Extras:{" "}
-                          {item.extras.adicionais
+                          {item.extras
                             .map((e) => `${e.nome} (+R$ ${e.valor.toFixed(2)})`)
                             .join(", ")}
                         </Typography>
                       )}
 
-                      {item.extras?.obs && (
+                      {item?.observacao && (
                         <Typography variant="body2">
-                          Obs: {item.extras.obs}
+                          Obs: {item.observacao}
                         </Typography>
                       )}
 
@@ -252,9 +260,9 @@ export default function AdminPedidos() {
                           variant="contained"
                           color="success"
                           fullWidth
-                          onClick={() => handleAceitar(pedido)}
+                          onClick={() => handlePreparar(pedido)}
                         >
-                          Aceitar
+                          Iniciar preparo
                         </Button>
 
                         <Button
@@ -263,13 +271,13 @@ export default function AdminPedidos() {
                           fullWidth
                           onClick={() => handleCancelar(pedido)}
                         >
-                          Recusar
+                          Cancelar
                         </Button>
                       </Box>
                     )}
 
                     {/* AÇÃO DE EXCLUSÃO */}
-                    {!["pendente", "aceito"].includes(pedido.status) && (
+                    {!["pendente", "preparando"].includes(pedido.status) && (
                       <>
                         <Divider sx={{ my: 1 }} />
                         <Button
@@ -286,6 +294,18 @@ export default function AdminPedidos() {
 
                       </>
                     )}
+
+                    {pedido.status === "preparando" && (
+                      <Button
+                        variant="contained"
+                        color="success"
+                        fullWidth
+                        onClick={() => updatePedidoStatus(idLoja, pedido.id, "finalizado")}
+                      >
+                        Finalizar pedido
+                      </Button>
+                    )}
+
                   </Box>
                 </Card>
               ))}

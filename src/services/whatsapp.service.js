@@ -1,20 +1,6 @@
-export function gerarMensagemWhatsApp(pedido) {
-  const texto = `
-🍕 *123Pedidos*
-Olá ${pedido.cliente.nome}!
+// WhatsApp.service.js
 
-Seu pedido foi *ACEITO* 🎉
-Total: R$ ${pedido.total.toFixed(2)}
-
-Em breve iniciaremos o preparo.
-Obrigado pela preferência!
-`;
-
-  return encodeURIComponent(texto.trim());
-}
-
-
-export function enviarMensagem(pedido) {
+export function enviarMensagem(pedido, texto) {
   const telefone = pedido.cliente?.telefone;
 
   if (!telefone) {
@@ -23,11 +9,9 @@ export function enviarMensagem(pedido) {
   }
 
   const numeroLimpo = telefone.replace(/\D/g, "");
+  const textoLimpo = encodeURIComponent(texto.trim());
 
-  const mensagem = gerarMensagemWhatsApp(pedido);
-
-  const url = `https://wa.me/55${numeroLimpo}?text=${encodeURIComponent(mensagem)}`;
+  const url = `https://wa.me/55${numeroLimpo}?text=${textoLimpo}`;
 
   window.open(url, "_blank");
 }
-

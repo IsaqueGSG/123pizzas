@@ -141,14 +141,16 @@ export default function MapaEntrega() {
                 </Typography>
             )}
 
-            {rota.length > 0 && (
+            {rota.length > 0 && endereco.lat && endereco.lng && (
                 <>
                     <Typography sx={{ mt: 1 }}>
                         {(endereco.rua && endereco.bairro && endereco.cidade && endereco.uf)
                             ? `${endereco.rua} - ${endereco.bairro}, ${endereco.cidade}/${endereco.uf} `
                             : "Localização atual "
-                         }
-                        📏 {endereco.distanciaKm.toFixed(2)} km — 💰 R$ {endereco.taxaEntrega.toFixed(2)}
+                        }
+                        📏 {(endereco.distanciaKm ?? 0).toFixed(2)} km —
+                        💰 R$ {(endereco.taxaEntrega ?? 0).toFixed(2)}
+
                     </Typography>
 
                     <Box sx={{ height: 280, mt: 1 }}>
@@ -158,9 +160,14 @@ export default function MapaEntrega() {
                             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
                             <Marker position={[ENDERECO_LOJA.lat, ENDERECO_LOJA.lng]} />
-                            <Marker position={[endereco.lat, endereco.lng]} />
 
-                            <Polyline positions={rota.map(p => [p.lat, p.lng])} />
+                            {endereco.lat && endereco.lng && (
+                                <Marker position={[endereco.lat, endereco.lng]} />
+                            )}
+
+                            {Array.isArray(rota) && rota.length > 0 && (
+                                <Polyline positions={rota.map(p => [p.lat, p.lng])} />
+                            )}
 
                             <AjustarZoom rota={rota} />
                         </MapContainer>

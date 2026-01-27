@@ -1,8 +1,3 @@
-import { useCarrinho } from "../../contexts/CarrinhoContext";
-import Navbar from "../../components/Navbar";
-import CarrinhoDrawer from "../../components/CarrinhoDrawer";
-import MapaEntrega from "../../components/EnderecoEntega";
-
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Card from "@mui/material/Card";
@@ -19,13 +14,17 @@ import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 
 import { useNavigate } from "react-router-dom";
-
-import { criarPedido } from "../../services/pedidos.service";
-import { useEffect, useState } from "react";
-import { useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 
 import { useLoja } from "../../contexts/LojaContext";
 import { useEntrega } from "../../contexts/EntregaContext";
+import { useCarrinho } from "../../contexts/CarrinhoContext";
+
+import Navbar from "../../components/Navbar";
+import CarrinhoDrawer from "../../components/CarrinhoDrawer";
+import MapaEntrega from "../../components/EnderecoEntega";
+
+import { criarPedido } from "../../services/pedidos.service";
 
 export default function Checkout() {
   const { idLoja } = useLoja()
@@ -50,8 +49,8 @@ export default function Checkout() {
     0
   );
 
-  const valorTotalPedido = valorTotalCarrinho + endereco.taxaEntrega;
-
+  const valorTotalPedido = valorTotalCarrinho + (endereco.taxaEntrega ?? 0);
+  
   const [cliente, setCliente] = useState({
     nome: "",
     telefone: "",
@@ -118,7 +117,6 @@ export default function Checkout() {
       impresso: false,
       criadoEm: new Date()
     }
-
 
     await criarPedido(idLoja, pedido);
     console.log("Pedido criado:", pedido);
@@ -410,8 +408,9 @@ export default function Checkout() {
               Valor total do Carrinho: R$ {valorTotalCarrinho.toFixed(2)}
             </Typography>
             <Typography variant="subtitle1" fontWeight="bold">
-              Valor da Taxa de entrega: R$ {endereco.taxaEntrega.toFixed(2)}
+              Valor da Taxa de entrega: R$ {(endereco.taxaEntrega ?? 0).toFixed(2)}
             </Typography>
+
             <Typography variant="subtitle1" fontWeight="bold">
               Valor total do pedido: R$ {valorTotalPedido.toFixed(2)}
             </Typography>
