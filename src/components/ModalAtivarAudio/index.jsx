@@ -10,7 +10,7 @@ import { unlockAudio } from "../../services/audio.service";
 
 export default function ModalAtivarAudio() {
     const [open, setOpen] = useState(false);
-    console.log("modal ativa som")
+    // console.log("modal ativa som")
 
     useEffect(() => {
         const unlocked = sessionStorage.getItem("audioUnlocked");

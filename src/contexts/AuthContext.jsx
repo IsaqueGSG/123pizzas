@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useRef } from "react";
 import {
     loginWithGoogle,
     logout,
@@ -19,27 +19,38 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
     const [openAdminDrawer, setOpenAdminDrawer] = useState(false);
 
-    // persiste sessão
+    const lojaRef = useRef(null);
+
+    useEffect(() => {
+        lojaRef.current = idLoja;
+    }, [idLoja]);
+
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-            if (firebaseUser) {
-                const allowed = await isUserAllowed(idLoja, firebaseUser.email);
-
-                if (!allowed) {
-                    await logout();
-                    setUser(null);
-                } else {
-                    setUser(firebaseUser);
-                }
-            } else {
+            if (!firebaseUser || !lojaRef.current) {
                 setUser(null);
+                setLoading(false);
+                return;
+            }
+
+            const allowed = await isUserAllowed(
+                lojaRef.current,
+                firebaseUser.email
+            );
+
+            if (!allowed) {
+                await logout();
+                setUser(null);
+            } else {
+                setUser(firebaseUser);
             }
 
             setLoading(false);
         });
 
         return () => unsubscribe();
-    }, [idLoja]);
+    }, []);
+
 
 
     const login = async () => {

@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import {
   Box,
   Typography,
@@ -39,6 +39,9 @@ export default function AdminPedidos() {
   const firstLoad = useRef(true);
 
   useEffect(() => {
+
+    if (!idLoja) return;
+
     const unsub = escutarPedidos(idLoja, (snapshot) => {
       snapshot.docChanges().forEach(change => {
         if (
@@ -58,7 +61,7 @@ export default function AdminPedidos() {
     });
 
     return unsub;
-  }, []);
+  }, [idLoja]);
 
 
   const handlePreparar = async (pedido) => {
@@ -116,11 +119,12 @@ Obrigado pela preferência!
     }
   };
 
-  const pedidosFiltrados = pedidos
-    .filter(p => p.status === statusTabs[abaAtiva])
-    .sort((a, b) => b.createdAt.seconds - a.createdAt.seconds);
+  const pedidosFiltrados = useMemo(() => {
+    return pedidos
+      .filter(p => p.status === statusTabs[abaAtiva])
+      .sort((a, b) => b.createdAt.seconds - a.createdAt.seconds);
+  }, [pedidos, abaAtiva]);
 
-  console.log(pedidosFiltrados)
 
   return (
     <Box sx={{ p: 2 }}>
