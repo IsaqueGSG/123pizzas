@@ -4,13 +4,11 @@ import {
     Button,
     Typography,
     CircularProgress,
-    FormControlLabel,
-    Checkbox
 } from "@mui/material";
 import { MapContainer, TileLayer, Marker, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { useEffect, useState } from "react";
+import { useEffect, } from "react";
 
 // FIX ÍCONE LEAFLET
 delete L.Icon.Default.prototype._getIconUrl;
@@ -25,36 +23,8 @@ L.Icon.Default.mergeOptions({
 
 import { useEntrega } from "../../contexts/EntregaContext";
 
-const ENDERECO_LOJA = {
-    lat: -23.460380170938265,
-    lng: -46.41701184232687
-};
-
 export default function MapaEntrega() {
-    const { endereco, rota, atualizarCampo, calcularEntrega, calcularEntregaPorLocalizacao } = useEntrega();
-
-
-    const [useLocalizacao, setUseLocalizacao] = useState(false);
-    function usarLocalizacaoAtual() {
-        if (!navigator.geolocation) {
-            alert("Geolocalização não suportada");
-            return;
-        }
-
-        navigator.geolocation.getCurrentPosition(
-            (pos) => {
-                const { latitude, longitude } = pos.coords;
-                calcularEntregaPorLocalizacao(latitude, longitude);
-            },
-            () => {
-                alert("Não foi possível obter sua localização");
-            },
-            {
-                enableHighAccuracy: true,
-                timeout: 10000
-            }
-        );
-    }
+    const { endereco, rota, atualizarCampo, calcularEntrega, enderecoLoja } = useEntrega();
 
     function AjustarZoom({ rota }) {
         const map = useMap();
@@ -80,7 +50,7 @@ export default function MapaEntrega() {
                     size="small"
                     value={endereco.cep}
                     onChange={e => atualizarCampo("cep", e.target.value)}
-                    disabled={endereco.loading || useLocalizacao}
+                    disabled={endereco.loading}
                 />
 
                 <TextField
@@ -101,80 +71,71 @@ export default function MapaEntrega() {
                     onChange={e => atualizarCampo("observacao", e.target.value)}
                 />
             </Box>
-
-            {/* <FormControlLabel
-                control={
-                    <Checkbox
-                        checked={useLocalizacao}
-                        onChange={(e) => setUseLocalizacao(e.target.checked)}
-                    />
-                }
-                label="Usar localização atual"
-            /> */}
-
             <Button
                 sx={{ mt: 1 }}
                 variant="contained"
                 fullWidth
-                onClick={() => {
-                    if (useLocalizacao) {
-                        usarLocalizacaoAtual();
-                    } else {
-                        calcularEntrega();
-                    }
-                }}
+                onClick={calcularEntrega}
                 disabled={endereco.loading}
             >
                 Calcular taxa
-            </Button>
+            </Button >
 
 
-            {endereco.loading && (
-                <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-                    <CircularProgress />
-                </Box>
-            )}
-
-            {endereco.erro && (
-                <Typography color="error" sx={{ mt: 2 }}>
-                    {endereco.erro}
-                </Typography>
-            )}
-
-            {rota.length > 0 && endereco.lat && endereco.lng && (
-                <>
-                    <Typography sx={{ mt: 1 }}>
-                        {(endereco.rua && endereco.bairro && endereco.cidade && endereco.uf)
-                            ? `${endereco.rua} - ${endereco.bairro}, ${endereco.cidade}/${endereco.uf} `
-                            : "Localização atual "
-                        }
-                        📏 {(endereco.distanciaKm ?? 0).toFixed(2)} km —
-                        💰 R$ {(endereco.taxaEntrega ?? 0).toFixed(2)}
-
-                    </Typography>
-
-                    <Box sx={{ height: 280, mt: 1 }}>
-                        <MapContainer
-                            style={{ height: "100%", width: "100%" }}
-                        >
-                            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-
-                            <Marker position={[ENDERECO_LOJA.lat, ENDERECO_LOJA.lng]} />
-
-                            {endereco.lat && endereco.lng && (
-                                <Marker position={[endereco.lat, endereco.lng]} />
-                            )}
-
-                            {Array.isArray(rota) && rota.length > 0 && (
-                                <Polyline positions={rota.map(p => [p.lat, p.lng])} />
-                            )}
-
-                            <AjustarZoom rota={rota} />
-                        </MapContainer>
-
+            {
+                endereco.loading && (
+                    <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+                        <CircularProgress />
                     </Box>
-                </>
-            )}
+                )
+            }
+
+            {
+                endereco.erro && (
+                    <Typography color="error" sx={{ mt: 2 }}>
+                        {endereco.erro}
+                    </Typography>
+                )
+            }
+
+            {
+                rota.length > 0 && endereco.lat && endereco.lng && (
+                    <>
+                        <Typography sx={{ mt: 1 }}>
+                            {(endereco.rua && endereco.bairro && endereco.cidade && endereco.uf)
+                                ? `${endereco.rua} - ${endereco.bairro}, ${endereco.cidade}/${endereco.uf} `
+                                : "Localização atual "
+                            }
+                            📏 {(endereco.distanciaKm ?? 0).toFixed(2)} km —
+                            💰 R$ {(endereco.taxaEntrega ?? 0).toFixed(2)}
+
+                        </Typography>
+
+                        <Box sx={{ height: 280, mt: 1 }}>
+                            <MapContainer
+                                style={{ height: "100%", width: "100%" }}
+                            >
+                                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+
+                                {enderecoLoja?.lat && enderecoLoja?.lng && (
+                                    <Marker position={[enderecoLoja.lat, enderecoLoja.lng]} />
+                                )}
+
+                                {endereco.lat && endereco.lng && (
+                                    <Marker position={[endereco.lat, endereco.lng]} />
+                                )}
+
+                                {Array.isArray(rota) && rota.length > 0 && (
+                                    <Polyline positions={rota.map(p => [p.lat, p.lng])} />
+                                )}
+
+                                <AjustarZoom rota={rota} />
+                            </MapContainer>
+
+                        </Box>
+                    </>
+                )
+            }
         </>
     );
 }

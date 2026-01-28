@@ -5,24 +5,18 @@ import {
   Card,
   Switch,
   FormControlLabel,
-  Divider,
   TextField,
   Button,
-  Select,
-  MenuItem,
   CircularProgress,
-  Toolbar
+  Toolbar,
 } from "@mui/material";
 
 import Navbar from "../../components/Navbar";
 import AdminDrawer from "../../components/AdminDrawer";
 
-import {
-  getPreferencias,
-  salvarPreferencias
-} from "../../services/preferencias.service";
+import { buscarCep, geocodeGoogle } from "../../services/entrega.service";
 
-import { useLoja } from "../../contexts/LojaContext";
+import { usePreferencias } from "../../contexts/PreferenciasContext";
 
 const DIAS_SEMANA = [
   "segunda",
@@ -34,38 +28,76 @@ const DIAS_SEMANA = [
   "domingo"
 ];
 
-const DEFAULT_PREFS = {
-  horarios: {
-    segunda: { ativo: true, inicio: "18:00", fim: "23:00" },
-    terca: { ativo: true, inicio: "18:00", fim: "23:00" },
-    quarta: { ativo: true, inicio: "18:00", fim: "23:00" },
-    quinta: { ativo: true, inicio: "18:00", fim: "23:00" },
-    sexta: { ativo: true, inicio: "18:00", fim: "23:59" },
-    sabado: { ativo: true, inicio: "18:00", fim: "23:59" },
-    domingo: { ativo: false, inicio: "18:00", fim: "23:00" }
-  },
-  autoAceitar: false,
-  impressora: {
-    autoPrint: true,
-    papel: "80mm"
-  }
-};
-
 export default function AdminPreferencias() {
-  const {idLoja} = useLoja()
+  const { preferencias, atualizarPreferencias, loading } = usePreferencias();
 
-  const [prefs, setPrefs] = useState(DEFAULT_PREFS);
-  const [loading, setLoading] = useState(true);
-  const [salvando, setSalvando] = useState(false);
+  const [prefs, setPrefs] = useState(preferencias);
+
+  const [cepLoja, setCepLoja] = useState("");
+  const [cepData, setCepData] = useState(null);
+
+  const [enderecoLoja, setEnderecoLoja] = useState("");
+  const [numeroLoja, setNumeroLoja] = useState("");
+  const [loadingEndereco, setLoadingEndereco] = useState(false);
+  const [erroEndereco, setErroEndereco] = useState("");
 
   useEffect(() => {
-    async function carregar() {
-      const data = await getPreferencias(idLoja);
-      if (data) setPrefs({ ...DEFAULT_PREFS, ...data });
-      setLoading(false);
+    setPrefs(preferencias);
+
+    if (preferencias?.enderecoLoja) {
+      setCepLoja(preferencias.enderecoLoja.cep || "");
+      setNumeroLoja(preferencias.enderecoLoja.numero || "");
     }
-    carregar();
-  }, [idLoja]);
+  }, [preferencias]);
+
+  async function buscarEndereco() {
+    try {
+      if (!cepLoja || !numeroLoja) {
+        setErroEndereco("Informe CEP e número");
+        return;
+      }
+
+      setLoadingEndereco(true);
+      setErroEndereco("");
+
+      // ViaCEP
+      const cepData = await buscarCep(cepLoja);
+      setCepData(cepData);
+
+      const enderecoTexto = `${cepData.logradouro}, ${numeroLoja} - ${cepData.bairro}, ${cepData.localidade} - ${cepData.uf}, ${cepData.cep}`;
+      setEnderecoLoja(enderecoTexto);
+
+      // Geocode
+      const key = import.meta.env.VITE_GOOGLE_GEO_API_KEY;
+      let geo = null;
+      try {
+        geo = await geocodeGoogle(key, enderecoTexto);
+      } catch {
+        geo = await geocodeGoogle(key, `${cepData.cep}, Brasil`);
+      }
+
+      const enderecoLoja = {
+        cep: cepData.cep,
+        numero: numeroLoja,
+        rua: cepData.logradouro,
+        bairro: cepData.bairro,
+        cidade: cepData.localidade,
+        uf: cepData.uf,
+        lat: geo.lat,
+        lng: geo.lng
+      };
+
+      setPrefs(prev => ({
+        ...prev,
+        enderecoLoja
+      }));
+
+    } catch (err) {
+      setErroEndereco(err.message);
+    } finally {
+      setLoadingEndereco(false);
+    }
+  }
 
   const atualizarHorario = (dia, campo, valor) => {
     setPrefs((prev) => ({
@@ -80,11 +112,19 @@ export default function AdminPreferencias() {
     }));
   };
 
-  const salvar = async () => {
-    setSalvando(true);
-    await salvarPreferencias(idLoja, prefs);
-    setSalvando(false);
-    alert("Preferências salvas com sucesso!");
+  const disabledSalvarPreferencias = () => {
+    return JSON.stringify(prefs) === JSON.stringify(preferencias);
+  };
+
+  const guardarPreferencias = async () => {
+    try {
+      await atualizarPreferencias(prefs);
+      console.log("Preferências salvas", prefs);
+      alert("Preferências salvas com sucesso!");
+    } catch (e) {
+      alert("Erro ao salvar preferências. Tente novamente.");
+      console.log("Erro ao salvar preferências", e);
+    }
   };
 
   if (loading) {
@@ -96,9 +136,9 @@ export default function AdminPreferencias() {
   }
 
   return (
-    <Box sx={{ p: 2 }}>
+    <Box sx={{ p: 2, pb: 10 }}>
       <Navbar />
-       <Toolbar />
+      <Toolbar />
       <AdminDrawer />
 
       <Typography variant="h5" fontWeight="bold" gutterBottom>
@@ -147,90 +187,125 @@ export default function AdminPreferencias() {
                 />
               </Box>
             )}
-
-            <Divider sx={{ mt: 2 }} />
           </Box>
+
+
         ))}
       </Card>
 
-      {/* PEDIDOS */}
-      {/* <Card sx={{ p: 2, mb: 3 }}>
+      {/* ENDEREÇO */}
+      <Card sx={{ p: 2, mb: 3 }}>
         <Typography fontWeight="bold" gutterBottom>
-          🤖 Pedidos
+          📍 Endereço da loja
         </Typography>
 
-        <FormControlLabel
-          control={
-            <Switch
-              checked={prefs.autoAceitar}
-              onChange={(e) =>
-                setPrefs((prev) => ({
-                  ...prev,
-                  autoAceitar: e.target.checked
-                }))
-              }
-            />
-          }
-          label="Aceitar pedidos automaticamente"
-        />
-      </Card> */}
+        <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 1, mt: 1 }}>
 
-      {/* IMPRESSORA */}
-      {/* <Card sx={{ p: 2, mb: 3 }}>
-        <Typography fontWeight="bold" gutterBottom>
-          🖨️ Impressora
-        </Typography>
-
-        <FormControlLabel
-          control={
-            <Switch
-              checked={prefs.impressora.autoPrint}
-              onChange={(e) =>
-                setPrefs((prev) => ({
-                  ...prev,
-                  impressora: {
-                    ...prev.impressora,
-                    autoPrint: e.target.checked
-                  }
-                }))
-              }
-            />
-          }
-          label="Imprimir automaticamente"
-        />
-
-        <Box sx={{ mt: 2, width: 200 }}>
-          <Typography variant="body2" gutterBottom>
-            Tipo de papel
-          </Typography>
-
-          <Select
-            size="small"
+          <TextField
+            label="CEP"
             fullWidth
-            value={prefs.impressora.papel}
-            onChange={(e) =>
-              setPrefs((prev) => ({
-                ...prev,
-                impressora: {
-                  ...prev.impressora,
-                  papel: e.target.value
-                }
-              }))
-            }
-          >
-            <MenuItem value="58mm">58mm</MenuItem>
-            <MenuItem value="80mm">80mm</MenuItem>
-          </Select>
-        </Box>
-      </Card> */}
+            size="small"
+            value={cepLoja}
+            onChange={e => setCepLoja(e.target.value)}
+          />
 
-      <Button
-        variant="contained"
-        disabled={salvando}
-        onClick={salvar}
+          <TextField
+            label="Número"
+            fullWidth
+            size="small"
+            value={numeroLoja}
+            onChange={e => setNumeroLoja(e.target.value)}
+          />
+
+          {/* Butao buca cep */}
+          <Button
+            disabled={
+              loadingEndereco}
+            variant="outlined"
+            onClick={buscarEndereco}
+          >
+            {loadingEndereco ? (
+              <Box sx={{ display: "flex", alignItems: "center", ml: 2 }}>
+                <CircularProgress size={20} />
+              </Box>
+            ) : (
+              "Buscar endereço"
+            )}
+          </Button>
+
+          {(cepData && prefs.enderecoLoja.lat) && (
+            <Box sx={{ gridColumn: "1 / -1", mt: 2 }}>
+              <Typography>
+                <strong>Endereço encontrado:</strong> {enderecoLoja} / {`Lat: ${prefs.enderecoLoja?.lat || ""}, Lng: ${prefs.enderecoLoja?.lng || ""} `}
+              </Typography>
+            </Box>
+          )}
+
+          {erroEndereco && (
+            <Typography color="error" sx={{ mt: 1 }}>
+              {erroEndereco}
+            </Typography>
+          )}
+        </Box>
+      </Card>
+
+      {/* Taxa de entrega */}
+      <Card sx={{ p: 2, mb: 3 }}>
+        <Typography fontWeight="bold" gutterBottom>
+          💰 Taxa de entrega por km
+        </Typography>
+
+        <TextField
+          fullWidth
+          label="Taxa por km (R$)"
+          type="number"
+          size="small"
+          value={prefs.taxaEntregaKm}
+          onChange={(e) => {
+            //previne valor negativo
+            if (e.target.value < 0) {
+              e.target.value = 0;
+            }
+            const valor = Math.max(0, Number(e.target.value) || 0);
+
+            setPrefs(prev => ({
+              ...prev,
+              taxaEntregaKm: valor
+            }));
+
+          }
+          }
+        />
+      </Card >
+
+      <Box
+        sx={{
+          position: "fixed",
+          bottom: 0,
+          left: 0,
+          width: "100%",
+          bgcolor: "background.paper",
+          boxShadow: "0 -2px 10px rgba(0,0,0,0.5)",
+          p: 2,
+          zIndex: 1200,
+
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center"
+        }}
       >
-        {salvando ? "Salvando..." : "Salvar preferências"}
-      </Button>
-    </Box>
+        <Button
+          fullWidth
+          variant="contained"
+          disabled={disabledSalvarPreferencias()}
+          onClick={guardarPreferencias}
+        >
+          {disabledSalvarPreferencias()
+            ? "Nenhuma alteração"
+            : "Salvar preferências"}
+        </Button>
+
+      </Box>
+    </Box >
   );
 }

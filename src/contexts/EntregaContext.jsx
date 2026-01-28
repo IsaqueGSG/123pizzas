@@ -1,11 +1,7 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 
 const EntregaContext = createContext();
 
-const ENDERECO_LOJA = {
-  lat: -23.460380170938265,
-  lng: -46.41701184232687
-};
 
 const GEO_KEY = import.meta.env.VITE_GOOGLE_GEO_API_KEY;
 
@@ -28,7 +24,18 @@ const estadoInicial = {
   observacao: ""
 };
 
+import { usePreferencias } from "./PreferenciasContext";
+
+import { buscarCep } from "../services/entrega.service";
+
 export function EntregaProvider({ children }) {
+  const { preferencias } = usePreferencias();
+  const [taxaEntregaKm, setTaxaEntregaKm] = useState(preferencias.taxaEntregaKm || 0);
+  const [enderecoLoja, setEnderecoLoja] = useState(preferencias.enderecoLoja || null);
+  useEffect(() => {
+    setTaxaEntregaKm(preferencias.taxaEntregaKm || 0);
+    setEnderecoLoja(preferencias.enderecoLoja || null);
+  }, [preferencias]);
 
   const [endereco, setEndereco] = useState(estadoInicial);
   const [rota, setRota] = useState([]);
@@ -37,18 +44,6 @@ export function EntregaProvider({ children }) {
 
   function atualizarCampo(campo, valor) {
     setEndereco(prev => ({ ...prev, [campo]: valor }));
-  }
-
-  async function buscarCep(cep) {
-    const cepLimpo = cep.replace(/\D/g, "");
-    if (cepLimpo.length !== 8) throw new Error("CEP inválido");
-
-    const res = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
-    const data = await res.json();
-
-    if (data.erro) throw new Error("CEP não encontrado");
-
-    return data;
   }
 
   async function geocodeGoogle(enderecoTexto) {
@@ -76,8 +71,12 @@ export function EntregaProvider({ children }) {
 
       const geo = await geocodeGoogle(enderecoCompleto);
 
-      const lojaLng = Number(ENDERECO_LOJA.lng);
-      const lojaLat = Number(ENDERECO_LOJA.lat);
+      if (!enderecoLoja?.lat || !enderecoLoja?.lng) {
+        throw new Error("Endereço da loja não configurado");
+      }
+
+      const lojaLng = Number(enderecoLoja.lng);
+      const lojaLat = Number(enderecoLoja.lat);
       const destinoLng = Number(geo.lng);
       const destinoLat = Number(geo.lat);
 
@@ -96,7 +95,7 @@ export function EntregaProvider({ children }) {
 
       const route = data.routes[0];
       const km = route.distance / 1000;
-      const taxa = Math.ceil(km * 5);
+      const taxa = Math.ceil(km * taxaEntregaKm);
 
       setEndereco(prev => ({
         ...prev,
@@ -110,7 +109,7 @@ export function EntregaProvider({ children }) {
 
         distanciaKm: km,
         taxaEntrega: taxa,
-        
+
         loading: false
       }));
 
@@ -128,60 +127,16 @@ export function EntregaProvider({ children }) {
     }
   }
 
-  async function calcularEntregaPorLocalizacao(lat, lng) {
-    try {
-      setEndereco(prev => ({ ...prev, loading: true, erro: "" }));
-
-      const lojaLng = Number(ENDERECO_LOJA.lng);
-      const lojaLat = Number(ENDERECO_LOJA.lat);
-
-      const url =
-        `https://router.project-osrm.org/route/v1/driving/` +
-        `${lojaLng},${lojaLat};${lng},${lat}` +
-        `?overview=full&geometries=geojson`;
-
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Erro ao calcular rota");
-
-      const data = await res.json();
-      if (!data.routes?.length) throw new Error("Rota não encontrada");
-
-      const route = data.routes[0];
-      const km = route.distance / 1000;
-      const taxa = Math.ceil(km * 5);
-
-      setEndereco(prev => ({
-        ...prev,
-        lat,
-        lng,
-        distanciaKm: km,
-        taxaEntrega: taxa,
-        loading: false
-      }));
-
-      setRota(
-        route.geometry.coordinates.map(([lng, lat]) => ({ lat, lng }))
-      );
-
-    } catch (err) {
-      setEndereco(prev => ({
-        ...prev,
-        erro: err.message,
-        loading: false,
-        taxaEntrega: 0
-      }));
-    }
-  }
 
   return (
     <EntregaContext.Provider
       value={{
+        enderecoLoja,
         endereco,
         rota,
         clearEndereco,
         atualizarCampo,
         calcularEntrega,
-        calcularEntregaPorLocalizacao
       }}
     >
       {children}

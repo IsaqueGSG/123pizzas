@@ -1,5 +1,5 @@
 
-async function buscarCep(cep) {
+export async function buscarCep(cep) {
     const cepLimpo = cep.replace(/\D/g, "");
 
     if (cepLimpo.length !== 8) {
@@ -18,20 +18,24 @@ async function buscarCep(cep) {
     return data;
 }
 
-async function geocodeGoogle(apiKey, cep) {
-
+export async function geocodeGoogle(apiKey, endereco) {
     const res = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?address=${cep}&key=${apiKey}`
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(endereco)}&key=${apiKey}`
     );
 
     const data = await res.json();
 
-    if (data.status !== "OK") throw new Error("Google sem resultado");
+    if (data.status !== "OK") {
+        console.error("Geocode error:", data);
+        throw new Error("Google sem resultado");
+    }
 
     return data.results[0].geometry.location;
 }
 
-async function calcularEntrega() {
+
+export async function calcularEntrega() {
+    setRota([]);
 
     try {
         if (!cep || !numero) {
@@ -108,7 +112,7 @@ async function calcularEntrega() {
     }
 }
 
-async function usarLocalizacaoAtual() {
+export async function usarLocalizacaoAtual() {
     if (!navigator.geolocation) {
         setErro("Geolocalização não suportada");
         return;

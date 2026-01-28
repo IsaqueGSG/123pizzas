@@ -24,31 +24,32 @@ export async function salvarPreferencias(idLoja, preferencias) {
 }
 
 
-export function abertoAgora(horarioFuncionamento) {
-  // fallback seguro (não bloqueia pedidos se não houver config)
-  if (!horarioFuncionamento) return true;
+export function abertoAgora(horarios) {
+  if (!horarios) return true;
 
   const agora = new Date();
-  const dia = agora.getDay(); // 0 = domingo
 
-  const config = horarioFuncionamento[dia];
+  const dias = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
+  const diaAtual = dias[agora.getDay()];
 
+  const config = horarios[diaAtual];
   if (!config || !config.ativo) return false;
 
-  const [horaA, minA] = config.abertura.split(":").map(Number);
-  const [horaF, minF] = config.fechamento.split(":").map(Number);
+  const [hA, mA] = config.inicio.split(":").map(Number);
+  const [hF, mF] = config.fim.split(":").map(Number);
 
   const abertura = new Date();
-  abertura.setHours(horaA, minA, 0, 0);
+  abertura.setHours(hA, mA, 0, 0);
 
   const fechamento = new Date();
-  fechamento.setHours(horaF, minF, 0, 0);
+  fechamento.setHours(hF, mF, 0, 0);
 
-  // 🔥 suporta horários normais (ex: 18:00 → 23:00)
+  // horário normal
   if (fechamento > abertura) {
     return agora >= abertura && agora <= fechamento;
   }
 
-  // 🌙 suporta horário que vira a meia-noite (ex: 18:00 → 02:00)
+  // vira a meia-noite
   return agora >= abertura || agora <= fechamento;
 }
+
