@@ -1,138 +1,37 @@
-import { useState } from "react";
+import {
+  Box,
+  Toolbar,
+} from "@mui/material";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 
 import { db } from "../../config/firebase";
-import { useLoja } from "../../contexts/LojaContext";
-
-import {
-  Box,
-  TextField,
-  Button,
-  Typography,
-  Switch,
-  FormControlLabel,
-  Paper,
-  Toolbar,
-  IconButton,
-  Divider
-} from "@mui/material";
-import DeleteIcon from "@mui/icons-material/Delete";
 
 import Navbar from "../../components/Navbar";
 import AdminDrawer from "../../components/AdminDrawer";
+import CategoriaForm from "../../components/FormCategoria";
+
 import { useProducts } from "../../contexts/ProdutosContext";
+import { useLoja } from "../../contexts/LojaContext";
+
+import { gerarSlug } from "../../services/categorias.service";
 
 export default function AddCategoria() {
   const { addCategoria } = useProducts();
-
-  const [suportaExtra, setSuportaExtra] = useState(false);
-  const [suportaBorda, setSuportaBorda] = useState(false);
-
   const { idLoja } = useLoja();
 
-  const [nome, setNome] = useState("");
-  const [permiteMisto, setPermiteMisto] = useState(false);
-  const [loading, setLoading] = useState(false);
+  async function handleSave(payload) {
+    const id = gerarSlug(payload.nome);
 
-  const [extras, setExtras] = useState([]);
-  const [bordas, setBordas] = useState([]);
+    const ref = doc(db, "clientes123pedidos", idLoja, "categorias", id);
+    const snap = await getDoc(ref);
+    if (snap.exists()) {
+      alert("Categoria já existe")
+      throw new Error("Categoria já existe")
+    };
 
-  const [novoExtraNome, setNovoExtraNome] = useState("");
-  const [novoExtraValor, setNovoExtraValor] = useState("");
-
-  const [novaBordaNome, setNovaBordaNome] = useState("");
-  const [novaBordaValor, setNovaBordaValor] = useState("");
-
-  function gerarSlug(texto) {
-    return texto
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9 ]/g, "")
-      .trim()
-      .replace(/\s+/g, "_");
+    await setDoc(ref, { ...payload, createdAt: new Date() });
+    addCategoria({ id, ...payload });
   }
-
-  const adicionarExtra = () => {
-    const nomeExtra = novoExtraNome.trim();
-    const valorExtra = parseFloat(novoExtraValor);
-    if (!nomeExtra || isNaN(valorExtra)) {
-      alert("Preencha nome e valor válidos para o extra");
-      return;
-    }
-    const idExtra = gerarSlug(nomeExtra);
-    setExtras(prev => [...prev, { id: idExtra, nome: nomeExtra, valor: valorExtra, status: true }]);
-    setNovoExtraNome("");
-    setNovoExtraValor("");
-  };
-
-  const removerExtra = (idExtra) => {
-    setExtras(prev => prev.filter(e => e.id !== idExtra));
-  };
-
-  const adicionarBorda = () => {
-    const nomeBorda = novaBordaNome.trim();
-    const valorBorda = parseFloat(novaBordaValor);
-    if (!nomeBorda || isNaN(valorBorda)) {
-      alert("Preencha nome e valor válidos para a borda");
-      return;
-    }
-    const idBorda = gerarSlug(nomeBorda);
-    setBordas(prev => [...prev, { id: idBorda, nome: nomeBorda, valor: valorBorda, status: true }]);
-    setNovaBordaNome("");
-    setNovaBordaValor("");
-  };
-
-  const removerBorda = (id) => {
-    setBordas(prev => prev.filter(b => b.id !== id));
-  };
-
-  const salvarCategoria = async () => {
-    const nomeFinal = nome.trim();
-    if (!nomeFinal) return;
-
-    const idCategoria = gerarSlug(nomeFinal);
-
-    try {
-      setLoading(true);
-
-      const ref = doc(
-        db,
-        "clientes123pedidos",
-        idLoja,
-        "categorias",
-        idCategoria
-      );
-
-      const existe = await getDoc(ref);
-      if (existe.exists()) {
-        alert("Já existe uma categoria com esse nome");
-        throw new Error("CATEGORIA_DUPLICADA");
-      }
-
-      const novaCategoria = {
-        nome: nomeFinal,
-        permiteMisto,
-        status: true,
-        extras,   // array de extras
-        bordas,   // array de bordas
-        createdAt: new Date()
-      }
-
-      await setDoc(ref, novaCategoria);
-      addCategoria({ id: idCategoria, ...novaCategoria }); //atualiza o contexto de categorias
-
-      setNome("");
-      setPermiteMisto(false);
-      setExtras([]);
-      alert("Categoria criada com sucesso!");
-    } catch (err) {
-      console.error(err);
-      alert("Erro ao criar categoria");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <Box sx={{ p: 2 }}>
@@ -140,102 +39,7 @@ export default function AddCategoria() {
       <Toolbar />
       <AdminDrawer />
 
-      <Paper sx={{ p: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Nova Categoria
-        </Typography>
-
-        <TextField
-          label="Nome da categoria"
-          fullWidth
-          value={nome}
-          onChange={e => setNome(e.target.value)}
-          sx={{ mb: 2 }}
-        />
-
-        <Divider sx={{ my: 2 }} />
-
-        <FormControlLabel
-          control={
-            <Switch
-              checked={permiteMisto}
-              onChange={e => setPermiteMisto(e.target.checked)}
-            />
-          }
-          label="Permitir produto misto (1/2) - indicado para pizzas"
-        />
-
-        <Divider sx={{ my: 2 }} />
-
-        {/* Extras */}
-        <FormControlLabel
-          control={
-            <Switch
-              checked={suportaExtra}
-              onChange={e => setSuportaExtra(e.target.checked)}
-            />
-          }
-          label="Adicionar extras aos produtos desta categoria"
-        />
-        {suportaExtra && (
-          <>
-            <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-              <TextField fullWidth label="Nome do extra" value={novoExtraNome} onChange={e => setNovoExtraNome(e.target.value)} />
-              <TextField fullWidth label="Valor" type="number" value={novoExtraValor} onChange={e => setNovoExtraValor(e.target.value)} />
-              <Button fullWidth variant="contained" onClick={adicionarExtra}>Adicionar</Button>
-            </Box>
-
-            {extras.map(extra => (
-              <Box key={extra.id} sx={{ display: 'flex', justifyContent: 'space-between', mb: 1, p: 1, border: '1px solid #ccc', borderRadius: 1 }}>
-                <Typography>{extra.nome} - R$ {extra.valor.toFixed(2)}</Typography>
-                <IconButton onClick={() => removerExtra(extra.id)}><DeleteIcon /></IconButton>
-              </Box>
-            ))}
-          </>
-        )}
-
-        <Divider sx={{ my: 2 }} />
-
-
-
-        {/* Bordas */}
-        <FormControlLabel
-          control={
-            <Switch
-              checked={suportaBorda}
-              onChange={e => setSuportaBorda(e.target.checked)}
-            />
-          }
-          label="Adicionar bordas aos produtos desta categoria"
-        />
-        {suportaBorda && (
-          <>
-
-            <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-              <TextField fullWidth label="Nome da borda" value={novaBordaNome} onChange={e => setNovaBordaNome(e.target.value)} />
-              <TextField fullWidth label="Valor" type="number" value={novaBordaValor} onChange={e => setNovaBordaValor(e.target.value)} />
-              <Button fullWidth variant="contained" onClick={adicionarBorda}>Adicionar</Button>
-            </Box>
-
-            {bordas.map(borda => (
-              <Box key={borda.id} sx={{ display: 'flex', justifyContent: 'space-between', mb: 1, p: 1, border: '1px solid #ccc', borderRadius: 1 }}>
-                <Typography>{borda.nome} - R$ {borda.valor.toFixed(2)}</Typography>
-                <IconButton onClick={() => removerBorda(borda.id)}><DeleteIcon /></IconButton>
-              </Box>
-            ))}
-          </>
-        )}
-
-        <Button
-          fullWidth
-          variant="contained"
-          sx={{ mt: 3 }}
-          disabled={loading}
-          onClick={salvarCategoria}
-        >
-          Salvar Categoria
-        </Button>
-      </Paper>
+      <CategoriaForm mode="add" onSave={handleSave} />
     </Box>
   );
 }

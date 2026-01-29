@@ -22,9 +22,15 @@ export default function ModalExtras({
   bordasDisponiveis = [],
   onConfirm
 }) {
+
+
   const [extrasSelecionados, setExtrasSelecionados] = useState([]);
   const [bordaSelecionada, setBordaSelecionada] = useState(null);
   const [observacao, setObservacao] = useState("");
+
+  const limiteExtras = produto?.categoria?.limiteExtras ?? Infinity;
+  const limiteAtingido = extrasSelecionados.length >= limiteExtras;
+
 
   useEffect(() => {
     if (!open) {
@@ -35,12 +41,24 @@ export default function ModalExtras({
   }, [open]);
 
   const toggleExtra = (extra) => {
-    setExtrasSelecionados(prev =>
-      prev.some(e => e.id === extra.id)
-        ? prev.filter(e => e.id !== extra.id)
-        : [...prev, extra]
-    );
+    setExtrasSelecionados(prev => {
+      const jaSelecionado = prev.some(e => e.id === extra.id);
+
+      // sempre permitir remover
+      if (jaSelecionado) {
+        return prev.filter(e => e.id !== extra.id);
+      }
+
+      // bloquear se atingiu o limite
+      if (prev.length >= limiteExtras) {
+        alert(`Você pode escolher no máximo ${limiteExtras} extras`);
+        return prev;
+      }
+
+      return [...prev, extra];
+    });
   };
+
 
   // Calcula preço final com extras + borda
   const precoFinal =
@@ -55,21 +73,33 @@ export default function ModalExtras({
       <DialogContent>
         {/* Extras */}
         {extrasDisponiveis.length > 0 && (
-          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 2 }}>
-            {extrasDisponiveis.map(extra => {
-              const ativo = extrasSelecionados.some(e => e.id === extra.id);
-              return (
-                <Button
-                  key={extra.id}
-                  variant={ativo ? "contained" : "outlined"}
-                  onClick={() => toggleExtra(extra)}
-                >
-                  {extra.nome}
-                  {extra.valor > 0 && ` (+R$ ${extra.valor.toFixed(2)})`}
-                </Button>
-              );
-            })}
-          </Box>
+          <>
+            {
+              limiteExtras !== Infinity && (
+                <Typography variant="caption">
+                  {extrasSelecionados.length}/{limiteExtras} extras
+                </Typography>
+              )
+            }
+
+
+            <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 2 }}>
+              {extrasDisponiveis.map(extra => {
+                const ativo = extrasSelecionados.some(e => e.id === extra.id);
+                return (
+                  <Button
+                    key={extra.id}
+                    variant={ativo ? "contained" : "outlined"}
+                    onClick={() => toggleExtra(extra)}
+                    disabled={!ativo && limiteAtingido}
+                  >
+                    {extra.nome}
+                    {extra.valor > 0 && ` (+R$ ${extra.valor.toFixed(2)})`}
+                  </Button>
+                );
+              })}
+            </Box>
+          </>
         )}
 
         {/* Bordas */}
