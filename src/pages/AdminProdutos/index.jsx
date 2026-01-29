@@ -26,13 +26,18 @@ import { useLoja } from "../../contexts/LojaContext";
 export default function AdminProdutos() {
   const { idLoja } = useLoja();
   const navigate = useNavigate();
-  const { produtos, categorias, loading } = useProducts();
+  const { produtos, categorias, loading, updateProdutosStatus, removeProduto } = useProducts();
 
   const [abaAtiva, setAbaAtiva] = useState(0);
   const [produtosOriginais, setProdutosOriginais] = useState([]);
   const [cloneProdutos, setCloneProdutos] = useState([]);
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
   const [produtoSelecionado, setProdutoSelecionado] = useState(null);
+
+  const houveMudanca = cloneProdutos.some(p => {
+    const original = produtosOriginais.find(o => o.id === p.id);
+    return original && original.status !== p.status;
+  });
 
   /* ---------- EXCLUIR ---------- */
   const abrirConfirmacaoExcluir = (prod) => {
@@ -58,6 +63,7 @@ export default function AdminProdutos() {
     try {
       await updateProdutoStatusBatch(idLoja, produtosAlterados);
       setProdutosOriginais(cloneProdutos.map((p) => ({ ...p })));
+      updateProdutosStatus(produtosAlterados);
       console.log("Status atualizados com sucesso!");
     } catch (error) {
       console.error("Erro ao salvar status:", error);
@@ -80,7 +86,7 @@ export default function AdminProdutos() {
   }, [produtos]);
 
   return (
-    <Box sx={{ p: 2 }}>
+    <Box sx={{ p: 2, pb: 8 }}>
       <Navbar />
       <Toolbar />
       <AdminDrawer />
@@ -185,15 +191,29 @@ export default function AdminProdutos() {
         </Box>
       )}
 
-      <Button
-        sx={{ mt: 3 }}
-        variant="contained"
-        fullWidth
-        onClick={salvarStatus}
-        disabled={JSON.stringify(produtosOriginais) === JSON.stringify(cloneProdutos)}
+      {/* ---------- BOTÃO SALVAR STATUS ---------- */}
+      <Box
+        sx={{
+          position: "fixed",
+          bottom: 0,
+          left: 0,
+          width: "100%",
+          bgcolor: "background.paper",
+          boxShadow: "0 -2px 10px rgba(0,0,0,0.5)",
+          p: 2,
+          zIndex: 1200,
+          display: "flex", justifyContent: "center", alignItems: "center"
+        }}
       >
-        Salvar status dos Produtos
-      </Button>
+        <Button
+          variant="contained"
+          fullWidth
+          onClick={salvarStatus}
+          disabled={!houveMudanca}
+        >
+          Salvar status dos Produtos
+        </Button>
+      </Box>
 
       {/* ---------- CONFIRMAÇÃO ---------- */}
       <ConfirmDialog
@@ -205,10 +225,11 @@ export default function AdminProdutos() {
           if (!produtoSelecionado) return;
 
           await deleteProduto(idLoja, produtoSelecionado.id);
+          removeProduto(produtoSelecionado.id);
 
-          setCloneProdutos((prev) => prev.filter((p) => p.id !== produtoSelecionado.id));
-          setProdutosOriginais((prev) => prev.filter((p) => p.id !== produtoSelecionado.id));
-          setOpenConfirmDialog(false);
+          setCloneProdutos(prev => prev.filter(p => p.id !== produtoSelecionado.id));
+          setProdutosOriginais(prev => prev.filter(p => p.id !== produtoSelecionado.id));
+
         }}
       />
     </Box>

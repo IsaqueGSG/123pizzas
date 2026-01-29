@@ -25,20 +25,27 @@ import { useLoja } from "../../contexts/LojaContext";
 export default function AdminCategorias() {
   const { idLoja } = useLoja();
   const navigate = useNavigate();
-  const { categorias, loading } = useProducts(); // Reutilizamos ProdutosContext, que também tem categorias
+  const { categorias, loading, updateCategoriasStatus, removeCategoria } = useProducts();
 
-  const [categoriasOriginais, setCategoriasOriginais] = useState([]);
   const [cloneCategorias, setCloneCategorias] = useState([]);
+  useEffect(() => {
+    setCloneCategorias(categorias.map(c => ({ ...c })));
+  }, [categorias]);
+
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
   const [categoriaSelecionada, setCategoriaSelecionada] = useState(null);
 
-  /* ---------- EXCLUIR ---------- */
+  const houveMudanca = cloneCategorias.some(cat => {
+    const original = categorias.find(c => c.id === cat.id);
+    return original && original.status !== cat.status;
+  });
+
+
   const abrirConfirmacaoExcluir = (cat) => {
     setCategoriaSelecionada(cat);
     setOpenConfirmDialog(true);
   };
 
-  /* ---------- STATUS ---------- */
   const toggleStatus = (cat) => {
     setCloneCategorias((prev) =>
       prev.map((c) => (c.id === cat.id ? { ...c, status: !c.status } : c))
@@ -46,8 +53,8 @@ export default function AdminCategorias() {
   };
 
   const salvarStatus = async () => {
-    const categoriasAlteradas = cloneCategorias.filter((cat) => {
-      const original = categoriasOriginais.find((c) => c.id === cat.id);
+    const categoriasAlteradas = cloneCategorias.filter(cat => {
+      const original = categorias.find(c => c.id === cat.id);
       return original && original.status !== cat.status;
     });
 
@@ -55,22 +62,14 @@ export default function AdminCategorias() {
 
     try {
       await updateCategoriaStatusBatch(idLoja, categoriasAlteradas);
-      setCategoriasOriginais(cloneCategorias.map((c) => ({ ...c })));
-      console.log("Status atualizados com sucesso!");
+      updateCategoriasStatus(categoriasAlteradas); // 🔥 Context
     } catch (error) {
       console.error("Erro ao salvar status:", error);
     }
   };
 
-  /* ---------- INIT ---------- */
-  useEffect(() => {
-    if (!categorias.length || cloneCategorias.length) return;
-    setCategoriasOriginais(categorias.map((c) => ({ ...c })));
-    setCloneCategorias(categorias.map((c) => ({ ...c })));
-  }, [categorias]);
-
   return (
-    <Box sx={{ p: 2 }}>
+    <Box sx={{ p: 2, pb: 8 }}>
       <Navbar />
       <Toolbar />
       <AdminDrawer />
@@ -144,20 +143,33 @@ export default function AdminCategorias() {
                 </Box>
               </Card>
             ))}
-           
+
           </Box>
         </Box>
       )}
 
-      <Button
-        sx={{ mt: 3 }}
-        variant="contained"
-        fullWidth
-        onClick={salvarStatus}
-        disabled={JSON.stringify(categoriasOriginais) === JSON.stringify(cloneCategorias)}
+      <Box
+        sx={{
+          position: "fixed",
+          bottom: 0,
+          left: 0,
+          width: "100%",
+          bgcolor: "background.paper",
+          boxShadow: "0 -2px 10px rgba(0,0,0,0.5)",
+          p: 2,
+          zIndex: 1200,
+          display: "flex", justifyContent: "center", alignItems: "center"
+        }}
       >
-        Salvar status das Categorias
-      </Button>
+        <Button
+          variant="contained"
+          fullWidth
+          onClick={salvarStatus}
+          disabled={!houveMudanca}
+        >
+          Salvar status das Categorias
+        </Button>
+      </Box>
 
       {/* ---------- CONFIRMAÇÃO ---------- */}
       <ConfirmDialog
@@ -170,10 +182,10 @@ export default function AdminCategorias() {
 
           await deleteCategoria(idLoja, categoriaSelecionada.id);
 
-          setCloneCategorias((prev) => prev.filter((c) => c.id !== categoriaSelecionada.id));
-          setCategoriasOriginais((prev) => prev.filter((c) => c.id !== categoriaSelecionada.id));
+          removeCategoria(categoriaSelecionada.id);
           setOpenConfirmDialog(false);
         }}
+
       />
     </Box>
   );

@@ -45,9 +45,7 @@ export default function EditCategoria() {
   const [novaBordaNome, setNovaBordaNome] = useState("");
   const [novaBordaValor, setNovaBordaValor] = useState("");
 
-  // ------------------------------
   // Carregar categoria do context
-  // ------------------------------
   useEffect(() => {
     if (!categoriaId || !categorias.length) return;
 
@@ -66,9 +64,6 @@ export default function EditCategoria() {
     setSuportaBorda((categoria.bordas || []).length > 0);
   }, [categoriaId, categorias, navigate]);
 
-  // ------------------------------
-  // Helpers
-  // ------------------------------
   function gerarSlug(texto) {
     return texto
       .toLowerCase()
@@ -109,9 +104,7 @@ export default function EditCategoria() {
     setBordas(prev => prev.filter(b => b.id !== idBorda));
   };
 
-  // ------------------------------
   // Salvar alterações
-  // ------------------------------
   const salvarCategoria = async () => {
     const nomeFinal = nome.trim();
     if (!nomeFinal) return;
@@ -144,9 +137,6 @@ export default function EditCategoria() {
     }
   };
 
-  // ------------------------------
-  // JSX
-  // ------------------------------
   return (
     <Box sx={{ p: 2 }}>
       <Navbar />

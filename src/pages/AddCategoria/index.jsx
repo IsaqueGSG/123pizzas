@@ -20,8 +20,10 @@ import DeleteIcon from "@mui/icons-material/Delete";
 
 import Navbar from "../../components/Navbar";
 import AdminDrawer from "../../components/AdminDrawer";
+import { useProducts } from "../../contexts/ProdutosContext";
 
 export default function AddCategoria() {
+  const { addCategoria } = useProducts();
 
   const [suportaExtra, setSuportaExtra] = useState(false);
   const [suportaBorda, setSuportaBorda] = useState(false);
@@ -40,7 +42,6 @@ export default function AddCategoria() {
 
   const [novaBordaNome, setNovaBordaNome] = useState("");
   const [novaBordaValor, setNovaBordaValor] = useState("");
-
 
   function gerarSlug(texto) {
     return texto
@@ -109,14 +110,17 @@ export default function AddCategoria() {
         throw new Error("CATEGORIA_DUPLICADA");
       }
 
-      await setDoc(ref, {
+      const novaCategoria = {
         nome: nomeFinal,
         permiteMisto,
         status: true,
         extras,   // array de extras
         bordas,   // array de bordas
         createdAt: new Date()
-      });
+      }
+
+      await setDoc(ref, novaCategoria);
+      addCategoria({ id: idCategoria, ...novaCategoria }); //atualiza o contexto de categorias
 
       setNome("");
       setPermiteMisto(false);
@@ -150,7 +154,7 @@ export default function AddCategoria() {
         />
 
         <Divider sx={{ my: 2 }} />
-        
+
         <FormControlLabel
           control={
             <Switch

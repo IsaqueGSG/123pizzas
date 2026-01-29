@@ -16,16 +16,15 @@ import AdminDrawer from "../../components/AdminDrawer";
 
 import { useProducts } from "../../contexts/ProdutosContext";
 import { useLoja } from "../../contexts/LojaContext";
-import { updateProduto } from "../../services/produtos.service";
-import { getCategorias } from "../../services/categorias.service";
+
+import { updateProduto as updateProdutoService } from "../../services/produtos.service";
 
 export default function EditProduto() {
   const { IDproduto } = useParams();
-  const { produtos, loading } = useProducts();
+  const { produtos, loading, categorias, updateProduto } = useProducts();
   const { idLoja } = useLoja();
 
   const [produto, setProduto] = useState(null);
-  const [categorias, setCategorias] = useState([]);
 
   const [form, setForm] = useState({
     nome: "",
@@ -35,12 +34,7 @@ export default function EditProduto() {
     categoriaId: ""
   });
 
-  // 🔹 carrega categorias
-  useEffect(() => {
-    getCategorias(idLoja).then(setCategorias);
-  }, [idLoja]);
-
-  // 🔹 busca o produto
+  // busca o produto no contexto
   useEffect(() => {
     if (loading || !produtos.length) return;
 
@@ -48,7 +42,7 @@ export default function EditProduto() {
     if (encontrado) setProduto(encontrado);
   }, [IDproduto, produtos, loading]);
 
-  // 🔹 popula o formulário
+  // popula o formulário
   useEffect(() => {
     if (!produto) return;
 
@@ -69,13 +63,16 @@ export default function EditProduto() {
       return;
     }
 
-    await updateProduto(idLoja, produto.id, {
+    const dadosAtualizados = {
       nome: form.nome,
       img: form.img,
       valor: Number(form.valor),
       descricao: form.descricao,
       categoriaId: form.categoriaId
-    });
+    }
+
+    await updateProdutoService(idLoja, produto.id, dadosAtualizados);
+    updateProduto(produto.id, dadosAtualizados);// atualizar a lista de produtos no context
 
     alert("Produto atualizado com sucesso!");
   };

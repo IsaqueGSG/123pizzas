@@ -10,7 +10,7 @@ import {
 import Navbar from "../../components/Navbar";
 import AdminDrawer from "../../components/AdminDrawer";
 
-import { addProduto } from "../../services/produtos.service";
+import { addProduto as addProdutoService } from "../../services/produtos.service";
 import { useProducts } from "../../contexts/ProdutosContext";
 import { useLoja } from "../../contexts/LojaContext";
 
@@ -18,7 +18,7 @@ import { useLoja } from "../../contexts/LojaContext";
 export default function AddProduto() {
     const { idLoja } = useLoja();
 
-    const { categorias } = useProducts();
+    const { categorias, addProduto } = useProducts();
 
     const [produto, setProduto] = useState({
         nome: "",
@@ -38,10 +38,11 @@ export default function AddProduto() {
             return;
         }
 
-        await addProduto(idLoja, {
+        const idProduto = await addProdutoService(idLoja, {
             ...produto,
             valor: Number(valor)
         });
+        addProduto({ ...produto, id: idProduto });
 
         setProduto({
             nome: "",
