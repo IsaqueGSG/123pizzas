@@ -21,6 +21,47 @@ L.Icon.Default.mergeOptions({
         "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
+const clienteIcon = L.divIcon({
+    html: `
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="#1976d2">
+      <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+    </svg>
+  `,
+    className: "",
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+});
+
+const lojaIcon = L.divIcon({
+    html: `
+    <svg
+      width="34"
+      height="34"
+      viewBox="0 0 24 24"
+      fill="#d32f2f"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <!-- Toldo -->
+      <path d="M3 4h18l-1.5 5H4.5L3 4z" fill="#f44336"/>
+      
+      <!-- Corpo da loja -->
+      <rect x="4" y="9" width="16" height="11" rx="1.5" />
+
+      <!-- Porta -->
+      <rect x="10" y="12" width="4" height="8" fill="#ffffff"/>
+
+      <!-- Janela esquerda -->
+      <rect x="6" y="12" width="3" height="3" fill="#ffffff"/>
+
+      <!-- Janela direita -->
+      <rect x="15" y="12" width="3" height="3" fill="#ffffff"/>
+    </svg>
+  `,
+    className: "",
+    iconSize: [34, 34],
+    iconAnchor: [17, 34],
+});
+
 import { useEntrega } from "../../contexts/EntregaContext";
 
 export default function MapaEntrega() {
@@ -117,12 +158,14 @@ export default function MapaEntrega() {
                             >
                                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
+                                {/* Marker para o endereço da loja */}
                                 {enderecoLoja?.lat && enderecoLoja?.lng && (
-                                    <Marker position={[enderecoLoja.lat, enderecoLoja.lng]} />
+                                    <Marker position={[enderecoLoja.lat, enderecoLoja.lng]} icon={lojaIcon} />
                                 )}
 
+                                {/* Marker para o endereço do cliente */}
                                 {endereco.lat && endereco.lng && (
-                                    <Marker position={[endereco.lat, endereco.lng]} />
+                                    <Marker position={[endereco.lat, endereco.lng]} icon={clienteIcon} />
                                 )}
 
                                 {Array.isArray(rota) && rota.length > 0 && (

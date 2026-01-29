@@ -41,8 +41,6 @@ export default function Checkout() {
     limparCarrinho
   } = useCarrinho();
 
-  console.log("Itens no carrinho:", itens);
-
   const [aba, setAba] = useState(0)
   const valorTotalCarrinho = itens.reduce(
     (total, item) => total + Number(item.valor) * Number(item.quantidade),
@@ -50,7 +48,7 @@ export default function Checkout() {
   );
 
   const valorTotalPedido = valorTotalCarrinho + (endereco.taxaEntrega ?? 0);
-  
+
   const [cliente, setCliente] = useState({
     nome: "",
     telefone: "",
@@ -96,6 +94,11 @@ export default function Checkout() {
       !cliente.formaPagamento.obsPagamento
     ) {
       alert("Informe o valor para troco");
+      return false;
+    }
+
+    if (cliente.formaPagamento.obsPagamento < valorTotalPedido && cliente.formaPagamento.forma === "DINHEIRO") {
+      alert("O valor para troco não pode ser menor que o valor total do pedido\n Total do pedido R$ " + valorTotalPedido.toFixed(2));
       return false;
     }
 

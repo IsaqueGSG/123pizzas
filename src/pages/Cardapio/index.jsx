@@ -18,9 +18,6 @@ import Tab from "@mui/material/Tab";
 export default function Cardapio() {
   const { produtos, categorias, loading } = useProducts();
 
-  console.log("Categorias:", categorias);
-  console.log("Produtos:", produtos);
-
   const { addItem } = useCarrinho();
 
   const [modoMisto, setModoMisto] = useState(false);
@@ -171,6 +168,7 @@ export default function Cardapio() {
       >
         {produtosFiltrados.map((produto) => (
           <CardProduto
+            modoMisto={modoMisto}
             produto={produto}
             key={produto.id}
             selecionado={saboresSelecionados.some(s => s.id === produto.id)}

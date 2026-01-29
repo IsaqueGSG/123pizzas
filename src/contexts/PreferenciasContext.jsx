@@ -33,7 +33,6 @@ const DEFAULT_PREFS = {
 
 export function PreferenciasProvider({ children }) {
   const { idLoja } = useLoja();
-  console.log(idLoja)
 
   const [loading, setLoading] = useState(true);
   const [preferencias, setPreferencias] = useState(DEFAULT_PREFS);

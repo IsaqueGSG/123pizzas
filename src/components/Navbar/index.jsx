@@ -22,7 +22,6 @@ export default function Navbar() {
     const { quantidadeTotal, setOpenCarrinho } = useCarrinho();
     const { idLoja } = useLoja();
 
-    const navigate = useNavigate();
     const location = useLocation();
 
     const privatePrefixes = [
@@ -46,7 +45,6 @@ export default function Navbar() {
         setOpenCarrinho(false);
     }, [location.pathname, setOpenAdminDrawer, setOpenCarrinho]);
 
-
     return (
         <AppBar position="fixed">
             <Toolbar>
@@ -58,7 +56,6 @@ export default function Navbar() {
                 <Typography
                     variant="h6"
                     sx={{ flexGrow: 1, cursor: "pointer" }}
-                    onClick={() => isPrivateRoute ? navigate(`/${idLoja}/pedidos`) : navigate(`/${idLoja}`)}
                 >
                     123Pedidos
                 </Typography>

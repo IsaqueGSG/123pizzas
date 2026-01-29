@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -25,6 +26,7 @@ import campainha from "../../assets/audios/campainha.mp3"
 import { useLoja } from "../../contexts/LojaContext";
 
 export default function AdminPedidos() {
+  const navigate = useNavigate();
   const { idLoja } = useLoja()
 
   const statusTabs = ["pendente", "preparando", "finalizado", "cancelado"];
@@ -133,9 +135,20 @@ Obrigado pela preferência!
       <Toolbar />
       <AdminDrawer />
 
-      <Typography variant="h5" fontWeight="bold" gutterBottom>
-        Pedidos
-      </Typography>
+      <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+        <Typography variant="h5" fontWeight="bold" gutterBottom>
+          Gestão de pedidos
+        </Typography>
+
+        <Button
+          variant="contained"
+          onClick={() => navigate(`/${idLoja}`)}
+        >
+          Criar Pedido
+        </Button>
+      </Box>
+
+      <Divider sx={{ mt: 2 }} />
 
       <Tabs
         value={abaAtiva}

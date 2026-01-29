@@ -12,7 +12,7 @@ import RemoveIcon from "@mui/icons-material/Remove";
 
 import { useCarrinho } from "../../contexts/CarrinhoContext";
 
-export default function CardProduto({ produto, onSelecionar, selecionado }) {
+export default function CardProduto({ produto, onSelecionar, selecionado, modoMisto }) {
   const { itens, incrementar, decrementar } = useCarrinho();
 
   const itemCarrinho = itens.find(i => i.id === produto.id);
@@ -37,7 +37,7 @@ export default function CardProduto({ produto, onSelecionar, selecionado }) {
 
       {!itemCarrinho ? (
         <Button fullWidth variant="contained" onClick={onSelecionar}>
-          Adicionar
+          {modoMisto ? "Selecionar" : "Adicionar"}
         </Button>
       ) : (
         <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 1 }}>

@@ -13,7 +13,6 @@ const AuthContext = createContext({});
 
 export const AuthProvider = ({ children }) => {
     const { idLoja } = useLoja();
-    console.log(idLoja)
 
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
