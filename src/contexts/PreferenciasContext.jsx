@@ -28,6 +28,9 @@ const DEFAULT_PREFS = {
     sexta: { ativo: true, inicio: "18:00", fim: "23:59" },
     sabado: { ativo: true, inicio: "18:00", fim: "23:59" },
     domingo: { ativo: false, inicio: "18:00", fim: "23:00" }
+  },
+  impressao: {
+    largura: "80mm" // "80mm" | "58mm"
   }
 };
 

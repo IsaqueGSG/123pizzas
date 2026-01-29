@@ -9,13 +9,14 @@ import {
   Button,
   CircularProgress,
   Toolbar,
+  Select,
+  MenuItem
 } from "@mui/material";
 
 import Navbar from "../../components/Navbar";
 import AdminDrawer from "../../components/AdminDrawer";
 
 import { buscarCep, geocodeGoogle } from "../../services/entrega.service";
-
 import { usePreferencias } from "../../contexts/PreferenciasContext";
 
 const DIAS_SEMANA = [
@@ -41,6 +42,8 @@ export default function AdminPreferencias() {
   const [loadingEndereco, setLoadingEndereco] = useState(false);
   const [erroEndereco, setErroEndereco] = useState("");
 
+  const houveMudanca = JSON.stringify(prefs) !== JSON.stringify(preferencias)
+
   useEffect(() => {
     setPrefs(preferencias);
 
@@ -60,16 +63,15 @@ export default function AdminPreferencias() {
       setLoadingEndereco(true);
       setErroEndereco("");
 
-      // ViaCEP
       const cepData = await buscarCep(cepLoja);
       setCepData(cepData);
 
       const enderecoTexto = `${cepData.logradouro}, ${numeroLoja} - ${cepData.bairro}, ${cepData.localidade} - ${cepData.uf}, ${cepData.cep}`;
       setEnderecoLoja(enderecoTexto);
 
-      // Geocode
       const key = import.meta.env.VITE_GOOGLE_GEO_API_KEY;
-      let geo = null;
+      let geo;
+
       try {
         geo = await geocodeGoogle(key, enderecoTexto);
       } catch {
@@ -77,6 +79,7 @@ export default function AdminPreferencias() {
       }
 
       const enderecoLoja = {
+        enderecoCompleto: enderecoTexto,
         cep: cepData.cep,
         numero: numeroLoja,
         rua: cepData.logradouro,
@@ -92,6 +95,7 @@ export default function AdminPreferencias() {
         enderecoLoja
       }));
 
+      setErroEndereco("");
     } catch (err) {
       setErroEndereco(err.message);
     } finally {
@@ -100,7 +104,7 @@ export default function AdminPreferencias() {
   }
 
   const atualizarHorario = (dia, campo, valor) => {
-    setPrefs((prev) => ({
+    setPrefs(prev => ({
       ...prev,
       horarios: {
         ...prev.horarios,
@@ -112,20 +116,11 @@ export default function AdminPreferencias() {
     }));
   };
 
-  const disabledSalvarPreferencias = () => {
-    return JSON.stringify(prefs) === JSON.stringify(preferencias);
+  const guardarPreferencias = async () => {
+    await atualizarPreferencias(prefs);
+    alert("Preferências salvas com sucesso!");
   };
 
-  const guardarPreferencias = async () => {
-    try {
-      await atualizarPreferencias(prefs);
-      console.log("Preferências salvas", prefs);
-      alert("Preferências salvas com sucesso!");
-    } catch (e) {
-      alert("Erro ao salvar preferências. Tente novamente.");
-      console.log("Erro ao salvar preferências", e);
-    }
-  };
 
   if (loading) {
     return (
@@ -145,19 +140,19 @@ export default function AdminPreferencias() {
         Preferências
       </Typography>
 
-      {/* HORÁRIO */}
+      {/* HORÁRIOS */}
       <Card sx={{ p: 2, mb: 3 }}>
         <Typography fontWeight="bold" gutterBottom>
           🕒 Horário de funcionamento
         </Typography>
 
-        {DIAS_SEMANA.map((dia) => (
-          <Box key={dia} sx={{ mb: 2 }}>
+        {DIAS_SEMANA.map(dia => (
+          <Card key={dia} variant="outlined" sx={{ mb: 1.5, p: 1.5 }}>
             <FormControlLabel
               control={
                 <Switch
                   checked={prefs.horarios[dia].ativo}
-                  onChange={(e) =>
+                  onChange={e =>
                     atualizarHorario(dia, "ativo", e.target.checked)
                   }
                 />
@@ -172,7 +167,7 @@ export default function AdminPreferencias() {
                   type="time"
                   size="small"
                   value={prefs.horarios[dia].inicio}
-                  onChange={(e) =>
+                  onChange={e =>
                     atualizarHorario(dia, "inicio", e.target.value)
                   }
                 />
@@ -181,15 +176,13 @@ export default function AdminPreferencias() {
                   type="time"
                   size="small"
                   value={prefs.horarios[dia].fim}
-                  onChange={(e) =>
+                  onChange={e =>
                     atualizarHorario(dia, "fim", e.target.value)
                   }
                 />
               </Box>
             )}
-          </Box>
-
-
+          </Card>
         ))}
       </Card>
 
@@ -199,11 +192,16 @@ export default function AdminPreferencias() {
           📍 Endereço da loja
         </Typography>
 
-        <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 1, mt: 1 }}>
-
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr 1fr",
+            gap: 1,
+            mt: 1
+          }}
+        >
           <TextField
             label="CEP"
-            fullWidth
             size="small"
             value={cepLoja}
             onChange={e => setCepLoja(e.target.value)}
@@ -211,45 +209,44 @@ export default function AdminPreferencias() {
 
           <TextField
             label="Número"
-            fullWidth
             size="small"
             value={numeroLoja}
             onChange={e => setNumeroLoja(e.target.value)}
           />
 
-          {/* Butao buca cep */}
           <Button
-            disabled={
-              loadingEndereco}
             variant="outlined"
+            disabled={loadingEndereco || !cepLoja || !numeroLoja}
             onClick={buscarEndereco}
           >
-            {loadingEndereco ? (
-              <Box sx={{ display: "flex", alignItems: "center", ml: 2 }}>
-                <CircularProgress size={20} />
-              </Box>
-            ) : (
-              "Buscar endereço"
-            )}
+            {loadingEndereco ? <CircularProgress size={20} /> : "Buscar"}
           </Button>
 
-          {(cepData && prefs.enderecoLoja.lat) && (
-            <Box sx={{ gridColumn: "1 / -1", mt: 2 }}>
-              <Typography>
-                <strong>Endereço encontrado:</strong> {enderecoLoja} / {`Lat: ${prefs.enderecoLoja?.lat || ""}, Lng: ${prefs.enderecoLoja?.lng || ""} `}
+          {prefs.enderecoLoja?.lat && (
+            <Card
+              variant="outlined"
+              sx={{ gridColumn: "1 / -1", mt: 2, p: 2, bgcolor: "#f9f9f9" }}
+            >
+              <Typography fontWeight="bold">
+                Endereço confirmado
               </Typography>
-            </Box>
+              <Typography variant="body2" sx={{ mt: 1 }}>
+                {prefs.enderecoLoja.enderecoCompleto}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Lat: {prefs.enderecoLoja.lat} | Lng:{" "}
+                {prefs.enderecoLoja.lng}
+              </Typography>
+            </Card>
           )}
 
           {erroEndereco && (
-            <Typography color="error" sx={{ mt: 1 }}>
-              {erroEndereco}
-            </Typography>
+            <Typography color="error">{erroEndereco}</Typography>
           )}
         </Box>
       </Card>
 
-      {/* Taxa de entrega */}
+      {/* TAXA */}
       <Card sx={{ p: 2, mb: 3 }}>
         <Typography fontWeight="bold" gutterBottom>
           💰 Taxa de entrega por km
@@ -257,27 +254,48 @@ export default function AdminPreferencias() {
 
         <TextField
           fullWidth
-          label="Taxa por km (R$)"
+          label="Valor por km"
           type="number"
           size="small"
+          InputProps={{
+            startAdornment: <Typography sx={{ mr: 1 }}>R$</Typography>
+          }}
           value={prefs.taxaEntregaKm}
-          onChange={(e) => {
-            //previne valor negativo
-            if (e.target.value < 0) {
-              e.target.value = 0;
-            }
-            const valor = Math.max(0, Number(e.target.value) || 0);
-
+          onChange={e =>
             setPrefs(prev => ({
               ...prev,
-              taxaEntregaKm: valor
-            }));
-
-          }
+              taxaEntregaKm: Math.max(0, Number(e.target.value) || 0)
+            }))
           }
         />
-      </Card >
+      </Card>
 
+      {/* IMPRESSÃO */}
+      <Card sx={{ p: 2, mb: 3 }}>
+        <Typography fontWeight="bold" gutterBottom>
+          🖨️ Impressão da comanda
+        </Typography>
+
+        <Select
+          fullWidth
+          size="small"
+          value={prefs.impressao.largura}
+          onChange={e =>
+            setPrefs(prev => ({
+              ...prev,
+              impressao: {
+                ...prev.impressao,
+                largura: e.target.value
+              }
+            }))
+          }
+        >
+          <MenuItem value="58mm">58mm</MenuItem>
+          <MenuItem value="80mm">80mm</MenuItem>
+        </Select>
+      </Card>
+
+      {/* SALVAR */}
       <Box
         sx={{
           position: "fixed",
@@ -285,27 +303,22 @@ export default function AdminPreferencias() {
           left: 0,
           width: "100%",
           bgcolor: "background.paper",
-          boxShadow: "0 -2px 10px rgba(0,0,0,0.5)",
           p: 2,
-          zIndex: 1200,
-
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center"
+          boxShadow: "0 -2px 10px rgba(0,0,0,.3)"
         }}
       >
         <Button
           fullWidth
           variant="contained"
-          disabled={disabledSalvarPreferencias()}
+          disabled={!houveMudanca}
           onClick={guardarPreferencias}
         >
-          {disabledSalvarPreferencias()
-            ? "Nenhuma alteração"
-            : "Salvar preferências"}
+          {
+            !houveMudanca
+              ? "Nenhuma alteração"
+              : "Salvar preferências"}
         </Button>
-
       </Box>
-    </Box >
+    </Box>
   );
 }

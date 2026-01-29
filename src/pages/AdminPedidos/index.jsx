@@ -18,16 +18,18 @@ import ModalAtivarAudio from "../../components/ModalAtivarAudio";
 import ConfirmDialog from "../../components/ConfirmDialog";
 
 import { updatePedidoStatus, escutarPedidos, deletarPedido, marcarComoImpresso } from "../../services/pedidos.service";
-import { geraComandaHTML80mm, imprimir } from "../../services/impressora.service";
+import { geraComandaHTML80mm, imprimir, geraComandaHTML } from "../../services/impressora.service";
 import { enviarMensagem } from "../../services/whatsapp.service";
 import { tocarAudio } from "../../services/audio.service";
 import campainha from "../../assets/audios/campainha.mp3"
 
 import { useLoja } from "../../contexts/LojaContext";
+import { usePreferencias } from "../../contexts/PreferenciasContext";
 
 export default function AdminPedidos() {
   const navigate = useNavigate();
   const { idLoja } = useLoja()
+  const { preferencias } = usePreferencias();
 
   const statusTabs = ["pendente", "preparando", "finalizado", "cancelado"];
   const [abaAtiva, setAbaAtiva] = useState(0);
@@ -83,10 +85,10 @@ Obrigado pela preferência!
 
       enviarMensagem(pedido, texto);
 
-      const html = geraComandaHTML80mm({
-        ...pedido,
-        status: "preparando"
-      });
+      // const html = geraComandaHTML80mm(pedido);
+
+      const larguraImpressao = preferencias?.impressao?.largura || "80mm";
+      const html = geraComandaHTML(pedido, larguraImpressao);
 
       imprimir(html);
 
