@@ -236,13 +236,13 @@ Obrigado pela preferência!
                         Valor unitário: R$ {item.valor.toFixed(2)}
                       </Typography>
 
-                      {item?.borda && (
+                      {Array.isArray(item.borda) && item.borda.length > 0 && (
                         <Typography variant="body2">
                           Borda: {item.borda.nome}
                         </Typography>
                       )}
 
-                      {item?.extras.length > 0 && (
+                      {Array.isArray(item.extras) && item.extras.length > 0 && (
                         <Typography variant="body2">
                           Extras:{" "}
                           {item.extras
@@ -258,7 +258,7 @@ Obrigado pela preferência!
                       )}
 
                       <Typography variant="body2" fontWeight="bold">
-                        Subtotal: R$ {(item.valor * item.quantidade).toFixed(2)}
+                        Subtotal: R$ {(item.valor * (item.quantidade ?? 1)).toFixed(2)}
                       </Typography>
                     </Box>
                   ))}

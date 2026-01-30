@@ -178,10 +178,12 @@ export function geraComandaHTML(pedido, largura = "80mm") {
 
   const endereco = pedido.cliente?.endereco || {};
   const pagamento = pedido.cliente?.formaPagamento || {};
+  let subTotalItens = 0
 
   const itensPorTipo = pedido.itens.reduce((acc, item) => {
     const tipo = item.tipo || "Itens";
     if (!acc[tipo]) acc[tipo] = [];
+    subTotalItens += item.valor
     acc[tipo].push(item);
     return acc;
   }, {});
@@ -222,6 +224,12 @@ export function geraComandaHTML(pedido, largura = "80mm") {
     font-weight: bold;
     text-align: right;
   }
+
+  .subTotal {
+    font-size: ${fontBase}px;
+    font-weight: bold;
+    text-align: right;
+  }
 </style>
 
 <div class="center">
@@ -259,13 +267,13 @@ ${Object.entries(itensPorTipo).map(([tipo, itens]) => `
       </div>
 
       ${item.borda?.nome
-        ? `<div class="sub">Borda: ${item.borda.nome}</div>`
+        ? `<div class="sub"><b>Borda:</b> ${item.borda.nome}</div>`
         : ""
       }
 
       ${item.extras?.length
         ? `<div class="sub">
-            Extras: ${item.extras
+            <b>Extras:</b> ${item.extras
           .map(e => `${e.nome} (+${e.valor.toFixed(2)})`)
           .join(", ")}
           </div>`
@@ -289,6 +297,12 @@ ${pagamento.forma === "DINHEIRO" && pagamento.obsPagamento
       ? `<div class="sub">Troco para: R$ ${pagamento.obsPagamento}</div>`
       : ""
     }
+
+<div class="divider"></div>
+
+<div class="bold">Valores:</div>
+<div> Total dos itens: ${subTotalItens.toFixed(2) || ""}</div>
+<div> Taxa de entrega: ${endereco.taxaEntrega.toFixed(2) || ""}</div>
 
 <div class="divider"></div>
 

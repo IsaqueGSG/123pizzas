@@ -365,6 +365,7 @@ export default function Checkout() {
                 type="tel"
                 fullWidth
                 size="small"
+                sx={{ mb: 1 }}
                 value={cliente.telefone}
                 error={cliente.telefone && !telefoneValido}
                 helperText={
