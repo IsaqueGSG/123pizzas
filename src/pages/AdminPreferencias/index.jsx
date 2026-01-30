@@ -252,22 +252,41 @@ export default function AdminPreferencias() {
           💰 Taxa de entrega por km
         </Typography>
 
-        <TextField
-          fullWidth
-          label="Valor por km"
-          type="number"
-          size="small"
-          InputProps={{
-            startAdornment: <Typography sx={{ mr: 1 }}>R$</Typography>
-          }}
-          value={prefs.taxaEntregaKm}
-          onChange={e =>
-            setPrefs(prev => ({
-              ...prev,
-              taxaEntregaKm: Math.max(0, Number(e.target.value) || 0)
-            }))
-          }
-        />
+        <Box sx={{ display: "flex", gap: 1 }}>
+          <TextField
+            fullWidth
+            label="Taxa de entrega minima"
+            type="number"
+            size="small"
+            InputProps={{
+              startAdornment: <Typography sx={{ mr: 1 }}>R$</Typography>
+            }}
+            value={prefs.taxaEntregaMinima}
+            onChange={e =>
+              setPrefs(prev => ({
+                ...prev,
+                taxaEntregaMinima: Math.max(0, Number(e.target.value) || 0)
+              }))
+            }
+          />
+
+          <TextField
+            fullWidth
+            label="Valor por km"
+            type="number"
+            size="small"
+            InputProps={{
+              startAdornment: <Typography sx={{ mr: 1 }}>R$</Typography>
+            }}
+            value={prefs.taxaEntregaKm}
+            onChange={e =>
+              setPrefs(prev => ({
+                ...prev,
+                taxaEntregaKm: Math.max(0, Number(e.target.value) || 0)
+              }))
+            }
+          />
+        </Box>
       </Card>
 
       {/* IMPRESSÃO */}

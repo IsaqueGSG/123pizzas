@@ -14,7 +14,7 @@ import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 
 import { useLoja } from "../../contexts/LojaContext";
 import { useEntrega } from "../../contexts/EntregaContext";
@@ -43,11 +43,14 @@ export default function Checkout() {
 
   const [aba, setAba] = useState(0)
   const valorTotalCarrinho = itens.reduce(
-    (total, item) => total + Number(item.valor) * Number(item.quantidade),
+    (total, item) =>
+      total +
+      Number(item.valor ?? 0) *
+      Number(item.quantidade ?? 1),
     0
   );
 
-  const valorTotalPedido = valorTotalCarrinho + (endereco.taxaEntrega ?? 0);
+  const valorTotalPedido = valorTotalCarrinho + (endereco?.taxaEntrega ?? 0);
 
   const [cliente, setCliente] = useState({
     nome: "",
@@ -56,6 +59,34 @@ export default function Checkout() {
       forma: "", obsPagamento: ""
     }
   });
+
+  function limparTelefone(valor) {
+    return valor.replace(/\D/g, "");
+  }
+
+  function formatarTelefone(valor) {
+    let numeros = valor.replace(/\D/g, "").slice(0, 11);
+
+    if (numeros.length === 0) return "";
+
+    if (numeros.length <= 2) return `(${numeros}`;
+
+    if (numeros.length <= 6)
+      return numeros.replace(/(\d{2})(\d+)/, "($1) $2");
+
+    if (numeros.length <= 10)
+      return numeros.replace(/(\d{2})(\d{4})(\d+)/, "($1) $2-$3");
+
+    return numeros.replace(/(\d{2})(\d{5})(\d+)/, "($1) $2-$3");
+  }
+
+
+  const telefoneLimpo = useMemo(
+    () => limparTelefone(cliente.telefone),
+    [cliente.telefone]
+  );
+
+  const telefoneValido = /^\d{10,11}$/.test(telefoneLimpo);
 
   const validacoes = () => {
 
@@ -71,7 +102,7 @@ export default function Checkout() {
       return false;
     }
 
-    if (!endereco || endereco.taxaEntrega <= 0) {
+    if (!endereco || Number(endereco.taxaEntrega ?? 0) <= 0) {
       alert("Calcule a taxa de entrega antes de continuar");
       setAba(1);
       return false;
@@ -82,6 +113,13 @@ export default function Checkout() {
       setAba(2);
       return false;
     }
+
+    if (!telefoneValido) {
+      alert("Telefone inválido");
+      setAba(2);
+      return false;
+    }
+
 
     if (!cliente.formaPagamento.forma) {
       alert("Selecione a forma de pagamento");
@@ -97,14 +135,14 @@ export default function Checkout() {
       return false;
     }
 
-    if (cliente.formaPagamento.obsPagamento < valorTotalPedido && cliente.formaPagamento.forma === "DINHEIRO") {
+    const troco = Number(cliente.formaPagamento.obsPagamento || 0);
+    if (troco < valorTotalPedido && cliente.formaPagamento.forma === "DINHEIRO") {
       alert("O valor para troco não pode ser menor que o valor total do pedido\n Total do pedido R$ " + valorTotalPedido.toFixed(2));
       return false;
     }
 
     return true;
   };
-
 
   async function finalizarPedido() {
     const ok = validacoes();
@@ -113,7 +151,11 @@ export default function Checkout() {
     pedidoFinalizadoRef.current = true;
 
     const pedido = {
-      cliente: { ...cliente, endereco },
+      cliente: {
+        ...cliente,
+        telefone: limparTelefone(cliente.telefone),
+        endereco
+      },
       itens: itens.map(item => ({ ...item })),
       total: valorTotalPedido,
       status: "novo",
@@ -136,7 +178,7 @@ export default function Checkout() {
       alert("!você será redirecionado!\n\nTalvez você tenha recarregado a página e por isso o carrinho foi esvaziado.");
       navigate(`/${idLoja}`);
     }
-  }, [itens]);
+  }, [itens, navigate, idLoja]);
 
   const getTextoBotao = () => {
     if (aba === 0) return "Continuar para entrega";
@@ -211,7 +253,7 @@ export default function Checkout() {
                       )}
 
                       {/* EXTRAS / OBS */}
-                      {item?.extras.length > 0 && (
+                      {Array.isArray(item.extras) && item.extras.length > 0 && (
                         <Typography variant="caption" color="text.secondary" display="block">
                           Extras: {item.extras.map(e => e.nome).join(", ")}<br />
                         </Typography>
@@ -250,7 +292,7 @@ export default function Checkout() {
                         </IconButton>
 
                         <Typography fontWeight="bold">
-                          {item.quantidade}
+                          {item.quantidade ?? 1}
                         </Typography>
 
                         <IconButton
@@ -262,7 +304,7 @@ export default function Checkout() {
                       </Box>
 
                       <Typography fontWeight="bold">
-                        R$ {(item.valor * item.quantidade).toFixed(2)}
+                        R$ {(Number(item.valor ?? 0) * Number(item.quantidade ?? 1)).toFixed(2)}
                       </Typography>
                     </Box>
                   </Box>
@@ -320,13 +362,24 @@ export default function Checkout() {
 
               <TextField
                 label="Telefone"
+                type="tel"
                 fullWidth
                 size="small"
-                sx={{ mb: 1 }}
                 value={cliente.telefone}
-                onChange={(e) =>
-                  setCliente({ ...cliente, telefone: e.target.value })
+                error={cliente.telefone && !telefoneValido}
+                helperText={
+                  cliente.telefone && !telefoneValido
+                    ? "Telefone inválido"
+                    : ""
                 }
+                onChange={(e) => {
+                  const formatado = formatarTelefone(e.target.value);
+
+                  setCliente({
+                    ...cliente,
+                    telefone: formatado
+                  });
+                }}
               />
 
               <TextField
@@ -359,6 +412,7 @@ export default function Checkout() {
                 <TextField
                   label="Troco para quanto?"
                   fullWidth
+                  type="number"
                   size="small"
                   value={cliente.formaPagamento.obsPagamento}
                   onChange={(e) =>
@@ -425,7 +479,11 @@ export default function Checkout() {
           variant="contained"
           size="large"
           fullWidth
-          disabled={itens.length === 0}
+          disabled={
+            itens.length === 0 ||
+            (aba === 2 && !telefoneValido)
+          }
+
           onClick={() => {
             if (aba === 2) {
               return finalizarPedido();

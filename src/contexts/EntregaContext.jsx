@@ -30,12 +30,8 @@ import { buscarCep } from "../services/entrega.service";
 
 export function EntregaProvider({ children }) {
   const { preferencias } = usePreferencias();
-  const [taxaEntregaKm, setTaxaEntregaKm] = useState(preferencias.taxaEntregaKm || 0);
-  const [enderecoLoja, setEnderecoLoja] = useState(preferencias.enderecoLoja || null);
-  useEffect(() => {
-    setTaxaEntregaKm(preferencias.taxaEntregaKm || 0);
-    setEnderecoLoja(preferencias.enderecoLoja || null);
-  }, [preferencias]);
+  const enderecoLoja = preferencias?.enderecoLoja;
+
 
   const [endereco, setEndereco] = useState(estadoInicial);
   const [rota, setRota] = useState([]);
@@ -45,6 +41,16 @@ export function EntregaProvider({ children }) {
   function atualizarCampo(campo, valor) {
     setEndereco(prev => ({ ...prev, [campo]: valor }));
   }
+
+  function calcularTaxaEntrega(km) {
+    const taxaKm = Number(preferencias?.taxaEntregaKm || 0);
+    const taxaMin = Number(preferencias?.taxaEntregaMinima || 0);
+
+    const taxaCalculada = km * taxaKm;
+
+    return Number(Math.max(taxaMin, taxaCalculada).toFixed(2));
+  }
+
 
   async function geocodeGoogle(enderecoTexto) {
     const res = await fetch(
@@ -95,7 +101,7 @@ export function EntregaProvider({ children }) {
 
       const route = data.routes[0];
       const km = route.distance / 1000;
-      const taxa = Math.ceil(km * taxaEntregaKm);
+      const taxa = calcularTaxaEntrega(km);
 
       setEndereco(prev => ({
         ...prev,

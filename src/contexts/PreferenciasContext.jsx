@@ -20,6 +20,7 @@ const DEFAULT_PREFS = {
     lng: -46.633308
   },
   taxaEntregaKm: 0,
+  taxaEntregaMinima: 0,
   horarios: {
     segunda: { ativo: true, inicio: "18:00", fim: "23:00" },
     terca: { ativo: true, inicio: "18:00", fim: "23:00" },

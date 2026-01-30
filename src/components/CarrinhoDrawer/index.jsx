@@ -96,7 +96,7 @@ export default function CarrinhoDrawer() {
                 R$ {(item.valor ?? 0).toFixed(2)}
               </Typography>
 
-              {item?.extras.length > 0 && (
+              {Array.isArray(item.extras) && item.extras.length > 0 && (
                 <Typography
                   variant="body2"
                   color="text.secondary"
@@ -134,7 +134,8 @@ export default function CarrinhoDrawer() {
               <IconButton size="small" onClick={() => decrementar(item.id)}>
                 <RemoveIcon />
               </IconButton>
-              <Typography>{item.quantidade}</Typography>
+              <Typography>{item.quantidade ?? 1}</Typography>
+
               <IconButton size="small" onClick={() => incrementar(item.id)}>
                 <AddIcon />
               </IconButton>
