@@ -188,8 +188,25 @@ export default function Cardapio() {
           extrasDisponiveis={produtoSelecionado.categoria.extras}
           bordasDisponiveis={produtoSelecionado.categoria.bordas} // <--- bordas aqui
           onConfirm={({ extras, borda, observacao, precoFinal }) => {
+
+            const extrasIds = [...extras]
+              .map(e => e.id)
+              .sort()
+              .join("-");
+
+            const obsId = observacao
+              ? observacao.trim().toLowerCase().replace(/\s+/g, "_")
+              : "sem_obs";
+
+            const itemId = [
+              produtoSelecionado.id,
+              extrasIds,
+              borda?.id || "sem_borda",
+              obsId
+            ].join("|");
+
             addItem({
-              id: produtoSelecionado.id + "-" + extras.map(e => e.id).join("-") + (borda?.id ? `-${borda.id}` : ""),
+              id: itemId,
               nome: produtoSelecionado.nome,
               valor: precoFinal,
               img: produtoSelecionado.img,
