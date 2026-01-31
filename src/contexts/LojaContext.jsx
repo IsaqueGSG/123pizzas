@@ -1,12 +1,17 @@
 import { createContext, useContext } from "react";
 import { useParams, Navigate } from "react-router-dom";
+import lojas from "../services/IdLojas.services";
 
 const LojaContext = createContext(null);
 
 export function LojaProvider({ children }) {
   const { idLoja } = useParams();
 
-  if (!idLoja) {
+  const lojaExiste = lojas.some(
+    (loja) => loja.idLoja === idLoja
+  );
+
+  if (!idLoja || !lojaExiste) {
     return <Navigate to="/" replace />;
   }
 

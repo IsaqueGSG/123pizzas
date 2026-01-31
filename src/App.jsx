@@ -13,6 +13,7 @@ import EditProduto from "./pages/EditProduto";
 import EditCategoria from "./pages/EditCategoria";
 import AdminPedidos from "./pages/AdminPedidos";
 import AdminPreferencias from "./pages/AdminPreferencias";
+import Lojas from "./pages/Lojas";
 
 import PrivateRoute from "./components/PrivateRoute";
 
@@ -20,6 +21,12 @@ const App = () => {
   return (
     <BrowserRouter>
       <Routes>
+
+        <Route //callback de rotas
+          path="/"
+          element={<Lojas></Lojas>}
+        />
+
 
         <Route path="/:idLoja" element={<LojaLayout />}>
           <Route index element={<Cardapio />} />
@@ -59,11 +66,6 @@ const App = () => {
             element={<PrivateRoute><AdminPreferencias /></PrivateRoute>}
           />
         </Route>
-
-        <Route
-          path="/"
-          element={<div>Por favor, acesse uma loja válida.</div>}
-        />
 
       </Routes>
     </BrowserRouter>
