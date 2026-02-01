@@ -1,4 +1,5 @@
 import { Box, Card, CardMedia, CardContent, Typography } from "@mui/material";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import lojas from "../../services/IdLojas.services";
 
@@ -11,6 +12,12 @@ export default function SelectLoja() {
         navigate(`/${idLoja}/login`, { replace: true });
     };
 
+    useEffect(() => {
+        const saved = localStorage.getItem("idLoja");
+        if (saved) {
+            navigate(`/${saved}/login`, { replace: true });
+        }
+    }, []);
 
     return (
         <Box
