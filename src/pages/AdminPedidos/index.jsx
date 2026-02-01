@@ -18,7 +18,7 @@ import ModalAtivarAudio from "../../components/ModalAtivarAudio";
 import ConfirmDialog from "../../components/ConfirmDialog";
 
 import { updatePedidoStatus, escutarPedidos, deletarPedido, marcarComoImpresso } from "../../services/pedidos.service";
-import { geraComandaHTML80mm, imprimir, geraComandaHTML } from "../../services/impressora.service";
+import { geraComandaHTML80mm, imprimir, imprimirElectron, geraComandaHTML } from "../../services/impressora.service";
 import { enviarMensagem } from "../../services/whatsapp.service";
 import { tocarAudio } from "../../services/audio.service";
 import campainha from "../../assets/audios/campainha.mp3"
