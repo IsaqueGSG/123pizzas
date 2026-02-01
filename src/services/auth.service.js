@@ -12,14 +12,6 @@ export const logout = async () => {
 
 };
 
-// para usuarios com id aleatorio
-// export const isUserAllowed = async (idLoja, email) => {
-//   if (idLoja === "demo") return true;
-//   const ref = collection(db, "clientes123pedidos", idLoja, "usuarios");
-//   const snap = await getDocs(ref);
-//   return snap.docs.some(doc => doc.data().email === email);
-// };
-
 // para usuarios com id = email
 export const isUserAllowed = async (idLoja, email) => {
   if (idLoja === "demo") return true;
@@ -35,4 +27,31 @@ export const isUserAllowed = async (idLoja, email) => {
   const snap = await getDoc(ref);
 
   return snap.exists();
+};
+
+export const getUserRole = async (idLoja, email) => {
+  if (idLoja === "demo") {
+    return { allowed: true, role: "admin" };
+  }
+
+  const ref = doc(
+    db,
+    "clientes123pedidos",
+    idLoja,
+    "usuarios",
+    email
+  );
+
+  const snap = await getDoc(ref);
+
+  if (!snap.exists()) {
+    return { allowed: false, role: null };
+  }
+
+  const data = snap.data();
+
+  return {
+    allowed: true,
+    role: data.role || "viewer"
+  };
 };

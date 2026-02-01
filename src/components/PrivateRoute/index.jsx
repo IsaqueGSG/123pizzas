@@ -2,19 +2,15 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useLoja } from "../../contexts/LojaContext";
 
-const PrivateRoute = ({ children }) => {
-  const { user, loading } = useAuth();
+export default function PrivateRoute({ children }) {
+  const { user, role, loading } = useAuth();
   const { idLoja } = useLoja();
 
-  if (loading) {
-    return <p>Carregando...</p>;
-  }
+  if (loading) return <div>Carregando</div>;
 
-  if (!user) {
+  if (!user || role !== "admin") {
     return <Navigate to={`/${idLoja}/login`} replace />;
   }
 
   return children;
-};
-
-export default PrivateRoute;
+}

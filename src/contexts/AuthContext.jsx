@@ -1,80 +1,87 @@
-import { createContext, useContext, useEffect, useState, useRef } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import {
-    loginWithGoogle,
-    logout,
-    isUserAllowed,
+  loginWithGoogle,
+  logout,
+  getUserRole,
 } from "../services/auth.service";
+
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../config/firebase";
 
-import { useLoja } from "../contexts/LojaContext"
+import { useLoja } from "../contexts/LojaContext";
 
 const AuthContext = createContext({});
 
 export const AuthProvider = ({ children }) => {
-    const { idLoja } = useLoja();
+  const { idLoja } = useLoja();
 
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [openAdminDrawer, setOpenAdminDrawer] = useState(false);
+  const [user, setUser] = useState(null);
+  const [role, setRole] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [openAdminDrawer, setOpenAdminDrawer] = useState(false);
 
-    const lojaRef = useRef(null);
+  // 🔥 revalida sempre que loja mudar
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (!firebaseUser || !idLoja) {
+        setUser(null);
+        setRole(null);
+        setLoading(false);
+        return;
+      }
 
-    useEffect(() => {
-        lojaRef.current = idLoja;
-    }, [idLoja]);
+      setLoading(true);
 
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-            if (!firebaseUser || !lojaRef.current) {
-                setUser(null);
-                setLoading(false);
-                return;
-            }
+      const result = await getUserRole(idLoja, firebaseUser.email);
 
-            const allowed = await isUserAllowed(
-                lojaRef.current,
-                firebaseUser.email
-            );
-
-            if (!allowed) {
-                await logout();
-                setUser(null);
-            } else {
-                setUser(firebaseUser);
-            }
-
-            setLoading(false);
-        });
-
-        return () => unsubscribe();
-    }, []);
-
-
-
-    const login = async () => {
-        const firebaseUser = await loginWithGoogle();
-
-        const allowed = await isUserAllowed(idLoja, firebaseUser.email);
-
-        if (!allowed) {
-            await logout();
-            alert("Acesso não autorizado");
-            return;
-        }
-    };
-
-
-    const signOut = async () => {
+      if (!result.allowed) {
         await logout();
         setUser(null);
-    };
+        setRole(null);
+      } else {
+        setUser(firebaseUser);
+        setRole(result.role);
+      }
 
-    return (
-        <AuthContext.Provider value={{ user, login, signOut, loading, openAdminDrawer, setOpenAdminDrawer }}>
-            {!loading && children}
-        </AuthContext.Provider>
-    );
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [idLoja]);
+
+  const login = async () => {
+    const firebaseUser = await loginWithGoogle();
+
+    const result = await getUserRole(idLoja, firebaseUser.email);
+
+    if (!result.allowed || result.role !== "admin") {
+      await logout();
+      alert("Acesso não autorizado para esta loja");
+      return;
+    }
+  };
+
+  const signOut = async () => {
+    await logout();
+    setUser(null);
+    setRole(null);
+  };
+
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        role,
+        login,
+        signOut,
+        loading,
+        openAdminDrawer,
+        setOpenAdminDrawer
+      }}
+    >
+      {!loading && children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => useContext(AuthContext);

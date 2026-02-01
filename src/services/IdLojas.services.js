@@ -1,4 +1,5 @@
-// src/data/lojas.js
+// ./services/idLojas.services.jsx
+
 const Lojas = [
     {
         idLoja: "chavao",

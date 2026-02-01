@@ -1,4 +1,8 @@
-import { Button, CircularProgress } from "@mui/material";
+import {
+  Button,
+  CircularProgress,
+  Box
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 
@@ -18,15 +22,16 @@ const Login = () => {
     }
   }, [user, loading, idLoja, navigate]);
 
-
   return (
-    <div
+    <Box
       style={{
         height: "100vh",
         display: "grid",
         placeItems: "center"
       }}
     >
+
+
       <Button
         variant="contained"
         onClick={login}
@@ -34,7 +39,7 @@ const Login = () => {
       >
         {loading ? <CircularProgress size={24} /> : "Entrar com Google"}
       </Button>
-    </div>
+    </Box>
   );
 };
 
