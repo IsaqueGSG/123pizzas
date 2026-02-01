@@ -164,6 +164,16 @@ export function imprimir(html) {
   win.document.close();
 }
 
+export function imprimirElectron(html) {
+  if (window.electronAPI?.printHTML) {
+    window.electronAPI.printHTML(html);
+  } else {
+    imprimir(html); // fallback navegador
+  }
+}
+
+
+
 export function geraComandaHTML(pedido, largura = "80mm") {
   const is58 = largura === "58mm";
 

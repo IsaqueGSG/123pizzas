@@ -90,7 +90,7 @@ Obrigado pela preferência!
       const larguraImpressao = preferencias?.impressao?.largura || "80mm";
       const html = geraComandaHTML(pedido, larguraImpressao);
 
-      imprimir(html);
+      imprimirElectron(html);
 
       await marcarComoImpresso(idLoja, pedido.id);
 
