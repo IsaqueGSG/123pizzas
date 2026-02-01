@@ -14,6 +14,8 @@ import EditCategoria from "./pages/EditCategoria";
 import AdminPedidos from "./pages/AdminPedidos";
 import AdminPreferencias from "./pages/AdminPreferencias";
 import Lojas from "./pages/Lojas";
+import SelectLoja from "./pages/SelectLoja";
+
 
 import PrivateRoute from "./components/PrivateRoute";
 
@@ -22,16 +24,16 @@ const App = () => {
     <BrowserRouter>
       <Routes>
 
-        <Route //callback de rotas
-          path="/"
-          element={<Lojas></Lojas>}
-        />
-
+        <Route path="/" element={<Lojas />} />
+        <Route path="/selecionarloja" element={<SelectLoja />} />
 
         <Route path="/:idLoja" element={<LojaLayout />}>
-          <Route index element={<Cardapio />} />
-          <Route path="checkout" element={<Checkout />} />
+
           <Route path="login" element={<Login />} />
+          
+          <Route index element={<Cardapio />} />
+          
+          <Route path="checkout" element={<Checkout />} />
 
           <Route
             path="produtos"

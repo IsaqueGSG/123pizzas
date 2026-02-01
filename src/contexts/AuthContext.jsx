@@ -32,15 +32,22 @@ export const AuthProvider = ({ children }) => {
 
       setLoading(true);
 
-      const result = await getUserRole(idLoja, firebaseUser.email);
+      try {
+        const result = await getUserRole(idLoja, firebaseUser.email);
 
-      if (!result.allowed) {
-        await logout();
+        if (!result.allowed) {
+          await logout();
+          setUser(null);
+          setRole(null);
+        } else {
+          setUser(firebaseUser);
+          setRole(result.role);
+        }
+
+      } catch (err) {
+        console.error(err);
         setUser(null);
         setRole(null);
-      } else {
-        setUser(firebaseUser);
-        setRole(result.role);
       }
 
       setLoading(false);
@@ -50,15 +57,12 @@ export const AuthProvider = ({ children }) => {
   }, [idLoja]);
 
   const login = async () => {
-    const firebaseUser = await loginWithGoogle();
-
-    const result = await getUserRole(idLoja, firebaseUser.email);
-
-    if (!result.allowed || result.role !== "admin") {
-      await logout();
-      alert("Acesso não autorizado para esta loja");
+    if (!idLoja) {
+      alert("Loja não definida");
       return;
     }
+
+    await loginWithGoogle();
   };
 
   const signOut = async () => {

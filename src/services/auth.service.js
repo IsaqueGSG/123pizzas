@@ -16,12 +16,14 @@ export const logout = async () => {
 export const isUserAllowed = async (idLoja, email) => {
   if (idLoja === "demo") return true;
 
+  const emailId = email.toLowerCase();
+
   const ref = doc(
     db,
     "clientes123pedidos",
     idLoja,
     "usuarios",
-    email
+    emailId
   );
 
   const snap = await getDoc(ref);
@@ -34,12 +36,14 @@ export const getUserRole = async (idLoja, email) => {
     return { allowed: true, role: "admin" };
   }
 
+  const emailId = email.toLowerCase();
+
   const ref = doc(
     db,
     "clientes123pedidos",
     idLoja,
     "usuarios",
-    email
+    emailId
   );
 
   const snap = await getDoc(ref);
