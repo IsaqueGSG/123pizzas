@@ -83,7 +83,7 @@ Assim que finalizar, avisamos você.
 Obrigado pela preferência!
 `;
 
-      enviarMensagemElectron(pedido, texto);
+      enviarMensagemElectron(idLoja, pedido, texto);
 
       const larguraImpressao = preferencias?.impressao?.largura || "80mm";
       const html = geraComandaHTML(pedido, larguraImpressao);
