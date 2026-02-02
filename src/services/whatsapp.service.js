@@ -30,7 +30,7 @@ export async function enviarMensagemElectron(idLoja, pedido, texto) {
     return;
   }
 
-  const res = awaitwindow.electronAPI.enviarWhats(idLoja, telefone, texto);
+  const res = await window.electronAPI.enviarWhats(idLoja, telefone, texto);
 
   if (!res?.ok) {
     console.error("Erro WhatsApp:", res?.erro);
