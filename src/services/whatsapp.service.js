@@ -15,3 +15,24 @@ export function enviarMensagem(pedido, texto) {
 
   window.open(url, "_blank");
 }
+
+export async function enviarMensagemElectron(pedido, texto) {
+
+  if (!window.electronAPI) {
+    return enviarMensagem(pedido, texto);
+  }
+
+
+  const telefone = pedido.cliente?.telefone;
+
+  if (!telefone) {
+    console.warn("Pedido sem telefone");
+    return;
+  }
+
+  const res = await window.electronAPI.enviarWhats(telefone, texto);
+
+  if (!res?.ok) {
+    console.error("Erro WhatsApp:", res?.erro);
+  }
+}

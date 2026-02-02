@@ -18,8 +18,8 @@ import ModalAtivarAudio from "../../components/ModalAtivarAudio";
 import ConfirmDialog from "../../components/ConfirmDialog";
 
 import { updatePedidoStatus, escutarPedidos, deletarPedido, marcarComoImpresso } from "../../services/pedidos.service";
-import { geraComandaHTML80mm, imprimir, imprimirElectron, geraComandaHTML } from "../../services/impressora.service";
-import { enviarMensagem } from "../../services/whatsapp.service";
+import { imprimirElectron, geraComandaHTML } from "../../services/impressora.service";
+import { enviarMensagemElectron } from "../../services/whatsapp.service";
 import { tocarAudio } from "../../services/audio.service";
 import campainha from "../../assets/audios/campainha.mp3"
 
@@ -83,9 +83,7 @@ Assim que finalizar, avisamos você.
 Obrigado pela preferência!
 `;
 
-      enviarMensagem(pedido, texto);
-
-      // const html = geraComandaHTML80mm(pedido);
+      enviarMensagemElectron(pedido, texto);
 
       const larguraImpressao = preferencias?.impressao?.largura || "80mm";
       const html = geraComandaHTML(pedido, larguraImpressao);
@@ -142,13 +140,18 @@ Obrigado pela preferência!
           Gestão de pedidos
         </Typography>
 
-        <Button
-          variant="contained"
-          onClick={() => navigate(`/${idLoja}`)}
-        >
-          Criar Pedido
-        </Button>
+        {
+          (!window.electronAPI) && (
+            <Button
+              variant="contained"
+              onClick={() => navigate(`/${idLoja}`)}
+            >
+              Criar Pedido
+            </Button>
+          )
+        }
       </Box>
+
 
       <Divider sx={{ mt: 2 }} />
 
@@ -236,7 +239,7 @@ Obrigado pela preferência!
                         Valor unitário: R$ {item.valor.toFixed(2)}
                       </Typography>
 
-                      {Array.isArray(item.borda) && item.borda.length > 0 && (
+                      {item.borda?.nome && (
                         <Typography variant="body2">
                           Borda: {item.borda.nome}
                         </Typography>

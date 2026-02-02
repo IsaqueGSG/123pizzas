@@ -12,10 +12,8 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import AddIcon from "@mui/icons-material/Add";
 import LogoutIcon from "@mui/icons-material/Logout";
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
-import FoodBankIcon from '@mui/icons-material/FoodBank';
 import SettingsIcon from "@mui/icons-material/Settings";
 import RoomServiceIcon from '@mui/icons-material/RoomService';
 import CategoryIcon from '@mui/icons-material/Category';
@@ -87,6 +85,13 @@ export default function AdminDrawer() {
           <ListItemButton onClick={() => navigate(`/${idLoja}/categorias`, { replace: true })}>
             <CategoryIcon sx={{ mr: 2 }} />
             <ListItemText primary="Gerenciar Categorias" />
+          </ListItemButton>
+        </ListItem>
+
+        <ListItem disablePadding>
+          <ListItemButton onClick={() => navigate(`/${idLoja}/whatsapp`, { replace: true })}>
+            <SettingsIcon sx={{ mr: 2 }} />
+            <ListItemText primary="Whatsapp" />
           </ListItemButton>
         </ListItem>
 

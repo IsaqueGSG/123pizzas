@@ -15,6 +15,7 @@ import AdminPedidos from "./pages/AdminPedidos";
 import AdminPreferencias from "./pages/AdminPreferencias";
 import Lojas from "./pages/Lojas";
 import SelectLoja from "./pages/SelectLoja";
+import WhatsQR from "./pages/WhatsappQR";
 
 
 import PrivateRoute from "./components/PrivateRoute";
@@ -66,6 +67,10 @@ const App = () => {
           <Route
             path="preferencias"
             element={<PrivateRoute><AdminPreferencias /></PrivateRoute>}
+          />
+             <Route
+            path="whatsapp"
+            element={<PrivateRoute><WhatsQR /></PrivateRoute>}
           />
         </Route>
 

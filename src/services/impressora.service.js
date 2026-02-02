@@ -172,8 +172,6 @@ export function imprimirElectron(html) {
   }
 }
 
-
-
 export function geraComandaHTML(pedido, largura = "80mm") {
   const is58 = largura === "58mm";
 
@@ -193,7 +191,7 @@ export function geraComandaHTML(pedido, largura = "80mm") {
   const itensPorTipo = pedido.itens.reduce((acc, item) => {
     const tipo = item.tipo || "Itens";
     if (!acc[tipo]) acc[tipo] = [];
-    subTotalItens += item.valor
+    subTotalItens += item.valor * (item.quantidade ?? 1)
     acc[tipo].push(item);
     return acc;
   }, {});
@@ -312,7 +310,8 @@ ${pagamento.forma === "DINHEIRO" && pagamento.obsPagamento
 
 <div class="bold">Valores:</div>
 <div> Total dos itens: ${subTotalItens.toFixed(2) || ""}</div>
-<div> Taxa de entrega: ${endereco.taxaEntrega.toFixed(2) || ""}</div>
+<div> Taxa de entrega: ${(endereco.taxaEntrega ?? 0).toFixed(2)}</div>
+
 
 <div class="divider"></div>
 

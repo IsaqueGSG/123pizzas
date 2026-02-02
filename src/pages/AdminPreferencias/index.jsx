@@ -314,6 +314,10 @@ export default function AdminPreferencias() {
         </Select>
       </Card>
 
+      <Card sx={{ p: 2, mb: 3 }}>
+        <a href="https://drive.google.com/file/d/1aJ_a5ksPDj1mvd9ls1BTYI8kIKRZmlYi/view?usp=sharing">Baixar - https://drive.google.com/file/d/1aJ_a5ksPDj1mvd9ls1BTYI8kIKRZmlYi/view?usp=sharing</a>
+      </Card>
+      
       {/* SALVAR */}
       <Box
         sx={{

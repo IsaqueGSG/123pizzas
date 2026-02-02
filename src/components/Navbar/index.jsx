@@ -33,6 +33,7 @@ export default function Navbar() {
         `/${idLoja}/preferencias`,
         `/${idLoja}/categorias`,
         `/${idLoja}/editcategoria`,
+        `/${idLoja}/whatsapp`,
     ];
 
     const isPrivateRoute = user && privatePrefixes.some(prefix =>
