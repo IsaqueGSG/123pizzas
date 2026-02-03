@@ -31,9 +31,9 @@ const App = () => {
         <Route path="/:idLoja" element={<LojaLayout />}>
 
           <Route path="login" element={<Login />} />
-          
+
           <Route index element={<Cardapio />} />
-          
+
           <Route path="checkout" element={<Checkout />} />
 
           <Route
@@ -68,10 +68,11 @@ const App = () => {
             path="preferencias"
             element={<PrivateRoute><AdminPreferencias /></PrivateRoute>}
           />
-             <Route
+          <Route
             path="whatsapp"
             element={<PrivateRoute><WhatsQR /></PrivateRoute>}
           />
+
         </Route>
 
       </Routes>

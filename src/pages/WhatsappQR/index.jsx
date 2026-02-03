@@ -12,11 +12,13 @@ export default function WhatsQR() {
     const { idLoja } = useLoja()
 
     const isDesktop = !!window.electronAPI;
-    const lojaAtual = localStorage.getItem("idLoja") || idLoja ;
+    const lojaAtual = localStorage.getItem("idLoja") || idLoja;
 
     useEffect(() => {
         if (isDesktop && lojaAtual) {
-            window.electronAPI.initWhats(lojaAtual);
+            console.log("[RENDERER] INIT WHATS:", lojaAtual);
+            window.electronAPI.initWhats(lojaAtual)
+                .then(r => console.log("[RENDERER] init retorno:", r));
         }
     }, [isDesktop, lojaAtual]);
 
@@ -24,18 +26,22 @@ export default function WhatsQR() {
     useEffect(() => {
         if (!isDesktop || !lojaAtual) return;
 
-        const offQR = window.electronAPI.onWhatsQR(({ idLoja, qr }) => {
-            if (idLoja !== lojaAtual) return;
-            setQr(qr);
+        const offQR = window.electronAPI.onWhatsQR((data) => {
+            console.log("[RENDERER] QR EVENT:", data);
+
+            if (data.idLoja !== lojaAtual) return;
+            setQr(data.qr);
             setStatus("qr");
         });
 
-        const offStatus = window.electronAPI.onWhatsStatus(({ idLoja, status }) => {
-            if (idLoja !== lojaAtual) return;
+        const offStatus = window.electronAPI.onWhatsStatus((data) => {
+            console.log("[RENDERER] STATUS EVENT:", data);
 
-            setStatus(status);
+            if (data.idLoja !== lojaAtual) return;
 
-            if (status === "ready" || status === "authenticated") {
+            setStatus(data.status);
+
+            if (data.status === "ready" || data.status === "authenticated") {
                 setQr(null);
             }
         });
@@ -49,6 +55,10 @@ export default function WhatsQR() {
     if (!isDesktop) {
         return (
             <Box sx={{ p: 2 }}>
+                <Navbar />
+                <Toolbar />
+                <AdminDrawer />
+                
                 <Card sx={{ p: 3 }}>
                     <Typography>
                         WhatsApp disponível apenas na versão desktop.
@@ -63,6 +73,16 @@ export default function WhatsQR() {
             <Navbar />
             <Toolbar />
             <AdminDrawer />
+
+            {status === "starting" && (
+                <Card sx={{ p: 3, textAlign: "center" }}>
+                    <Typography fontWeight="bold">
+                        Inicializando engine do WhatsApp…
+                    </Typography>
+                    <CircularProgress />
+                </Card>
+            )}
+
 
             {(status === "ready" || status === "authenticated") && (
                 <Card sx={{ p: 3 }}>
