@@ -6,6 +6,8 @@ import { PreferenciasProvider } from "../../contexts/PreferenciasContext";
 import { CartProvider } from "../../contexts/CarrinhoContext";
 import { EntregaProvider } from "../../contexts/EntregaContext";
 import { ProdutosProvider } from "../../contexts/ProdutosContext";
+import { WhatsProvider } from "../../contexts/Whatsapp.Context";
+
 
 export default function LojaLayout() {
   return (
@@ -15,7 +17,9 @@ export default function LojaLayout() {
           <CartProvider>
             <EntregaProvider>
               <ProdutosProvider>
-                <Outlet />
+                <WhatsProvider>
+                  <Outlet />
+                </WhatsProvider>
               </ProdutosProvider>
             </EntregaProvider>
           </CartProvider>

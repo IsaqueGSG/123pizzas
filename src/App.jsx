@@ -17,7 +17,6 @@ import Lojas from "./pages/Lojas";
 import SelectLoja from "./pages/SelectLoja";
 import WhatsQR from "./pages/WhatsappQR";
 
-
 import PrivateRoute from "./components/PrivateRoute";
 
 const App = () => {

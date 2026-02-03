@@ -22,7 +22,6 @@ export async function enviarMensagemElectron(idLoja, pedido, texto) {
     return enviarMensagem(pedido, texto);
   }
 
-
   const telefone = pedido.cliente?.telefone;
 
   if (!telefone) {
