@@ -15,6 +15,7 @@ export function WhatsProvider({ children }) {
 
     window.electronAPI.getWhatsStatus(idLoja)
       .then(s => {
+        console.log(s)
         if (!s || s === "disconnected") {
           window.electronAPI.initWhats(idLoja);
           setStatus("starting");
@@ -23,7 +24,6 @@ export function WhatsProvider({ children }) {
         }
       });
   }, [idLoja, isDesktop]);
-
 
   useEffect(() => {
     if (!isDesktop) return;
@@ -44,7 +44,14 @@ export function WhatsProvider({ children }) {
       offQR();
       offStatus();
     };
-}, [idLoja, isDesktop]);
+  }, [idLoja, isDesktop]);
+
+  useEffect(() => {
+    if (!isDesktop) return;
+
+    window.electronAPI.onLogMessage((data) =>
+      console.log(`[WHATS ${data.id}]`, ...data.msg));
+  }, [])
 
   return (
     <WhatsContext.Provider value={{ status, qr }}>
