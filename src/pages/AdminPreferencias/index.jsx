@@ -428,8 +428,8 @@ export default function AdminPreferencias() {
 
       <Card sx={{ p: 2, mb: 3 }}>
         <a
-          href="https://drive.google.com/file/d/1qonVapHHWPSCtllnw0-fC-a7_6ix5b6j/view?usp=sharing">
-          Baixar - https://drive.google.com/file/d/1qonVapHHWPSCtllnw0-fC-a7_6ix5b6j/view?usp=sharing
+          href="https://drive.google.com/drive/folders/1PXOp7L5Abd8xxwIOCp3WO7YDALkDEnaC?usp=sharing">
+          Baixar versão desktop - https://drive.google.com/drive/folders/1PXOp7L5Abd8xxwIOCp3WO7YDALkDEnaC?usp=sharing
         </a>
       </Card>
 

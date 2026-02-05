@@ -85,10 +85,22 @@ export function WhatsProvider({ children }) {
   }, [isDesktop]);
 
   // -------------------------
-  const restartWhats = () => {
+  const restartWhats = async () => {
     if (!isDesktop || !idLoja) return;
-    window.electronAPI.initWhats(idLoja);
+
+    setQr(null);
+    setLoading(true); // Isso ativará o CircularProgress imediatamente
     setStatus(STATUS.STARTING);
+
+    try {
+      // Chamamos o Electron para iniciar o processo
+      await window.electronAPI.initWhats(idLoja);
+      // O status "QR" ou "READY" virá através dos eventos onWhatsQR/onWhatsStatus
+    } catch (e) {
+      console.error("Erro ao reiniciar:", e);
+      setStatus(STATUS.ERROR);
+      setLoading(false);
+    }
   };
 
   return (

@@ -72,16 +72,19 @@ export default function WhatsQR() {
     if (status === "disconnected") {
       return (
         <>
-          <Typography fontWeight="bold" color="error">
-            WhatsApp desconectado
+          <Typography fontWeight="bold" color="error" gutterBottom>
+            WhatsApp Desconectado
           </Typography>
-
+          <Typography variant="body2" sx={{ mb: 2 }}>
+            A sessão foi encerrada pelo celular ou o computador está sem internet.
+          </Typography>
           <Button
             variant="contained"
-            sx={{ mt: 2 }}
+            color="primary"
             onClick={restartWhats}
+            disabled={loading}
           >
-            Reconectar
+            {loading ? "Iniciando..." : "Gerar novo QR Code"}
           </Button>
         </>
       );

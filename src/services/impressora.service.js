@@ -164,11 +164,11 @@ export function imprimir(html) {
   win.document.close();
 }
 
-export function imprimirElectron(html) {
+export function imprimirElectron(html, largura = "80mm") {
   if (window.electronAPI?.printHTML) {
-    window.electronAPI.printHTML(html);
+    window.electronAPI.printHTML(html, largura);
   } else {
-    imprimir(html); // fallback navegador
+    imprimir(html);
   }
 }
 
@@ -202,6 +202,7 @@ export function geraComandaHTML(pedido, largura = "80mm") {
     width: ${widthPx}px;
     margin: 0;
     padding: 6px;
+    padding-bottom: 60px;
     font-family: Arial, Helvetica, sans-serif;
     font-size: ${fontBase}px;
     line-height: 1.35;
