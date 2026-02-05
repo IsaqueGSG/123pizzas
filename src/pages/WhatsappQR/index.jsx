@@ -1,29 +1,108 @@
-import { Box, Typography, Card, Toolbar, CircularProgress } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Card,
+  Toolbar,
+  CircularProgress,
+  Button
+} from "@mui/material";
+
 import Navbar from "../../components/Navbar";
 import AdminDrawer from "../../components/AdminDrawer";
-
 import { useWhats } from "../../contexts/Whatsapp.Context";
 
 export default function WhatsQR() {
-  const { status, qr } = useWhats();
+  const { status, qr, loading, isDesktop, restartWhats } = useWhats();
 
-  const isDesktop = !!window.electronAPI;
+  const renderContent = () => {
+    if (!isDesktop) {
+      return <Typography>WhatsApp disponível apenas no desktop</Typography>;
+    }
 
-  if (!isDesktop) {
-    return (
-      <Box sx={{ p: 2 }}>
-        <Navbar />
-        <Toolbar />
-        <AdminDrawer />
-
-        <Card sx={{ p: 3 }}>
-          <Typography>
-            WhatsApp disponível apenas na versão desktop.
+    if (loading || status === "starting" || status === "preparando") {
+      return (
+        <>
+          <Typography fontWeight="bold">
+            Inicializando WhatsApp…
           </Typography>
-        </Card>
-      </Box>
-    );
-  }
+          <CircularProgress sx={{ mt: 2 }} />
+        </>
+      );
+    }
+
+    if (status === "ready" || status === "authenticated") {
+      return (
+        <>
+          <Typography fontWeight="bold">
+            ✅ WhatsApp conectado
+          </Typography>
+
+          <Button
+            sx={{ mt: 2 }}
+            variant="outlined"
+            onClick={restartWhats}
+          >
+            Reiniciar sessão
+          </Button>
+        </>
+      );
+    }
+
+    if (status === "qr" && qr) {
+      return (
+        <>
+          <Typography fontWeight="bold">
+            Escaneie o QR no WhatsApp
+          </Typography>
+
+          <Box
+            component="img"
+            src={qr}
+            sx={{
+              width: 280,
+              mt: 2,
+              borderRadius: 2,
+              boxShadow: 2
+            }}
+          />
+        </>
+      );
+    }
+
+    if (status === "disconnected") {
+      return (
+        <>
+          <Typography fontWeight="bold" color="error">
+            WhatsApp desconectado
+          </Typography>
+
+          <Button
+            variant="contained"
+            sx={{ mt: 2 }}
+            onClick={restartWhats}
+          >
+            Reconectar
+          </Button>
+        </>
+      );
+    }
+
+    if (status === "error") {
+      return (
+        <>
+          <Typography color="error">
+            Erro ao iniciar WhatsApp
+          </Typography>
+
+          <Button sx={{ mt: 2 }} onClick={restartWhats}>
+            Tentar novamente
+          </Button>
+        </>
+      );
+    }
+
+    return <Typography>Status: {status}</Typography>;
+  };
 
   return (
     <Box sx={{ p: 2 }}>
@@ -31,39 +110,17 @@ export default function WhatsQR() {
       <Toolbar />
       <AdminDrawer />
 
-      {status === "starting" && (
-        <Card sx={{ p: 3, textAlign: "center" }}>
-          <Typography fontWeight="bold">
-            Inicializando engine do WhatsApp…
-          </Typography>
-          <CircularProgress />
-        </Card>
-      )}
-
-      {(status === "ready" || status === "authenticated") && (
-        <Card sx={{ p: 3 }}>
-          <Typography fontWeight="bold">
-            ✅ WhatsApp conectado
-          </Typography>
-        </Card>
-      )}
-
-      {status === "qr" && qr && (
-        <Card sx={{ p: 3, textAlign: "center" }}>
-          <Typography fontWeight="bold" gutterBottom>
-            Escaneie o QR do WhatsApp
-          </Typography>
-          <Box component="img" src={qr} sx={{ width: 260 }} />
-        </Card>
-      )}
-
-      {status === "disconnected" && (
-        <Card sx={{ p: 3 }}>
-          <Typography fontWeight="bold" color="error">
-            WhatsApp desconectado
-          </Typography>
-        </Card>
-      )}
+      <Card
+        sx={{
+          p: 4,
+          mt: 2,
+          textAlign: "center",
+          maxWidth: 420,
+          mx: "auto"
+        }}
+      >
+        {renderContent()}
+      </Card>
     </Box>
   );
 }

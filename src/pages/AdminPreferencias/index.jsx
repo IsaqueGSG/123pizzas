@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   Box,
   Typography,
@@ -41,8 +41,6 @@ export default function AdminPreferencias() {
   const [numeroLoja, setNumeroLoja] = useState("");
   const [loadingEndereco, setLoadingEndereco] = useState(false);
   const [erroEndereco, setErroEndereco] = useState("");
-
-  const houveMudanca = JSON.stringify(prefs) !== JSON.stringify(preferencias)
 
   useEffect(() => {
     setPrefs(preferencias);
@@ -107,19 +105,59 @@ export default function AdminPreferencias() {
     setPrefs(prev => ({
       ...prev,
       horarios: {
-        ...prev.horarios,
+        ...(prev.horarios || {}),
         [dia]: {
-          ...prev.horarios[dia],
+          ...(prev.horarios?.[dia] || {}),
           [campo]: valor
         }
       }
     }));
   };
 
+  const [printers, setPrinters] = useState([]);
+  const [selecionada, setSelecionada] = useState("");
+  const [printerSalva, setPrinterSalva] = useState("");
+
+  useEffect(() => {
+    async function load() {
+      if (!window.electronAPI) return;
+
+      const lista = await window.electronAPI.listPrinters();
+      setPrinters(lista);
+
+      const salva = await window.electronAPI.getPrinter();
+      if (salva) {
+        setSelecionada(salva);
+        setPrinterSalva(salva);
+      }
+    }
+
+    load();
+  }, []);
+
+
+  async function salvar() {
+    if (!window.electronAPI) return;
+    await window.electronAPI.setPrinter(selecionada);
+    setPrinterSalva(selecionada);
+  }
+
   const guardarPreferencias = async () => {
     await atualizarPreferencias(prefs);
+
+    if (window.electronAPI && selecionada !== printerSalva) {
+      await salvar();
+    }
+
     alert("Preferências salvas com sucesso!");
   };
+
+  const houveMudanca = useMemo(() => {
+    return (
+      JSON.stringify(prefs) !== JSON.stringify(preferencias) ||
+      (window.electronAPI && selecionada !== printerSalva)
+    );
+  }, [prefs, preferencias, selecionada, printerSalva]);
 
 
   if (loading) {
@@ -151,7 +189,7 @@ export default function AdminPreferencias() {
             <FormControlLabel
               control={
                 <Switch
-                  checked={prefs.horarios[dia].ativo}
+                  checked={prefs.horarios?.[dia]?.ativo || false}
                   onChange={e =>
                     atualizarHorario(dia, "ativo", e.target.checked)
                   }
@@ -166,7 +204,7 @@ export default function AdminPreferencias() {
                   label="Início"
                   type="time"
                   size="small"
-                  value={prefs.horarios[dia].inicio}
+                  value={prefs.horarios[dia].inicio || ""}
                   onChange={e =>
                     atualizarHorario(dia, "inicio", e.target.value)
                   }
@@ -175,7 +213,7 @@ export default function AdminPreferencias() {
                   label="Fim"
                   type="time"
                   size="small"
-                  value={prefs.horarios[dia].fim}
+                  value={prefs.horarios[dia].fim || ""}
                   onChange={e =>
                     atualizarHorario(dia, "fim", e.target.value)
                   }
@@ -290,29 +328,103 @@ export default function AdminPreferencias() {
       </Card>
 
       {/* IMPRESSÃO */}
-      <Card sx={{ p: 2, mb: 3 }}>
-        <Typography fontWeight="bold" gutterBottom>
-          🖨️ Impressão da comanda
+      <Card
+        sx={{
+          p: 2.5,
+          mb: 3,
+          borderRadius: 3,
+          boxShadow: 3
+        }}
+      >
+        <Typography variant="h6" fontWeight="bold" gutterBottom>
+          🖨️ Configurações de impressão
         </Typography>
 
-        <Select
-          fullWidth
-          size="small"
-          value={prefs.impressao.largura}
-          onChange={e =>
-            setPrefs(prev => ({
-              ...prev,
-              impressao: {
-                ...prev.impressao,
-                largura: e.target.value
-              }
-            }))
-          }
+        {/* largura papel */}
+        <Box
+          sx={{
+            p: 2,
+            borderRadius: 2,
+            bgcolor: "grey.50",
+            mb: 2
+          }}
         >
-          <MenuItem value="58mm">58mm</MenuItem>
-          <MenuItem value="80mm">80mm</MenuItem>
-        </Select>
+          <Typography fontWeight="bold" sx={{ mb: 1 }}>
+            Largura do papel
+          </Typography>
+
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+            Ajusta o layout do cupom para a impressora térmica
+          </Typography>
+
+          <Select
+            fullWidth
+            size="small"
+            value={prefs.impressao?.largura || "80mm"}
+            onChange={e =>
+              setPrefs(prev => ({
+                ...prev,
+                impressao: {
+                  ...prev.impressao,
+                  largura: e.target.value
+                }
+              }))
+            }
+          >
+            <MenuItem value="58mm">58mm — cupom estreito</MenuItem>
+            <MenuItem value="80mm">80mm — cupom padrão</MenuItem>
+          </Select>
+        </Box>
+
+        {/* impressora */}
+        <Box
+          sx={{
+            p: 2,
+            borderRadius: 2,
+            bgcolor: "grey.50"
+          }}
+        >
+          <Typography fontWeight="bold" sx={{ mb: 1 }}>
+            Impressora automática
+          </Typography>
+
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+            Usada para impressão silenciosa de pedidos
+          </Typography>
+
+          <Select
+            fullWidth
+            size="small"
+            disabled={!window.electronAPI}
+            value={selecionada || ""}
+            onChange={(e) => setSelecionada(e.target.value)}
+          >
+            {window.electronAPI ? (
+              printers.map(p => (
+                <MenuItem key={p.name} value={p.name}>
+                  {p.displayName || p.name}
+                  {p.isDefault && " • padrão do sistema"}
+                </MenuItem>
+              ))
+            ) : (
+              <MenuItem value="">
+                Disponível apenas no Desktop
+              </MenuItem>
+            )}
+          </Select>
+
+          {!window.electronAPI && (
+            <Typography
+              variant="caption"
+              color="warning.main"
+              sx={{ mt: 1, display: "block" }}
+            >
+              ⚠️ Seleção de impressora só funciona na versão desktop
+            </Typography>
+          )}
+        </Box>
       </Card>
+
 
       <Card sx={{ p: 2, mb: 3 }}>
         <a
