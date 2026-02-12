@@ -147,9 +147,11 @@ export default function AdminPreferencias() {
 
   const guardarPreferencias = async () => {
     await atualizarPreferencias(prefs);
+    console.log("preferencias salvas: ", prefs);
 
     if (window.electronAPI && selecionada !== printerSalva) {
       await salvar();
+      console.log("impressora salva: ", selecionada);
     }
 
     alert("Preferências salvas com sucesso!");
@@ -347,7 +349,7 @@ export default function AdminPreferencias() {
           <Button
             variant="contained"
             endIcon={<PrintIcon />}
-            onClick={() => {
+            onClick={async () => {
 
               const now = Date.now();
               const seconds = Math.floor(now / 1000);
@@ -402,8 +404,15 @@ export default function AdminPreferencias() {
                 "total": 236.28
               }
               const larguraImpressao = preferencias?.impressao?.largura || "80mm";
-              const html = geraComandaHTML(pedido, larguraImpressao);
-              imprimir(html);
+              if (!window.electronAPI) {
+                const html = geraComandaHTML(pedido, larguraImpressao);
+                imprimir(html);
+              } else {
+                console.log("impressao electron")
+                const result = await window.electronAPI.imprimirPedido(pedido, larguraImpressao);
+                console.log("RESULTADO IMPRESSÃO:", result);
+              }
+
             }}>
             Testar impressão
           </Button>

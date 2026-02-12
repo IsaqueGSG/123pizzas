@@ -87,8 +87,14 @@ Obrigado pela preferência!
       enviarMensagemElectron(idLoja, pedido, texto);
 
       const larguraImpressao = preferencias?.impressao?.largura || "80mm";
-      const html = geraComandaHTML(pedido, larguraImpressao);
-      imprimir(html);
+      if (!window.electronAPI) {
+        const html = geraComandaHTML(pedido, larguraImpressao);
+        imprimir(html);
+      } else {
+        console.log("impressao electron")
+        const result = await window.electronAPI.imprimirPedido(pedido, larguraImpressao);
+        console.log("RESULTADO IMPRESSÃO:", result);
+      }
 
       await marcarComoImpresso(idLoja, pedido.id);
 
@@ -212,10 +218,16 @@ Obrigado pela preferência!
 
                     <IconButton
                       color="inherit"
-                      onClick={() => {
+                      onClick={async () => {
                         const larguraImpressao = preferencias?.impressao?.largura || "80mm";
-                        const html = geraComandaHTML(pedido, larguraImpressao);
-                        imprimir(html);
+                        if (!window.electronAPI) {
+                          const html = geraComandaHTML(pedido, larguraImpressao);
+                          imprimir(html);
+                        } else {
+                          console.log("impressao electron")
+                          const result = await window.electronAPI.imprimirPedido(pedido, larguraImpressao);
+                          console.log("RESULTADO IMPRESSÃO:", result);
+                        }
                       }}
                     >
                       <PrintIcon />
