@@ -4,13 +4,8 @@ import { useLoja } from "./LojaContext";
 const WhatsContext = createContext();
 
 const STATUS = {
-  IDLE: "idle",
-  PREPARING: "preparando",
-  STARTING: "starting",
-  QR: "qr",
-  READY: "ready",
-  AUTH: "authenticated",
   DISCONNECTED: "disconnected",
+  READY: "ready",
   ERROR: "error"
 };
 
@@ -18,53 +13,33 @@ export function WhatsProvider({ children }) {
   const { idLoja } = useLoja();
   const isDesktop = !!window.electronAPI;
 
-  const [status, setStatus] = useState(STATUS.IDLE);
+  const [status, setStatus] = useState(STATUS.DISCONNECTED);
   const [qr, setQr] = useState(null);
-  const [loading, setLoading] = useState(false);
 
-  // -------------------------
-  const init = useCallback(async () => {
+  // iniciar sempre que abrir
+  useEffect(() => {
     if (!isDesktop || !idLoja) return;
 
-    try {
-      setLoading(true);
-      setStatus(STATUS.PREPARING);
-
-      const s = await window.electronAPI.getWhatsStatus(idLoja);
-
-      if (!s || s === STATUS.DISCONNECTED) {
-        await window.electronAPI.initWhats(idLoja);
-        setStatus(STATUS.STARTING);
-      } else {
-        setStatus(s);
-      }
-    } catch (e) {
-      console.error(e);
-      setStatus(STATUS.ERROR);
-    } finally {
-      setLoading(false);
-    }
+    window.electronAPI.initWhats(idLoja);
   }, [idLoja, isDesktop]);
 
-  // -------------------------
-  useEffect(() => {
-    init();
-  }, [init]);
-
-  // -------------------------
   useEffect(() => {
     if (!isDesktop || !idLoja) return;
 
     const offQR = window.electronAPI.onWhatsQR((d) => {
       if (d.idLoja !== idLoja) return;
       setQr(d.qr);
-      setStatus(STATUS.QR);
+      setStatus(STATUS.DISCONNECTED);
     });
 
     const offStatus = window.electronAPI.onWhatsStatus((d) => {
       if (d.idLoja !== idLoja) return;
+
       setStatus(d.status);
-      if (d.status === STATUS.READY) setQr(null);
+
+      if (d.status === STATUS.READY) {
+        setQr(null);
+      }
     });
 
     return () => {
@@ -73,34 +48,13 @@ export function WhatsProvider({ children }) {
     };
   }, [idLoja, isDesktop]);
 
-  // -------------------------
-  useEffect(() => {
-    if (!isDesktop) return;
-
-    const off = window.electronAPI.onLogMessage((data) =>
-      console.log(`[WHATS ${data.id}]`, ...data.msg)
-    );
-
-    return () => off?.();
-  }, [isDesktop]);
-
-  // -------------------------
   const restartWhats = async () => {
     if (!isDesktop || !idLoja) return;
 
     setQr(null);
-    setLoading(true); // Isso ativará o CircularProgress imediatamente
-    setStatus(STATUS.STARTING);
+    setStatus(STATUS.DISCONNECTED);
 
-    try {
-      // Chamamos o Electron para iniciar o processo
-      await window.electronAPI.initWhats(idLoja);
-      // O status "QR" ou "READY" virá através dos eventos onWhatsQR/onWhatsStatus
-    } catch (e) {
-      console.error("Erro ao reiniciar:", e);
-      setStatus(STATUS.ERROR);
-      setLoading(false);
-    }
+    await window.electronAPI.initWhats(idLoja);
   };
 
   return (
@@ -108,7 +62,6 @@ export function WhatsProvider({ children }) {
       value={{
         status,
         qr,
-        loading,
         isDesktop,
         restartWhats
       }}

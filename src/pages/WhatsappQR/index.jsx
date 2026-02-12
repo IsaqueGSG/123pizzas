@@ -19,77 +19,16 @@ export default function WhatsQR() {
       return <Typography>WhatsApp disponível apenas no desktop</Typography>;
     }
 
-    if (loading || status === "starting" || status === "preparando") {
+    // ready
+    if (status === "ready") {
       return (
-        <>
-          <Typography fontWeight="bold">
-            Inicializando WhatsApp…
-          </Typography>
-          <CircularProgress sx={{ mt: 2 }} />
-        </>
+        <Typography fontWeight="bold">
+          ✅ WhatsApp conectado
+        </Typography>
       );
     }
 
-    if (status === "ready" || status === "authenticated") {
-      return (
-        <>
-          <Typography fontWeight="bold">
-            ✅ WhatsApp conectado
-          </Typography>
-
-          <Button
-            sx={{ mt: 2 }}
-            variant="outlined"
-            onClick={restartWhats}
-          >
-            Reiniciar sessão
-          </Button>
-        </>
-      );
-    }
-
-    if (status === "qr" && qr) {
-      return (
-        <>
-          <Typography fontWeight="bold">
-            Escaneie o QR no WhatsApp
-          </Typography>
-
-          <Box
-            component="img"
-            src={qr}
-            sx={{
-              width: 280,
-              mt: 2,
-              borderRadius: 2,
-              boxShadow: 2
-            }}
-          />
-        </>
-      );
-    }
-
-    if (status === "disconnected") {
-      return (
-        <>
-          <Typography fontWeight="bold" color="error" gutterBottom>
-            WhatsApp Desconectado
-          </Typography>
-          <Typography variant="body2" sx={{ mb: 2 }}>
-            A sessão foi encerrada pelo celular ou o computador está sem internet.
-          </Typography>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={restartWhats}
-            disabled={loading}
-          >
-            {loading ? "Iniciando..." : "Gerar novo QR Code"}
-          </Button>
-        </>
-      );
-    }
-
+    // error
     if (status === "error") {
       return (
         <>
@@ -104,7 +43,39 @@ export default function WhatsQR() {
       );
     }
 
-    return <Typography>Status: {status}</Typography>;
+    // 🔥 Se está desconectado mas ainda não tem QR
+    if (!qr) {
+      return (
+        <>
+          <Typography fontWeight="bold">
+            Preparando conexão...
+          </Typography>
+
+          <CircularProgress sx={{ mt: 2 }} />
+        </>
+      );
+    }
+
+    // 🔥 Se tem QR
+    return (
+      <>
+        <Typography fontWeight="bold">
+          Escaneie o QR no WhatsApp
+        </Typography>
+
+        <Box
+          component="img"
+          src={qr}
+          sx={{
+            width: 280,
+            mt: 2,
+            borderRadius: 2,
+            boxShadow: 2
+          }}
+        />
+      </>
+    );
+
   };
 
   return (

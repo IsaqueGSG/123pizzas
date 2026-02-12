@@ -10,13 +10,16 @@ import {
   CircularProgress,
   Toolbar,
   Select,
-  MenuItem
+  MenuItem,
+  IconButton
 } from "@mui/material";
+import PrintIcon from '@mui/icons-material/Print';
 
 import Navbar from "../../components/Navbar";
 import AdminDrawer from "../../components/AdminDrawer";
 
 import { buscarCep, geocodeGoogle } from "../../services/entrega.service";
+import { imprimir, geraComandaHTML } from "../../services/impressora.service";
 import { usePreferencias } from "../../contexts/PreferenciasContext";
 
 const DIAS_SEMANA = [
@@ -336,9 +339,76 @@ export default function AdminPreferencias() {
           boxShadow: 3
         }}
       >
-        <Typography variant="h6" fontWeight="bold" gutterBottom>
-          🖨️ Configurações de impressão
-        </Typography>
+        <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+          <Typography variant="h6" fontWeight="bold" gutterBottom>
+            Configurações de impressão
+          </Typography>
+
+          <Button
+            variant="contained"
+            endIcon={<PrintIcon />}
+            onClick={() => {
+
+              const now = Date.now();
+              const seconds = Math.floor(now / 1000);
+              const nanoseconds = (now % 1000) * 1e6;
+
+              const pedido = {
+                "id": "zYmtWFJiscslxVfsNtDZ",
+                "impresso": true,
+                "cliente": {
+                  "nome": "teste",
+                  "endereco": {
+                    "lat": -23.4624581,
+                    "observacao": "",
+                    "taxaEntrega": 216.28,
+                    "bairro": "Jardim Monte Alegre",
+                    "lng": -46.4174645,
+                    "loading": false,
+                    "cep": "07273270",
+                    "erro": "",
+                    "rua": "Rua Jopiata",
+                    "distanciaKm": 30.897,
+                    "cidade": "Guarulhos",
+                    "numero": "0",
+                    "uf": "SP"
+                  },
+                  "telefone": "11111111111",
+                  "formaPagamento": {
+                    "obsPagamento": "",
+                    "forma": "PIX"
+                  }
+                },
+                "itens": [
+                  {
+                    "valor": 20,
+                    "sabores": [],
+                    "observacao": "",
+                    "borda": null,
+                    "quantidade": 1,
+                    "extras": [],
+                    "img": "https://receitasabordochef.com.br/wp-content/uploads/2023/07/Como-Fazer-Acai.jpg",
+                    "misto": false,
+                    "id": "uoP0aTAt20BFqspuixdx||sem_borda|sem_obs",
+                    "nome": "Acai 700ml"
+                  }
+                ],
+                "status": "preparando",
+                "createdAt": {
+                  "type": "firestore/timestamp/1.0",
+                  "seconds": seconds,
+                  "nanoseconds": nanoseconds
+                },
+                "total": 236.28
+              }
+              const larguraImpressao = preferencias?.impressao?.largura || "80mm";
+              const html = geraComandaHTML(pedido, larguraImpressao);
+              imprimir(html);
+            }}>
+            Testar impressão
+          </Button>
+        </Box>
+
 
         {/* largura papel */}
         <Box
@@ -423,7 +493,7 @@ export default function AdminPreferencias() {
             </Typography>
           )}
         </Box>
-      </Card>
+      </Card >
 
 
       <Card sx={{ p: 2, mb: 3 }}>
@@ -457,6 +527,6 @@ export default function AdminPreferencias() {
               : "Salvar preferências"}
         </Button>
       </Box>
-    </Box>
+    </Box >
   );
 }

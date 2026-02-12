@@ -4,13 +4,14 @@ import {
   Box,
   Typography,
   Card,
-  Chip,
+  IconButton,
   Button,
   Divider,
   Tabs,
   Tab,
   Toolbar
 } from "@mui/material";
+import PrintIcon from '@mui/icons-material/Print';
 
 import Navbar from "../../components/Navbar";
 import AdminDrawer from "../../components/AdminDrawer";
@@ -18,7 +19,7 @@ import ModalAtivarAudio from "../../components/ModalAtivarAudio";
 import ConfirmDialog from "../../components/ConfirmDialog";
 
 import { updatePedidoStatus, escutarPedidos, deletarPedido, marcarComoImpresso } from "../../services/pedidos.service";
-import { imprimirElectron, geraComandaHTML } from "../../services/impressora.service";
+import { imprimir, geraComandaHTML } from "../../services/impressora.service";
 import { enviarMensagemElectron } from "../../services/whatsapp.service";
 import { tocarAudio } from "../../services/audio.service";
 import campainha from "../../assets/audios/campainha.mp3"
@@ -87,8 +88,7 @@ Obrigado pela preferência!
 
       const larguraImpressao = preferencias?.impressao?.largura || "80mm";
       const html = geraComandaHTML(pedido, larguraImpressao);
-
-      imprimirElectron(html, larguraImpressao);
+      imprimir(html);
 
       await marcarComoImpresso(idLoja, pedido.id);
 
@@ -97,7 +97,6 @@ Obrigado pela preferência!
       alert("Erro ao iniciar preparo");
     }
   };
-
 
   const handleCancelar = async (pedido) => {
     await updatePedidoStatus(idLoja, pedido.id, "cancelado");
@@ -211,19 +210,16 @@ Obrigado pela preferência!
                       </Typography>
                     </Box>
 
-                    <Chip
-                      label={pedido.status}
-                      color={
-                        pedido.status === "pendente"
-                          ? "warning"
-                          : pedido.status === "preparando"
-                            ? "info"
-                            : pedido.status === "finalizado"
-                              ? "success"
-                              : "default"
-                      }
-                    />
-
+                    <IconButton
+                      color="inherit"
+                      onClick={() => {
+                        const larguraImpressao = preferencias?.impressao?.largura || "80mm";
+                        const html = geraComandaHTML(pedido, larguraImpressao);
+                        imprimir(html);
+                      }}
+                    >
+                      <PrintIcon />
+                    </IconButton>
                   </Box>
 
                   <Divider sx={{ my: 1 }} />
