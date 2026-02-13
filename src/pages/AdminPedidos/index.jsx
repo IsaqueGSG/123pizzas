@@ -73,18 +73,7 @@ export default function AdminPedidos() {
     try {
       await updatePedidoStatus(idLoja, pedido.id, "preparando");
 
-      const texto = `
-🍕 *123Pedidos*
-Olá ${pedido.cliente.nome}!
-
-Seu pedido entrou em *PREPARO* 👨‍🍳🔥
-Total: R$ ${pedido.total.toFixed(2)}
-
-Assim que finalizar, avisamos você.
-Obrigado pela preferência!
-`;
-
-      enviarMensagemElectron(idLoja, pedido, texto);
+      enviarMensagemElectron(idLoja, pedido);
 
       const larguraImpressao = preferencias?.impressao?.largura || "80mm";
       if (!window.electronAPI) {
@@ -145,18 +134,24 @@ Obrigado pela preferência!
           Gestão de pedidos
         </Typography>
 
-        {
-          (!window.electronAPI) && (
-            <Button
-              variant="contained"
-              onClick={() => navigate(`/${idLoja}`)}
-            >
-              Criar Pedido
-            </Button>
-          )
-        }
-      </Box>
 
+        <Button
+          variant="contained"
+          onClick={() => {
+            const url = `${window.location.origin}/${idLoja}`;
+
+            if (window.electronAPI) {
+              // No Electron: Abre no navegador padrão do sistema
+              window.electronAPI.openExternal(url);
+            } else {
+              // No Navegador: Abre em uma nova aba
+              window.open(url, '_blank', 'noreferrer');
+            }
+          }}
+        >
+          Criar Pedido
+        </Button>
+      </Box>
 
       <Divider sx={{ mt: 2 }} />
 

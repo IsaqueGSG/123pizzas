@@ -157,7 +157,10 @@ ${Object.entries(itensPorTipo).map(([tipo, itens]) => `
 <div>${pagamento.forma || ""}</div>
 
 ${pagamento.forma === "DINHEIRO" && pagamento.obsPagamento
-      ? `<div class="sub">Troco para: R$ ${pagamento.obsPagamento}</div>`
+      ? `
+      <div class="sub">Troco para: R$ ${pagamento.obsPagamento}</div>
+      <div class="sub">Troco: R$ ${(pagamento.obsPagamento - pedido.total).toFixed(2)}</div>
+      `
       : ""
     }
 
@@ -172,12 +175,6 @@ ${pagamento.forma === "DINHEIRO" && pagamento.obsPagamento
 
 <div class="total">
   TOTAL: R$ ${pedido.total.toFixed(2)}
-</div>
-
-<div class="divider"></div>
-
-<div class="center" style="font-size:${fontBase - 1}px">
-  Obrigado pela preferência ❤️
 </div>
 `;
 }
