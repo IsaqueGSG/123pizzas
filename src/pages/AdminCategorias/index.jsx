@@ -105,7 +105,16 @@ export default function AdminCategorias() {
           >
             {cloneCategorias.map((categoria) => (
               <Card key={categoria.id} sx={{ p: 2 }}>
-                <Typography fontWeight="bold">{categoria.nome}</Typography>
+                <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                  <Typography fontWeight="bold">{categoria.nome}</Typography>
+
+                  <Switch
+                    size="small"
+                    checked={Boolean(categoria.status)}
+                    onChange={() => toggleStatus(categoria)}
+                  />
+                </Box>
+
 
                 <Box sx={{ mt: 1 }}>
                   <Typography variant="subtitle2">Extras:</Typography>
@@ -129,7 +138,7 @@ export default function AdminCategorias() {
                     : "Nenhuma borda"}
                 </Box>
 
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 2 }}>
+                {/* <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 2 }}>
                   <Switch
                     size="small"
                     checked={Boolean(categoria.status)}
@@ -140,7 +149,7 @@ export default function AdminCategorias() {
                     onEdit={() => navigate(`/${idLoja}/editcategoria/${categoria.id}`)}
                     onDelete={() => abrirConfirmacaoExcluir(categoria)}
                   />
-                </Box>
+                </Box> */}
               </Card>
             ))}
 

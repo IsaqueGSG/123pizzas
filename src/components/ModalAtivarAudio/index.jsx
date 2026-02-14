@@ -6,7 +6,22 @@ import {
     Button
 } from "@mui/material";
 
-import { unlockAudio } from "../../services/audio.service";
+const [open, setOpen] = useState(false);
+// console.log("modal ativa som")
+
+useEffect(() => {
+    const unlocked = sessionStorage.getItem("audioUnlocked");
+
+    if (!unlocked) {
+        setOpen(true);
+    }
+}, []);
+
+const handleUnlock = () => {
+    unlockAudio();
+    sessionStorage.setItem("audioUnlocked", "true");
+    setOpen(false);
+};
 
 export default function ModalAtivarAudio() {
     const [open, setOpen] = useState(false);

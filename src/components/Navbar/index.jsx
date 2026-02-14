@@ -13,32 +13,19 @@ import MenuIcon from '@mui/icons-material/Menu';
 
 import { useCarrinho } from "../../contexts/CarrinhoContext";
 import { useAuth } from "../../contexts/AuthContext";
-import { useLoja } from "../../contexts/LojaContext";
+
+import { useAdminRoute } from "../../services/useAdminRoute";
 
 const AppBar = styled(MuiAppBar)({});
 
 export default function Navbar() {
     const { user, setOpenAdminDrawer } = useAuth();
     const { quantidadeTotal, setOpenCarrinho } = useCarrinho();
-    const { idLoja } = useLoja();
-
     const location = useLocation();
 
-    const privatePrefixes = [
-        `/${idLoja}/pedidos`,
-        `/${idLoja}/produtos`,
-        `/${idLoja}/addproduto`,
-        `/${idLoja}/addcategoria`,
-        `/${idLoja}/editproduto`,
-        `/${idLoja}/preferencias`,
-        `/${idLoja}/categorias`,
-        `/${idLoja}/editcategoria`,
-        `/${idLoja}/whatsapp`,
-    ];
+    const isAdminRoute = useAdminRoute();
 
-    const isPrivateRoute = user && privatePrefixes.some(prefix =>
-        location.pathname.startsWith(prefix)
-    );
+    const isPrivateRoute = user && isAdminRoute;
 
     // fecha o drawer ao trocar de rota
     useEffect(() => {

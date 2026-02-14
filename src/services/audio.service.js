@@ -1,34 +1,59 @@
-let audioUnlocked = false;
+let audioUnlocked = sessionStorage.getItem("audioUnlocked") === "true";
 let audioElement = null;
 
 export function unlockAudio() {
-  if (!audioElement) {
+  if (audioUnlocked) return;
+
+  try {
     audioElement = new Audio();
-    audioElement.volume = 1;
+    audioElement.src = campainha;
+    audioElement.volume = 0;
+    audioElement.muted = true;
+
+    const playPromise = audioElement.play();
+
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          audioUnlocked = true;
+          sessionStorage.setItem("audioUnlocked", "true");
+          console.log("🔊 Áudio desbloqueado com sucesso");
+        })
+        .catch((err) => {
+          console.warn("🔇 Falha ao desbloquear áudio:", err);
+        });
+    } else {
+      audioUnlocked = true;
+      sessionStorage.setItem("audioUnlocked", "true");
+    }
+  } catch (err) {
+    console.error("Erro no unlockAudio:", err);
   }
-
-  // tentativa silenciosa para "desbloquear"
-  audioElement.src = "";
-  audioElement.play().catch(() => {});
-
-  audioUnlocked = true;
 }
 
+let audioPool = null;
+
 export function tocarAudio(src) {
-  if (!audioUnlocked) {
+  const unlocked = sessionStorage.getItem("audioUnlocked") === "true";
+
+  if (!unlocked) {
     console.warn("🔇 Áudio bloqueado pelo navegador");
     return;
   }
 
-  if (!audioElement) {
-    audioElement = new Audio();
+  try {
+    if (!audioPool) {
+      audioPool = new Audio(src);
+      audioPool.volume = 1;
+    }
+
+    audioPool.currentTime = 0; // reinicia som
+    audioPool.play().catch((err) => {
+      console.error("Erro ao tocar áudio:", err);
+    });
+  } catch (err) {
+    console.error("Erro geral de áudio:", err);
   }
-
-  audioElement.pause();
-  audioElement.currentTime = 0;
-  audioElement.src = src;
-
-  audioElement.play().catch((err) => {
-    console.error("Erro ao tocar áudio:", err);
-  });
 }
+
+

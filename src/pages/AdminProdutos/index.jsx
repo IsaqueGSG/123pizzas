@@ -78,6 +78,13 @@ export default function AdminProdutos() {
     return acc;
   }, {});
 
+  // Ordena por nome (A → Z)
+  Object.keys(produtosPorCategoria).forEach((cat) => {
+    produtosPorCategoria[cat].sort((a, b) =>
+      a.nome.localeCompare(b.nome, "pt-BR", { sensitivity: "base" })
+    );
+  });
+
   /* ---------- INIT ---------- */
   useEffect(() => {
     if (!produtos.length || cloneProdutos.length) return;

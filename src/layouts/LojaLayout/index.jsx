@@ -7,7 +7,9 @@ import { CartProvider } from "../../contexts/CarrinhoContext";
 import { EntregaProvider } from "../../contexts/EntregaContext";
 import { ProdutosProvider } from "../../contexts/ProdutosContext";
 import { WhatsProvider } from "../../contexts/Whatsapp.Context";
+import { PedidosRealtimeProvider } from "../../contexts/PedidosRealtimeContext";
 
+import BellPedidos from "../../components/BellPedidos"
 
 export default function LojaLayout() {
   return (
@@ -18,7 +20,15 @@ export default function LojaLayout() {
             <EntregaProvider>
               <ProdutosProvider>
                 <WhatsProvider>
-                  <Outlet />
+
+                  <PedidosRealtimeProvider> {/* PedidosRealtimeProvider valida se a rota é privada e esculta se for */}
+                    
+                    <BellPedidos />{/* BellPedidos valida se a rota é privada e rederiza se for */}
+
+                    <Outlet />
+
+                  </PedidosRealtimeProvider>
+
                 </WhatsProvider>
               </ProdutosProvider>
             </EntregaProvider>

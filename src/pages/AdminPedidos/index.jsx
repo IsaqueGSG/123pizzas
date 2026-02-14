@@ -1,5 +1,4 @@
 import { useEffect, useState, useRef, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -15,59 +14,26 @@ import PrintIcon from '@mui/icons-material/Print';
 
 import Navbar from "../../components/Navbar";
 import AdminDrawer from "../../components/AdminDrawer";
-import ModalAtivarAudio from "../../components/ModalAtivarAudio";
 import ConfirmDialog from "../../components/ConfirmDialog";
 
-import { updatePedidoStatus, escutarPedidos, deletarPedido, marcarComoImpresso } from "../../services/pedidos.service";
+import { updatePedidoStatus, deletarPedido, marcarComoImpresso } from "../../services/pedidos.service";
 import { imprimir, geraComandaHTML } from "../../services/impressora.service";
 import { enviarMensagemElectron } from "../../services/whatsapp.service";
-import { tocarAudio } from "../../services/audio.service";
-import campainha from "../../assets/audios/campainha.mp3"
 
 import { useLoja } from "../../contexts/LojaContext";
 import { usePreferencias } from "../../contexts/PreferenciasContext";
+import { usePedidosRealtime } from "../../contexts/PedidosRealtimeContext";
 
 export default function AdminPedidos() {
-  const navigate = useNavigate();
   const { idLoja } = useLoja()
   const { preferencias } = usePreferencias();
+  const { pedidos, loading } = usePedidosRealtime();
 
   const statusTabs = ["pendente", "preparando", "finalizado", "cancelado"];
   const [abaAtiva, setAbaAtiva] = useState(0);
 
-  const [pedidos, setPedidos] = useState([]);
-  const [loading, setLoading] = useState(true);
-
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pedidoSelecionado, setPedidoSelecionado] = useState(null);
-
-  const firstLoad = useRef(true);
-
-  useEffect(() => {
-
-    if (!idLoja) return;
-
-    const unsub = escutarPedidos(idLoja, (snapshot) => {
-      snapshot.docChanges().forEach(change => {
-        if (
-          change.type === "added" &&
-          change.doc.data().status === "pendente" &&
-          !firstLoad.current
-        ) {
-          tocarAudio(campainha);
-        }
-
-      });
-
-      firstLoad.current = false;
-      setPedidos(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
-      console.log(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
-      setLoading(false)
-    });
-
-    return unsub;
-  }, [idLoja]);
-
 
   const handlePreparar = async (pedido) => {
     try {
@@ -124,7 +90,6 @@ export default function AdminPedidos() {
 
   return (
     <Box sx={{ p: 2 }}>
-      <ModalAtivarAudio />
       <Navbar />
       <Toolbar />
       <AdminDrawer />
