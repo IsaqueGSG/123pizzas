@@ -6,9 +6,6 @@ const EntregaContext = createContext();
 const GEO_KEY = import.meta.env.VITE_GOOGLE_GEO_API_KEY;
 
 const estadoInicial = {
-  placeId: "",
-  enderecoFormatado: "",
-
   cep: "",
   numero: "",
   rua: "",
@@ -30,13 +27,11 @@ const estadoInicial = {
 import { usePreferencias } from "./PreferenciasContext";
 
 import { buscarCep } from "../services/entrega.service";
-import { getPlaceDetails } from "../services/googlePlaces.service";
-import { getPlaceDetailsFromJS } from "../services/googlePlaces.service";
 
 export function EntregaProvider({ children }) {
   const { preferencias } = usePreferencias();
   const enderecoLoja = preferencias?.enderecoLoja;
-  const [sessionToken, setSessionToken] = useState(null);
+
 
   const [endereco, setEndereco] = useState(estadoInicial);
   const [rota, setRota] = useState([]);
@@ -74,19 +69,13 @@ export function EntregaProvider({ children }) {
     try {
       setEndereco(prev => ({ ...prev, loading: true, erro: "" }));
 
-      if (!endereco.placeId) {
-        throw new Error("Selecione um endereço na lista");
-      }
+      const cepData = await buscarCep(endereco.cep);
 
-      if (!endereco.numero) {
-        throw new Error("Informe o número do endereço");
-      }
+      const enderecoCompleto =
+        `${cepData.logradouro}, ${endereco.numero}, ` +
+        `${cepData.localidade} - ${cepData.uf}`;
 
-      // 🔥 GOOGLE PLACE DETAILS (precisão alta)
-      const details = await getPlaceDetailsFromJS(
-        endereco.placeId,
-        sessionToken
-      );
+      const geo = await geocodeGoogle(enderecoCompleto);
 
       if (!enderecoLoja?.lat || !enderecoLoja?.lng) {
         throw new Error("Endereço da loja não configurado");
@@ -94,14 +83,15 @@ export function EntregaProvider({ children }) {
 
       const lojaLng = Number(enderecoLoja.lng);
       const lojaLat = Number(enderecoLoja.lat);
-      const destinoLng = Number(details.lng);
-      const destinoLat = Number(details.lat);
+      const destinoLng = Number(geo.lng);
+      const destinoLat = Number(geo.lat);
 
-      // Mantém seu OSRM (perfeito e gratuito)
       const url =
         `https://router.project-osrm.org/route/v1/driving/` +
         `${lojaLng},${lojaLat};${destinoLng},${destinoLat}` +
         `?overview=full&geometries=geojson`;
+
+      console.log("URL OSRM:", url); // debug
 
       const res = await fetch(url);
       if (!res.ok) throw new Error("Erro ao calcular rota");
@@ -115,21 +105,23 @@ export function EntregaProvider({ children }) {
 
       setEndereco(prev => ({
         ...prev,
-        rua: details.rua,
-        bairro: details.bairro,
-        cidade: details.cidade,
-        uf: details.uf,
-        enderecoFormatado: details.enderecoFormatado,
+        rua: cepData.logradouro,
+        bairro: cepData.bairro,
+        cidade: cepData.localidade,
+        uf: cepData.uf,
+
         lat: destinoLat,
         lng: destinoLng,
+
         distanciaKm: km,
         taxaEntrega: taxa,
+
         loading: false
       }));
 
-      setRota(
-        route.geometry.coordinates.map(([lng, lat]) => ({ lat, lng }))
-      );
+      setRota(route.geometry.coordinates.map(
+        ([lng, lat]) => ({ lat, lng })
+      ));
 
     } catch (err) {
       setEndereco(prev => ({
@@ -142,7 +134,6 @@ export function EntregaProvider({ children }) {
   }
 
 
-
   return (
     <EntregaContext.Provider
       value={{
@@ -151,9 +142,7 @@ export function EntregaProvider({ children }) {
         rota,
         clearEndereco,
         atualizarCampo,
-        calcularEntrega, 
-        sessionToken,        
-        setSessionToken,
+        calcularEntrega,
       }}
     >
       {children}

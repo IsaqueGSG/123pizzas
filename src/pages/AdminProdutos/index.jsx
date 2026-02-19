@@ -19,14 +19,14 @@ import AdminDrawer from "../../components/AdminDrawer";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import ProductMenu from "../../components/MenuOptions";
 
-import { updateProdutoStatusBatch, deleteProduto } from "../../services/produtos.service";
+import { updateProdutoStatusBatch, deleteProduto, duplicarProduto } from "../../services/produtos.service";
 import { useProducts } from "../../contexts/ProdutosContext";
 import { useLoja } from "../../contexts/LojaContext";
 
 export default function AdminProdutos() {
   const { idLoja } = useLoja();
   const navigate = useNavigate();
-  const { produtos, categorias, loading, updateProdutosStatus, removeProduto } = useProducts();
+  const { produtos, categorias, loading, updateProdutosStatus, removeProduto, addProduto } = useProducts();
 
   const [abaAtiva, setAbaAtiva] = useState(0);
   const [produtosOriginais, setProdutosOriginais] = useState([]);
@@ -91,6 +91,24 @@ export default function AdminProdutos() {
     setProdutosOriginais(produtos.map((p) => ({ ...p })));
     setCloneProdutos(produtos.map((p) => ({ ...p })));
   }, [produtos]);
+
+
+  const handleDuplicarProduto = async (prod) => {
+    try {
+      const novoProduto = await duplicarProduto(idLoja, prod);
+
+      // Atualiza instantaneamente o context (sem nova busca)
+      addProduto(novoProduto);
+
+      // Atualiza também os clones da tela (importantíssimo)
+      setCloneProdutos(prev => [...prev, novoProduto]);
+      setProdutosOriginais(prev => [...prev, novoProduto]);
+
+    } catch (error) {
+      console.error("Erro ao duplicar produto:", error);
+    }
+  };
+
 
   return (
     <Box sx={{ p: 2, pb: 8 }}>
@@ -189,7 +207,9 @@ export default function AdminProdutos() {
                     <ProductMenu
                       onEdit={() => navigate(`/${idLoja}/editproduto/${prod.id}`)}
                       onDelete={() => abrirConfirmacaoExcluir(prod)}
+                      duplicar={() => handleDuplicarProduto(prod)}
                     />
+
                   </Box>
                 </Box>
               </Card>

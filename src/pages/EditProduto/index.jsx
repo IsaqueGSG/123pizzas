@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 import {
   Box,
@@ -8,7 +8,8 @@ import {
   MenuItem,
   Divider,
   Toolbar,
-  Typography
+  Typography,
+  Snackbar, Alert
 } from "@mui/material";
 
 import Navbar from "../../components/Navbar";
@@ -20,9 +21,12 @@ import { useLoja } from "../../contexts/LojaContext";
 import { updateProduto as updateProdutoService } from "../../services/produtos.service";
 
 export default function EditProduto() {
+  const navigate = useNavigate();
   const { IDproduto } = useParams();
   const { produtos, loading, categorias, updateProduto } = useProducts();
   const { idLoja } = useLoja();
+
+  const [snackTxt, setSnackTxt] = useState("");
 
   const [produto, setProduto] = useState(null);
 
@@ -36,11 +40,18 @@ export default function EditProduto() {
 
   // busca o produto no contexto
   useEffect(() => {
-    if (loading || !produtos.length) return;
+    if (loading) return;
 
     const encontrado = produtos.find(p => p.id === IDproduto);
-    if (encontrado) setProduto(encontrado);
-  }, [IDproduto, produtos, loading]);
+
+    if (!encontrado) {
+      alert("Produto não encontrado");
+      navigate(-1);
+      return
+    }
+
+    setProduto(encontrado);
+  }, [IDproduto, produtos, loading, navigate]);
 
   // popula o formulário
   useEffect(() => {
@@ -59,7 +70,7 @@ export default function EditProduto() {
     const { nome, valor, categoriaId } = form;
 
     if (!nome.trim() || !categoriaId || valor <= 0) {
-      alert("Preencha todos os campos corretamente");
+      setSnackTxt("Preencha todos os campos corretamente");
       return;
     }
 
@@ -74,7 +85,7 @@ export default function EditProduto() {
     await updateProdutoService(idLoja, produto.id, dadosAtualizados);
     updateProduto(produto.id, dadosAtualizados);// atualizar a lista de produtos no context
 
-    alert("Produto atualizado com sucesso!");
+    setSnackTxt("Produto atualizado com sucesso!");
   };
 
   if (loading || !produto) {
@@ -92,6 +103,16 @@ export default function EditProduto() {
       <Navbar />
       <Toolbar />
       <AdminDrawer />
+
+      <Snackbar
+        open={!!snackTxt}
+        autoHideDuration={3000}
+        onClose={() => setSnackTxt("")}
+      >
+        <Alert severity="info" variant="filled">
+          {snackTxt}
+        </Alert>
+      </Snackbar>
 
       <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 3 }}>
         <TextField
@@ -152,6 +173,7 @@ export default function EditProduto() {
           Salvar Alterações
         </Button>
       </Box>
+
     </Box>
   );
 }

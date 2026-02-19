@@ -18,18 +18,29 @@ import AdminDrawer from "../../components/AdminDrawer";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import ProductMenu from "../../components/MenuOptions";
 
-import { updateCategoriaStatusBatch, deleteCategoria } from "../../services/categorias.service";
+import { updateCategoriaStatusBatch, deleteCategoria, duplicarCategoriaComProdutos } from "../../services/categorias.service";
+import { deleteProdutosPorCat } from "../../services/produtos.service";
 import { useProducts } from "../../contexts/ProdutosContext";
 import { useLoja } from "../../contexts/LojaContext";
 
 export default function AdminCategorias() {
   const { idLoja } = useLoja();
   const navigate = useNavigate();
-  const { categorias, loading, updateCategoriasStatus, removeCategoria } = useProducts();
+  const { addCategoria, addProduto, categorias, loading, updateCategoriasStatus, removeCategoria, removeProdutosPorCategoria } = useProducts();
 
   const [cloneCategorias, setCloneCategorias] = useState([]);
   useEffect(() => {
-    setCloneCategorias(categorias.map(c => ({ ...c })));
+    if (!categorias) return;
+
+    const cloneCat = [...categorias]
+      .map(c => ({ ...c }))
+      .sort((a, b) =>
+        (a.nome || "").localeCompare(b.nome || "", "pt-BR", {
+          sensitivity: "base",
+        })
+      );
+
+    setCloneCategorias(cloneCat);
   }, [categorias]);
 
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
@@ -39,7 +50,6 @@ export default function AdminCategorias() {
     const original = categorias.find(c => c.id === cat.id);
     return original && original.status !== cat.status;
   });
-
 
   const abrirConfirmacaoExcluir = (cat) => {
     setCategoriaSelecionada(cat);
@@ -67,6 +77,32 @@ export default function AdminCategorias() {
       console.error("Erro ao salvar status:", error);
     }
   };
+
+  const [duplicandoId, setDuplicandoId] = useState(null);
+
+  const duplicarCategoria = async (categoria) => {
+    if (duplicandoId === categoria.id) return;
+
+    try {
+      setDuplicandoId(categoria.id);
+
+      const { novaCategoria, produtosCriados } =
+        await duplicarCategoriaComProdutos(idLoja, categoria.id);
+
+      // Atualiza o context (instantâneo na UI)
+      addCategoria(novaCategoria);
+
+      produtosCriados.forEach((p) => {
+        addProduto(p);
+      });
+
+    } catch (error) {
+      console.error("Erro ao duplicar categoria:", error);
+    } finally {
+      setDuplicandoId(null);
+    }
+  };
+
 
   return (
     <Box sx={{ p: 2, pb: 8 }}>
@@ -138,18 +174,13 @@ export default function AdminCategorias() {
                     : "Nenhuma borda"}
                 </Box>
 
-                {/* <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 2 }}>
-                  <Switch
-                    size="small"
-                    checked={Boolean(categoria.status)}
-                    onChange={() => toggleStatus(categoria)}
-                  />
-
+                <Box sx={{ mt: "auto", display: "flex", justifyContent: "flex-end" }}>
                   <ProductMenu
                     onEdit={() => navigate(`/${idLoja}/editcategoria/${categoria.id}`)}
                     onDelete={() => abrirConfirmacaoExcluir(categoria)}
+                    duplicar={() => duplicarCategoria(categoria)}
                   />
-                </Box> */}
+                </Box>
               </Card>
             ))}
 
@@ -185,16 +216,23 @@ export default function AdminCategorias() {
         open={openConfirmDialog}
         onClose={() => setOpenConfirmDialog(false)}
         title="Excluir categoria"
-        message={`Tem certeza que deseja excluir "${categoriaSelecionada?.nome}"?`}
+        message={`Tem certeza que deseja excluir "${categoriaSelecionada?.nome}" e todos os seu produtos?`}
         funcao={async () => {
           if (!categoriaSelecionada) return;
 
-          await deleteCategoria(idLoja, categoriaSelecionada.id);
+          try {
+            await deleteProdutosPorCat(idLoja, categoriaSelecionada.id);
+            await deleteCategoria(idLoja, categoriaSelecionada.id);
 
-          removeCategoria(categoriaSelecionada.id);
-          setOpenConfirmDialog(false);
+            // só atualiza o context se o backend deu certo
+            removeProdutosPorCategoria(categoriaSelecionada.id);
+            removeCategoria(categoriaSelecionada.id);
+
+            setOpenConfirmDialog(false);
+          } catch (error) {
+            console.error("Erro ao excluir categoria:", error);
+          }
         }}
-
       />
     </Box>
   );

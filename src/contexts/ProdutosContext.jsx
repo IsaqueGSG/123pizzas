@@ -25,26 +25,38 @@ export function ProdutosProvider({ children }) {
     carregou.current = true;
 
     const carregar = async () => {
-      setLoading(true);
+      try {
+        setLoading(true);
 
-      const [prods, cats] = await Promise.all([
-        getProdutos(idLoja),
-        getCategorias(idLoja)
-      ]);
+        const [prods, cats] = await Promise.all([
+          getProdutos(idLoja),
+          getCategorias(idLoja)
+        ]);
 
-      setProdutos(prods);
-      setCategorias(cats);
-      setLoading(false);
+        setProdutos(prods || []);
+        setCategorias(cats || []);
+      } catch (error) {
+        console.error("Erro ao carregar produtos/categorias:", error);
+        setProdutos([]);
+        setCategorias([]);
+      } finally {
+        setLoading(false); // 🔥 garante que nunca trava
+      }
     };
 
     carregar();
   }, [idLoja]);
 
   /* ---------- PRODUTOS COM CATEGORIA (DERIVADO) ---------- */
+  const categoriasMap = Object.fromEntries(
+    categorias.map(cat => [cat.id, cat])
+  );
+
   const produtosComCategoria = produtos.map(prod => ({
     ...prod,
-    categoria: categorias.find(cat => cat.id === prod.categoriaId) || null
+    categoria: categoriasMap[prod.categoriaId] || null
   }));
+
 
   /* ---------- FUNÇÕES PRODUTOS ---------- */
 
@@ -87,6 +99,10 @@ export function ProdutosProvider({ children }) {
     setCategorias(prev => prev.filter(cat => cat.id !== id));
   };
 
+  const removeProdutosPorCategoria = (categoriaId) => {
+    setProdutos(prev => prev.filter(p => p.categoriaId !== categoriaId));
+  };
+
   const updateCategoriasStatus = (categoriasAlteradas) => {
     setCategorias(prev =>
       prev.map(cat => {
@@ -107,6 +123,7 @@ export function ProdutosProvider({ children }) {
         addProduto,
         updateProduto,
         removeProduto,
+        removeProdutosPorCategoria,
         updateProdutosStatus,
 
         // categorias

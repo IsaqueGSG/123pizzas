@@ -8,7 +8,7 @@ import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Avatar from "@mui/material/Avatar";
 import Toolbar from "@mui/material/Toolbar";
-import { Tab, Tabs, MenuItem, CircularProgress } from "@mui/material"
+import { Tab, Tabs, MenuItem } from "@mui/material"
 
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
@@ -90,8 +90,8 @@ export default function Checkout() {
 
   const validacoes = () => {
 
-    if (!endereco?.placeId) {
-      alert("Selecione o endereço na busca");
+    if (!endereco?.rua) {
+      alert("Informe o endereço de entrega");
       setAba(1);
       return false;
     }
@@ -186,54 +186,7 @@ export default function Checkout() {
     return "Finalizar pedido";
   };
 
-  const [mapsLoaded, setMapsLoaded] = useState(false);
-
-  useEffect(() => {
-    // já carregado
-    if (window.google?.maps?.places) {
-      setMapsLoaded(true);
-      return;
-    }
-
-    // evita duplicação
-    const existingScript = document.querySelector(
-      'script[src*="maps.googleapis.com/maps/api/js"]'
-    );
-
-    if (existingScript) {
-      existingScript.addEventListener("load", () => {
-        setMapsLoaded(true);
-      });
-      return;
-    }
-
-    const apiKey = import.meta.env.VITE_GOOGLE_GEO_API_KEY;
-
-    if (!apiKey) {
-      console.error("Google Maps API Key não encontrada no .env");
-      return;
-    }
-
-    const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&region=BR&language=pt-BR`;
-    script.async = true;
-    script.defer = true;
-
-    script.onload = () => {
-      console.log("Google Maps carregado!");
-      setMapsLoaded(true);
-    };
-
-    script.onerror = () => {
-      console.error("Erro ao carregar Google Maps");
-    };
-
-    document.body.appendChild(script);
-  }, []);
-
   const formasPagamento = ["PIX", "DINHEIRO", "CARTÃO"]
-
-  if (!mapsLoaded) return <CircularProgress />;
 
   return (
     <Box sx={{ p: 2, pb: 22 }}>

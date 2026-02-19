@@ -137,8 +137,7 @@ ${Object.entries(itensPorTipo).map(([tipo, itens]) => `
       ${item.extras?.length
         ? `<div class="sub">
             <b>Extras:</b> ${item.extras
-          .map(e => `${e.nome} (+${e.valor.toFixed(2)})`)
-          .join(", ")}
+          .map(e => `↳ ${e.nome} (+${e.valor.toFixed(2)})\n`)}
           </div>`
         : ""
       }

@@ -7,7 +7,9 @@ import {
   orderBy,
   updateDoc,
   deleteDoc,
-  onSnapshot
+  onSnapshot,
+  getDocs,
+  writeBatch
 } from "firebase/firestore";
 import { db } from "../config/firebase";
 

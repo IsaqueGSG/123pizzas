@@ -4,7 +4,9 @@ import {
     TextField,
     Button,
     Toolbar,
-    MenuItem
+    MenuItem,
+    Snackbar,
+    Alert
 } from "@mui/material";
 
 import Navbar from "../../components/Navbar";
@@ -14,11 +16,15 @@ import { addProduto as addProdutoService } from "../../services/produtos.service
 import { useProducts } from "../../contexts/ProdutosContext";
 import { useLoja } from "../../contexts/LojaContext";
 
-
 export default function AddProduto() {
     const { idLoja } = useLoja();
-
     const { categorias, addProduto } = useProducts();
+
+    const [snackbar, setSnackbar] = useState({
+        open: false,
+        msg: "",
+        severity: "success"
+    });
 
     const [produto, setProduto] = useState({
         nome: "",
@@ -34,7 +40,11 @@ export default function AddProduto() {
         const { nome, valor, categoriaId } = produto;
 
         if (!nome || !valor || !categoriaId) {
-            alert("Preencha todos os campos obrigatórios");
+            setSnackbar({
+                open: true,
+                msg: "Preencha todos os campos obrigatórios",
+                severity: "warning"
+            });
             return;
         }
 
@@ -42,6 +52,7 @@ export default function AddProduto() {
             ...produto,
             valor: Number(valor)
         });
+
         addProduto({ ...produto, id: idProduto });
 
         setProduto({
@@ -50,10 +61,15 @@ export default function AddProduto() {
             img: "",
             valor: "",
             categoriaId: "",
+            observacao: "",
             status: true
         });
 
-        alert("Produto adicionado com sucesso!");
+        setSnackbar({
+            open: true,
+            msg: "Produto adicionado com sucesso!",
+            severity: "success"
+        });
     };
 
     return (
@@ -61,6 +77,16 @@ export default function AddProduto() {
             <Navbar />
             <Toolbar />
             <AdminDrawer />
+
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={3000}
+                onClose={() => setSnackbar(s => ({ ...s, open: false }))}
+            >
+                <Alert severity={snackbar.severity} variant="filled">
+                    {snackbar.msg}
+                </Alert>
+            </Snackbar>
 
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 3 }}>
                 <TextField
@@ -103,9 +129,7 @@ export default function AddProduto() {
                                 {cat.nome}
                             </MenuItem>
                         ))}
-
                 </TextField>
-
 
                 <Button variant="contained" onClick={salvar}>
                     Salvar Produto

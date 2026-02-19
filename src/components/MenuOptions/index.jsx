@@ -4,7 +4,7 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 
-export default function ProductMenu({ onEdit, onDelete }) {
+export default function ProductMenu({ onEdit, onDelete, duplicar }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
 
@@ -22,7 +22,7 @@ export default function ProductMenu({ onEdit, onDelete }) {
         <MenuItem
           onClick={() => {
             setAnchorEl(null);
-            onEdit();
+            onEdit?.();
           }}
         >
           Editar
@@ -31,7 +31,16 @@ export default function ProductMenu({ onEdit, onDelete }) {
         <MenuItem
           onClick={() => {
             setAnchorEl(null);
-            onDelete();
+            duplicar?.();
+          }}
+        >
+          Duplicar
+        </MenuItem>
+
+        <MenuItem
+          onClick={() => {
+            setAnchorEl(null);
+            onDelete?.();
           }}
         >
           Excluir

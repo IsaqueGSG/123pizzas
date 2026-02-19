@@ -1,5 +1,70 @@
-import { collection, getDocs, doc, updateDoc, deleteDoc, writeBatch } from "firebase/firestore";
+import {
+  collection, getDocs, doc, deleteDoc, writeBatch, addDoc, getDoc
+} from "firebase/firestore";
 import { db } from "../config/firebase";
+import { duplicarProdutosDaCategoria } from "./produtos.service";
+
+export async function duplicarCategoriaComProdutos(idLoja, categoriaId) {
+  try {
+    if (!idLoja || !categoriaId) {
+      throw new Error("idLoja e categoriaId são obrigatórios");
+    }
+
+    const categoriaRef = doc(
+      db,
+      "clientes123pedidos",
+      idLoja,
+      "categorias",
+      categoriaId
+    );
+
+    const categoriaSnap = await getDoc(categoriaRef);
+
+    if (!categoriaSnap.exists()) {
+      throw new Error("Categoria não encontrada");
+    }
+
+    const categoriaOriginal = categoriaSnap.data();
+
+    // 🔥 Nome com cópia (aqui é o lugar correto que você perguntou antes)
+    const novaCategoria = {
+      ...categoriaOriginal,
+      nome: `${categoriaOriginal.nome} (Cópia ${new Date().toLocaleTimeString("pt-BR", {
+        hour: "2-digit",
+        minute: "2-digit"
+      })})`,
+      createdAt: Date.now(),
+    };
+
+    // nunca copiar id manual
+    delete novaCategoria.id;
+
+    const novaCategoriaRef = await addDoc(
+      collection(db, "clientes123pedidos", idLoja, "categorias"),
+      novaCategoria
+    );
+
+    const novaCategoriaId = novaCategoriaRef.id;
+
+    // duplicar produtos da categoria antiga para a nova
+    const produtosCriados = await duplicarProdutosDaCategoria(
+      idLoja,
+      categoriaId,
+      novaCategoriaId
+    );
+
+    return {
+      novaCategoria: {
+        id: novaCategoriaId,
+        ...novaCategoria,
+      },
+      produtosCriados,
+    };
+  } catch (error) {
+    console.error("Erro ao duplicar categoria com produtos:", error);
+    throw error;
+  }
+}
 
 /* ---------- BUSCAR CATEGORIAS ---------- */
 export async function getCategorias(idLoja) {

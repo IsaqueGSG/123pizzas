@@ -3,12 +3,15 @@ import {
     TextField,
     Button,
     Typography,
-    CircularProgress,
+    CircularProgress
 } from "@mui/material";
 import { MapContainer, TileLayer, Marker, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { useEffect, } from "react";
+import { useEffect } from "react";
+
+import CampoEnderecoGoogle from "../CampoEnderecoGoogle";
+import { useEntrega } from "../../contexts/EntregaContext";
 
 // FIX ÍCONE LEAFLET
 delete L.Icon.Default.prototype._getIconUrl;
@@ -41,19 +44,10 @@ const lojaIcon = L.divIcon({
       fill="#d32f2f"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <!-- Toldo -->
       <path d="M3 4h18l-1.5 5H4.5L3 4z" fill="#f44336"/>
-      
-      <!-- Corpo da loja -->
       <rect x="4" y="9" width="16" height="11" rx="1.5" />
-
-      <!-- Porta -->
       <rect x="10" y="12" width="4" height="8" fill="#ffffff"/>
-
-      <!-- Janela esquerda -->
       <rect x="6" y="12" width="3" height="3" fill="#ffffff"/>
-
-      <!-- Janela direita -->
       <rect x="15" y="12" width="3" height="3" fill="#ffffff"/>
     </svg>
   `,
@@ -61,8 +55,6 @@ const lojaIcon = L.divIcon({
     iconSize: [34, 34],
     iconAnchor: [17, 34],
 });
-
-import { useEntrega } from "../../contexts/EntregaContext";
 
 export default function MapaEntrega() {
     const { endereco, rota, atualizarCampo, calcularEntrega, enderecoLoja } = useEntrega();
@@ -80,19 +72,25 @@ export default function MapaEntrega() {
         return null;
     }
 
+    const temRota = Array.isArray(rota) && rota.length > 0;
+    const temCoordenadasCliente = endereco.lat && endereco.lng;
+
     return (
         <>
-            <Typography fontWeight="bold">Endereço de entrega</Typography>
+            <Typography fontWeight="bold">
+                Endereço de entrega
+            </Typography>
 
-            <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1, mt: 1 }}>
-                <TextField
-                    label="CEP"
-                    fullWidth
-                    size="small"
-                    value={endereco.cep}
-                    onChange={e => atualizarCampo("cep", e.target.value)}
-                    disabled={endereco.loading}
-                />
+            {/* GRID CORRIGIDO */}
+            <Box
+                sx={{
+                    display: "grid",
+                    gridTemplateColumns: { xs: "1fr", md: "1fr 120px" },
+                    gap: 1,
+                    mt: 1
+                }}
+            >
+                <CampoEnderecoGoogle />
 
                 <TextField
                     label="Número"
@@ -107,11 +105,13 @@ export default function MapaEntrega() {
                     fullWidth
                     size="small"
                     rows={2}
-                    sx={{ gridColumn: "1 / span 2" }}
+                    multiline
+                    sx={{ gridColumn: { md: "1 / span 2" } }}
                     value={endereco.observacao}
                     onChange={e => atualizarCampo("observacao", e.target.value)}
                 />
             </Box>
+
             <Button
                 sx={{ mt: 1 }}
                 variant="contained"
@@ -120,65 +120,56 @@ export default function MapaEntrega() {
                 disabled={endereco.loading}
             >
                 Calcular taxa
-            </Button >
+            </Button>
 
+            {endereco.loading && (
+                <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+                    <CircularProgress />
+                </Box>
+            )}
 
-            {
-                endereco.loading && (
-                    <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-                        <CircularProgress />
-                    </Box>
-                )
-            }
+            {endereco.erro && (
+                <Typography color="error" sx={{ mt: 2 }}>
+                    {endereco.erro}
+                </Typography>
+            )}
 
-            {
-                endereco.erro && (
-                    <Typography color="error" sx={{ mt: 2 }}>
-                        {endereco.erro}
+            {temRota && temCoordenadasCliente && (
+                <>
+                    <Typography sx={{ mt: 1 }}>
+                        {endereco.enderecoFormatado || "Endereço selecionado"}
+                        {" "}📏 {(endereco.distanciaKm ?? 0).toFixed(2)} km —
+                        {" "}💰 R$ {(endereco.taxaEntrega ?? 0).toFixed(2)}
                     </Typography>
-                )
-            }
 
-            {
-                rota.length > 0 && endereco.lat && endereco.lng && (
-                    <>
-                        <Typography sx={{ mt: 1 }}>
-                            {(endereco.rua && endereco.bairro && endereco.cidade && endereco.uf)
-                                ? `${endereco.rua} - ${endereco.bairro}, ${endereco.cidade}/${endereco.uf} `
-                                : "Localização atual "
-                            }
-                            📏 {(endereco.distanciaKm ?? 0).toFixed(2)} km —
-                            💰 R$ {(endereco.taxaEntrega ?? 0).toFixed(2)}
+                    <Box sx={{ height: 280, mt: 1, borderRadius: 2, overflow: "hidden" }}>
+                        <MapContainer
+                            center={[endereco.lat, endereco.lng]}
+                            zoom={15}
+                            style={{ height: "100%", width: "100%" }}
+                            scrollWheelZoom={false}
+                        >
+                            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
-                        </Typography>
+                            {enderecoLoja?.lat && enderecoLoja?.lng && (
+                                <Marker
+                                    position={[enderecoLoja.lat, enderecoLoja.lng]}
+                                    icon={lojaIcon}
+                                />
+                            )}
 
-                        <Box sx={{ height: 280, mt: 1 }}>
-                            <MapContainer
-                                style={{ height: "100%", width: "100%" }}
-                            >
-                                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                            <Marker
+                                position={[endereco.lat, endereco.lng]}
+                                icon={clienteIcon}
+                            />
 
-                                {/* Marker para o endereço da loja */}
-                                {enderecoLoja?.lat && enderecoLoja?.lng && (
-                                    <Marker position={[enderecoLoja.lat, enderecoLoja.lng]} icon={lojaIcon} />
-                                )}
+                            <Polyline positions={rota.map(p => [p.lat, p.lng])} />
 
-                                {/* Marker para o endereço do cliente */}
-                                {endereco.lat && endereco.lng && (
-                                    <Marker position={[endereco.lat, endereco.lng]} icon={clienteIcon} />
-                                )}
-
-                                {Array.isArray(rota) && rota.length > 0 && (
-                                    <Polyline positions={rota.map(p => [p.lat, p.lng])} />
-                                )}
-
-                                <AjustarZoom rota={rota} />
-                            </MapContainer>
-
-                        </Box>
-                    </>
-                )
-            }
+                            <AjustarZoom rota={rota} />
+                        </MapContainer>
+                    </Box>
+                </>
+            )}
         </>
     );
 }
