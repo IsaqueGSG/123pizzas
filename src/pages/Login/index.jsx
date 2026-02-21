@@ -10,14 +10,14 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useLoja } from "../../contexts/LojaContext";
 
 const Login = () => {
-  const { login, user, loading } = useAuth();
+  const { login, user, role, loading } = useAuth();
 
   const navigate = useNavigate();
 
   const { idLoja } = useLoja();
 
   useEffect(() => {
-    if (user && !loading) {
+    if (user && role === "admin" && !loading) {
       navigate(`/${idLoja}/produtos`, { replace: true });
     }
   }, [user, loading, idLoja, navigate]);

@@ -24,32 +24,41 @@ export async function salvarPreferencias(idLoja, preferencias) {
 }
 
 
-export function abertoAgora(horarios) {
-  if (!horarios) return true;
+export function abertoAgora(horarios, dataAtual = new Date()) {
+  if (!horarios) return false;
 
-  const agora = new Date();
+  const dias = [
+    "domingo",
+    "segunda",
+    "terca",
+    "quarta",
+    "quinta",
+    "sexta",
+    "sabado"
+  ];
 
-  const dias = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
-  const diaAtual = dias[agora.getDay()];
-
+  const diaAtual = dias[dataAtual.getDay()];
   const config = horarios[diaAtual];
+
   if (!config || !config.ativo) return false;
+
+  if (!config.inicio || !config.fim) return false; // proteção extra
 
   const [hA, mA] = config.inicio.split(":").map(Number);
   const [hF, mF] = config.fim.split(":").map(Number);
 
-  const abertura = new Date();
-  abertura.setHours(hA, mA, 0, 0);
-
-  const fechamento = new Date();
-  fechamento.setHours(hF, mF, 0, 0);
+  const minutosAgora = dataAtual.getHours() * 60 + dataAtual.getMinutes();
+  const minutosAbertura = hA * 60 + mA;
+  const minutosFechamento = hF * 60 + mF;
 
   // horário normal
-  if (fechamento > abertura) {
-    return agora >= abertura && agora <= fechamento;
+  if (minutosFechamento > minutosAbertura) {
+    return minutosAgora >= minutosAbertura && minutosAgora <= minutosFechamento;
   }
 
-  // vira a meia-noite
-  return agora >= abertura || agora <= fechamento;
+  // atravessa meia-noite
+  return (
+    minutosAgora >= minutosAbertura ||
+    minutosAgora <= minutosFechamento
+  );
 }
-

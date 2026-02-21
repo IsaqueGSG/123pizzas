@@ -45,7 +45,16 @@ export function PreferenciasProvider({ children }) {
     async function carregar() {
       const data = await getPreferencias(idLoja);
 
-      if (data) setPreferencias({ ...DEFAULT_PREFS, ...data });
+      if (data) {
+        setPreferencias({
+          ...DEFAULT_PREFS,
+          ...data,
+          horarios: {
+            ...DEFAULT_PREFS.horarios,
+            ...(data.horarios || {})
+          }
+        });
+      }
 
       setLoading(false);
     }

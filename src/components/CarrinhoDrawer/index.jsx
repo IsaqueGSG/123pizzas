@@ -16,7 +16,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useCarrinho } from "../../contexts/CarrinhoContext";
 import { usePreferencias } from "../../contexts/PreferenciasContext";
 import { abertoAgora } from "../../services/preferencias.service";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { useLoja } from "../../contexts/LojaContext";
 
@@ -38,9 +38,20 @@ export default function CarrinhoDrawer() {
   } = useCarrinho();
 
   const { preferencias, loading } = usePreferencias();
+  console.log(preferencias.horarios)
+
+  const [agora, setAgora] = useState(new Date());
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setAgora(new Date());
+    }, 30000); // mais responsivo
+
+    return () => clearInterval(interval);
+  }, []);
 
   const aberto = !loading
-    ? abertoAgora(preferencias.horarioFuncionamento)
+    ? abertoAgora(preferencias.horarios, agora)
     : false;
 
   const totalFormatado = Number(total || 0).toFixed(2);
