@@ -53,8 +53,7 @@ export default function EditCategoria() {
 
   return (
     <Box sx={{ p: 2 }}>
-      <Navbar />
-      <Toolbar />
+
       <AdminDrawer />
 
       {categoria && (

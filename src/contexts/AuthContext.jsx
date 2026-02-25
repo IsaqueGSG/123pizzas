@@ -69,6 +69,8 @@ export const AuthProvider = ({ children }) => {
     await logout();
     setUser(null);
     setRole(null);
+
+    localStorage.removeItem("idLoja");
   };
 
   return (

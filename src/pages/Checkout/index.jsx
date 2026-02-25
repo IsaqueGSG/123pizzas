@@ -8,7 +8,7 @@ import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Avatar from "@mui/material/Avatar";
 import Toolbar from "@mui/material/Toolbar";
-import { Tab, Tabs, MenuItem, CircularProgress } from "@mui/material"
+import { Tab, Tabs, MenuItem, CircularProgress, Checkbox } from "@mui/material"
 
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
@@ -29,6 +29,8 @@ import { criarPedido } from "../../services/pedidos.service";
 export default function Checkout() {
   const { idLoja } = useLoja()
   const { endereco, clearEndereco } = useEntrega()
+
+  const [checkTroco, setCheckTroco] = useState(false)
 
   const navigate = useNavigate();
   const pedidoFinalizadoRef = useRef(false);
@@ -236,10 +238,8 @@ export default function Checkout() {
   if (!mapsLoaded) return <CircularProgress />;
 
   return (
-    <Box sx={{ p: 2, pb: 22 }}>
+    <Box sx={{ p: 2, pt: 0, pb: 22 }}>
 
-      <Navbar />
-      <Toolbar />
       <CarrinhoDrawer />
 
       <Tabs
@@ -457,22 +457,36 @@ export default function Checkout() {
 
 
               {cliente.formaPagamento.forma === "DINHEIRO" && (
-                <TextField
-                  label="Troco para quanto?"
-                  fullWidth
-                  type="number"
-                  size="small"
-                  value={cliente.formaPagamento.obsPagamento}
-                  onChange={(e) =>
-                    setCliente({
-                      ...cliente,
-                      formaPagamento: {
-                        ...cliente.formaPagamento,
-                        obsPagamento: e.target.value
+                <>
+                  <Checkbox
+                    checked={checkTroco}
+                    onChange={setCheckTroco}
+                    slotProps={{
+                      input: { 'aria-label': 'controlled' },
+                    }}
+                  />
+
+                  {
+                    checkTroco &&
+                    <TextField
+                      label="Troco para quanto?"
+                      fullWidth
+                      type="number"
+                      size="small"
+                      value={cliente.formaPagamento.obsPagamento}
+                      onChange={(e) =>
+                        setCliente({
+                          ...cliente,
+                          formaPagamento: {
+                            ...cliente.formaPagamento,
+                            obsPagamento: e.target.value
+                          }
+                        })
                       }
-                    })
+                    />
                   }
-                />
+                </>
+
               )}
 
               {cliente.formaPagamento.forma === "PIX" && (

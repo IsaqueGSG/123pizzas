@@ -106,8 +106,7 @@ export default function AdminCategorias() {
 
   return (
     <Box sx={{ p: 2, pb: 8 }}>
-      <Navbar />
-      <Toolbar />
+
       <AdminDrawer />
 
       {loading && <CircularProgress sx={{ mt: 3 }} />}

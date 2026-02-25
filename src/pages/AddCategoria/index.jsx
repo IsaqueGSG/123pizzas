@@ -40,8 +40,7 @@ export default function AddCategoria() {
 
   return (
     <Box sx={{ p: 2 }}>
-      <Navbar />
-      <Toolbar />
+
       <AdminDrawer />
 
       <Snackbar

@@ -80,8 +80,7 @@ export default function WhatsQR() {
 
   return (
     <Box sx={{ p: 2 }}>
-      <Navbar />
-      <Toolbar />
+
       <AdminDrawer />
 
       <Card

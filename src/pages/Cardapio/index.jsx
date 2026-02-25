@@ -102,9 +102,8 @@ export default function Cardapio() {
   }, [categoriaSelecionada]);
 
   return (
-    <Box sx={{ p: 2 }}>
-      <Navbar />
-      <Toolbar />
+    <Box sx={{ p: 2, pt: 0 }}>
+
       <CarrinhoDrawer />
 
       {loading && (
@@ -161,8 +160,13 @@ export default function Cardapio() {
       <Box
         sx={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-          gap: 2
+          gridTemplateColumns: {
+            xs: "repeat(2, 1fr)",   // mantém 2 no celular
+            sm: "repeat(3, 1fr)",   // 🔥 3 em telas maiores
+            md: "repeat(auto-fill, minmax(220px, 1fr))",
+            lg: "repeat(auto-fill, minmax(240px, 1fr))",
+          },
+          gap: 2,
         }}
       >
         {produtosFiltrados.map((produto) => (

@@ -112,10 +112,8 @@ export default function AdminProdutos() {
 
   return (
     <Box sx={{ p: 2, pb: 8 }}>
-      <Navbar />
-      <Toolbar />
-      <AdminDrawer />
 
+      <AdminDrawer />
 
       <Box sx={{ display: "flex", justifyContent: "space-between" }}>
         <Typography variant="h5" fontWeight="bold" gutterBottom>

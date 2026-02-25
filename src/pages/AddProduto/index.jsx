@@ -74,8 +74,7 @@ export default function AddProduto() {
 
     return (
         <Box sx={{ p: 2 }}>
-            <Navbar />
-            <Toolbar />
+
             <AdminDrawer />
 
             <Snackbar

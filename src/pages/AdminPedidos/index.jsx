@@ -90,8 +90,7 @@ export default function AdminPedidos() {
 
   return (
     <Box sx={{ p: 2 }}>
-      <Navbar />
-      <Toolbar />
+
       <AdminDrawer />
 
       <Box sx={{ display: "flex", justifyContent: "space-between" }}>

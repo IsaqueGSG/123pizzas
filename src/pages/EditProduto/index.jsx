@@ -91,8 +91,7 @@ export default function EditProduto() {
   if (loading || !produto) {
     return (
       <Box sx={{ p: 2 }}>
-        <Navbar />
-        <Toolbar />
+
         <Typography>Carregando produto...</Typography>
       </Box>
     );
@@ -100,8 +99,7 @@ export default function EditProduto() {
 
   return (
     <Box sx={{ p: 2 }}>
-      <Navbar />
-      <Toolbar />
+
       <AdminDrawer />
 
       <Snackbar

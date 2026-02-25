@@ -174,9 +174,8 @@ export default function AdminPreferencias() {
   }
 
   return (
-    <Box sx={{ p: 2, pb: 10 }}>
-      <Navbar />
-      <Toolbar />
+    <Box sx={{ p: 2,pb: 8 }}>
+
       <AdminDrawer />
 
       <Typography variant="h5" fontWeight="bold" gutterBottom>

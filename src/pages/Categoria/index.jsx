@@ -41,10 +41,8 @@ export default function Categorias() {
     const navigate = useNavigate();
 
     return (
-        <Box sx={{ p: 2 }}>
+        <Box sx={{ p: 2, pt: 0 }}>
 
-            <Navbar />
-            <Toolbar />
             <CarrinhoDrawer />
 
             <Typography variant="h5" fontWeight="bold" gutterBottom>
