@@ -119,7 +119,7 @@ export default function AdminCategorias() {
 
         <Button
           variant="contained"
-          onClick={() => navigate(`/${idLoja}/addcategoria`)}
+          onClick={() => navigate(`/${idLoja}/admin/addcategoria`)}
         >
           Adicionar Nova Categoria
         </Button>
@@ -175,7 +175,7 @@ export default function AdminCategorias() {
 
                 <Box sx={{ mt: "auto", display: "flex", justifyContent: "flex-end" }}>
                   <ProductMenu
-                    onEdit={() => navigate(`/${idLoja}/editcategoria/${categoria.id}`)}
+                    onEdit={() => navigate(`/${idLoja}/admin/editcategoria/${categoria.id}`)}
                     onDelete={() => abrirConfirmacaoExcluir(categoria)}
                     duplicar={() => duplicarCategoria(categoria)}
                   />

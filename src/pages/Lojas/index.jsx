@@ -19,6 +19,7 @@ export default function Lojas() {
       sx={{
         minHeight: "100vh",
         display: "flex",
+        flexDirection: "column",
         gap: 3,
         flexWrap: "wrap",
         justifyContent: "center",

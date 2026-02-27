@@ -33,7 +33,6 @@ export default function AdminDrawer() {
   const { signOut, openAdminDrawer, setOpenAdminDrawer } = useAuth();
 
   return (
-    openAdminDrawer &&
     <Drawer
       disableEnforceFocus
       disableRestoreFocus
@@ -69,35 +68,35 @@ export default function AdminDrawer() {
       <List sx={{ flexGrow: 1 }}>
 
         <ListItem disablePadding>
-          <ListItemButton onClick={() => navigate(`/${idLoja}/pedidos`, { replace: true })}>
+          <ListItemButton onClick={() => navigate(`/${idLoja}/admin/pedidos`, { replace: true })}>
             <RoomServiceIcon sx={{ mr: 2 }} />
             <ListItemText primary="Gerenciar Pedidos" />
           </ListItemButton>
         </ListItem>
 
         <ListItem disablePadding>
-          <ListItemButton onClick={() => navigate(`/${idLoja}/produtos`, { replace: true })}>
+          <ListItemButton onClick={() => navigate(`/${idLoja}/admin/produtos`, { replace: true })}>
             <AutoStoriesIcon sx={{ mr: 2 }} />
             <ListItemText primary="Gerenciar Produtos" />
           </ListItemButton>
         </ListItem>
 
         <ListItem disablePadding>
-          <ListItemButton onClick={() => navigate(`/${idLoja}/categorias`, { replace: true })}>
+          <ListItemButton onClick={() => navigate(`/${idLoja}/admin/categorias`, { replace: true })}>
             <CategoryIcon sx={{ mr: 2 }} />
             <ListItemText primary="Gerenciar Categorias" />
           </ListItemButton>
         </ListItem>
 
         <ListItem disablePadding>
-          <ListItemButton onClick={() => navigate(`/${idLoja}/whatsapp`, { replace: true })}>
+          <ListItemButton onClick={() => navigate(`/${idLoja}/admin/whatsapp`, { replace: true })}>
             <WhatsAppIcon sx={{ mr: 2 }} />
             <ListItemText primary="Whatsapp" />
           </ListItemButton>
         </ListItem>
 
         <ListItem disablePadding>
-          <ListItemButton onClick={() => navigate(`/${idLoja}/preferencias`, { replace: true })}>
+          <ListItemButton onClick={() => navigate(`/${idLoja}/admin/preferencias`, { replace: true })}>
             <SettingsIcon sx={{ mr: 2 }} />
             <ListItemText primary="Ajustar Preferencias" />
           </ListItemButton>

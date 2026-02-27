@@ -11,7 +11,6 @@ import CarrinhoDrawer from "../../components/CarrinhoDrawer";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import Button from "@mui/material/Button";
-import Toolbar from "@mui/material/Toolbar";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 
@@ -102,8 +101,7 @@ export default function Cardapio() {
   }, [categoriaSelecionada]);
 
   return (
-    <Box sx={{ p: 2, pt: 0 }}>
-
+    <Box>
       <CarrinhoDrawer />
 
       {loading && (
@@ -115,7 +113,10 @@ export default function Cardapio() {
       {(categorias.length > 0 && categoriaSelecionada) ? (
         <Tabs
           sx={{ mb: 2 }}
-          variant="fullWidth"
+          variant="scrollable"
+          scrollButtons
+          allowScrollButtonsMobile
+          aria-label="scrollable auto tabs example"
           value={categoriaSelecionada}
           onChange={(e, newValue) => setCategoriaSelecionada(newValue)}
         >
@@ -131,104 +132,107 @@ export default function Cardapio() {
         <h1>Ainda nao há produtos nessa Loja</h1>
       )}
 
-      {categoriaAtual?.permiteMisto && (
-        <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
-          <Button
-            fullWidth
-            variant={!modoMisto ? "contained" : "outlined"}
-            onClick={() => {
-              setModoMisto(false);
-              setSaboresSelecionados([]);
-            }}
-          >
-            Inteira
-          </Button>
 
-          <Button
-            fullWidth
-            variant={modoMisto ? "contained" : "outlined"}
-            onClick={() => {
-              setModoMisto(true);
-              setSaboresSelecionados([]);
-            }}
-          >
-            1/2
-          </Button>
+      <Box sx={{ p: 2, pt: 0 }}>
+        {categoriaAtual?.permiteMisto && (
+          <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
+            <Button
+              fullWidth
+              variant={!modoMisto ? "contained" : "outlined"}
+              onClick={() => {
+                setModoMisto(false);
+                setSaboresSelecionados([]);
+              }}
+            >
+              Inteira
+            </Button>
+
+            <Button
+              fullWidth
+              variant={modoMisto ? "contained" : "outlined"}
+              onClick={() => {
+                setModoMisto(true);
+                setSaboresSelecionados([]);
+              }}
+            >
+              1/2
+            </Button>
+          </Box>
+        )}
+
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "repeat(2, 1fr)",   // mantém 2 no celular
+              sm: "repeat(3, 1fr)",   // 🔥 3 em telas maiores
+              md: "repeat(auto-fill, minmax(220px, 1fr))",
+              lg: "repeat(auto-fill, minmax(240px, 1fr))",
+            },
+            gap: 2,
+          }}
+        >
+          {produtosFiltrados.map((produto) => (
+            <CardProduto
+              modoMisto={modoMisto}
+              produto={produto}
+              key={produto.id}
+              selecionado={saboresSelecionados.some(s => s.id === produto.id)}
+              onSelecionar={() => selecionarProduto(produto)}
+            />
+          ))}
         </Box>
-      )}
 
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: {
-            xs: "repeat(2, 1fr)",   // mantém 2 no celular
-            sm: "repeat(3, 1fr)",   // 🔥 3 em telas maiores
-            md: "repeat(auto-fill, minmax(220px, 1fr))",
-            lg: "repeat(auto-fill, minmax(240px, 1fr))",
-          },
-          gap: 2,
-        }}
-      >
-        {produtosFiltrados.map((produto) => (
-          <CardProduto
-            modoMisto={modoMisto}
-            produto={produto}
-            key={produto.id}
-            selecionado={saboresSelecionados.some(s => s.id === produto.id)}
-            onSelecionar={() => selecionarProduto(produto)}
+        {openModal && produtoSelecionado && (
+          <ModalExtras
+            open={openModal}
+            onClose={() => {
+              setOpenModal(false);
+              setProdutoSelecionado(null);
+              setSaboresSelecionados([]);
+            }}
+            produto={produtoSelecionado}
+            extrasDisponiveis={produtoSelecionado.categoria.extras}
+            bordasDisponiveis={produtoSelecionado.categoria.bordas} // <--- bordas aqui
+            onConfirm={({ extras, borda, observacao, precoFinal }) => {
+
+              const extrasIds = [...extras]
+                .map(e => e.id)
+                .sort()
+                .join("-");
+
+              const obsId = observacao
+                ? observacao.trim().toLowerCase().replace(/\s+/g, "_")
+                : "sem_obs";
+
+              const itemId = [
+                produtoSelecionado.id,
+                extrasIds,
+                borda?.id || "sem_borda",
+                obsId
+              ].join("|");
+
+              addItem({
+                id: itemId,
+                nome: produtoSelecionado.nome,
+                valor: precoFinal,
+                img: produtoSelecionado.img,
+                extras,
+                borda,
+                observacao,
+                misto: produtoSelecionado.misto || false,
+                sabores: produtoSelecionado.sabores || []
+              });
+
+              setOpenModal(false);
+              setProdutoSelecionado(null);
+              setSaboresSelecionados([]);
+            }}
           />
-        ))}
+
+        )}
+
       </Box>
-
-      {openModal && produtoSelecionado && (
-        <ModalExtras
-          open={openModal}
-          onClose={() => {
-            setOpenModal(false);
-            setProdutoSelecionado(null);
-            setSaboresSelecionados([]);
-          }}
-          produto={produtoSelecionado}
-          extrasDisponiveis={produtoSelecionado.categoria.extras}
-          bordasDisponiveis={produtoSelecionado.categoria.bordas} // <--- bordas aqui
-          onConfirm={({ extras, borda, observacao, precoFinal }) => {
-
-            const extrasIds = [...extras]
-              .map(e => e.id)
-              .sort()
-              .join("-");
-
-            const obsId = observacao
-              ? observacao.trim().toLowerCase().replace(/\s+/g, "_")
-              : "sem_obs";
-
-            const itemId = [
-              produtoSelecionado.id,
-              extrasIds,
-              borda?.id || "sem_borda",
-              obsId
-            ].join("|");
-
-            addItem({
-              id: itemId,
-              nome: produtoSelecionado.nome,
-              valor: precoFinal,
-              img: produtoSelecionado.img,
-              extras,
-              borda,
-              observacao,
-              misto: produtoSelecionado.misto || false,
-              sabores: produtoSelecionado.sabores || []
-            });
-
-            setOpenModal(false);
-            setProdutoSelecionado(null);
-            setSaboresSelecionados([]);
-          }}
-        />
-
-      )}
-
     </Box>
   );
 }

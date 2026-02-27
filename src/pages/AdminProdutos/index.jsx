@@ -122,7 +122,7 @@ export default function AdminProdutos() {
 
         <Button
           variant="contained"
-          onClick={() => navigate(`/${idLoja}/addproduto`)}
+          onClick={() => navigate(`/${idLoja}/admin/addproduto`)}
         >
           Adicionar Novo produto
         </Button>
@@ -203,7 +203,7 @@ export default function AdminProdutos() {
                     />
 
                     <ProductMenu
-                      onEdit={() => navigate(`/${idLoja}/editproduto/${prod.id}`)}
+                      onEdit={() => navigate(`/${idLoja}/admin/editproduto/${prod.id}`)}
                       onDelete={() => abrirConfirmacaoExcluir(prod)}
                       duplicar={() => handleDuplicarProduto(prod)}
                     />

@@ -57,7 +57,6 @@ export default function CarrinhoDrawer() {
   const totalFormatado = Number(total || 0).toFixed(2);
 
   return (
-    openCarrinho &&
     <Drawer
       disableEnforceFocus
       disableRestoreFocus
