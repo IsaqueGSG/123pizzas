@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { styled } from "@mui/material/styles";
 import MuiAppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
@@ -8,24 +8,55 @@ import IconButton from "@mui/material/IconButton";
 import Badge from "@mui/material/Badge";
 
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
-import StoreIcon from '@mui/icons-material/Store';
-import MenuIcon from '@mui/icons-material/Menu';
+import StoreIcon from "@mui/icons-material/Store";
+import MenuIcon from "@mui/icons-material/Menu";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 import { useCarrinho } from "../../contexts/CarrinhoContext";
 import { useAuth } from "../../contexts/AuthContext";
-
 import { useAdminRoute } from "../../services/useAdminRoute";
+import { useLoja } from "../../contexts/LojaContext";
 
 const AppBar = styled(MuiAppBar)({});
 
 export default function Navbar() {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const { idLoja } = useLoja();
+
     const { user, setOpenAdminDrawer } = useAuth();
     const { quantidadeTotal, setOpenCarrinho } = useCarrinho();
-    const location = useLocation();
 
     const isAdminRoute = useAdminRoute();
 
+    const path = location.pathname;
+    const isPublicHome = path === `/${idLoja}`;
+    const isAdminHome = path === `/${idLoja}/admin/pedidos`;
     const isPrivateRoute = user && isAdminRoute;
+
+    const showStoreIcon =
+        (isAdminRoute && isAdminHome) || (!isAdminRoute && isPublicHome);
+
+    const showBackButton = idLoja && !showStoreIcon;
+
+    const handleBack = () => {
+        if (!idLoja) {
+            navigate(-1);
+            return;
+        }
+
+        const path = location.pathname;
+
+        // 🔐 Se estiver no admin
+        if (path.startsWith(`/${idLoja}/admin`)) {
+            // sempre volta para a home do admin
+            navigate(`/${idLoja}/admin/pedidos`);
+            return;
+        }
+
+        // 🌐 Rotas públicas
+        navigate(-1);
+    };
 
     // fecha o drawer ao trocar de rota
     useEffect(() => {
@@ -37,13 +68,39 @@ export default function Navbar() {
         <AppBar position="fixed">
             <Toolbar>
 
-                <IconButton color="inherit">
-                    <StoreIcon fontSize="large" />
+                <IconButton
+                    color="inherit"
+                    onClick={
+                        showBackButton
+                            ? handleBack
+                            : () =>
+                                navigate(
+                                    isAdminRoute
+                                        ? `/${idLoja}/admin/pedidos`
+                                        : `/${idLoja}`
+                                )
+                    }
+                >
+                    {showBackButton ? (
+                        <ArrowBackIcon fontSize="large" />
+                    ) : (
+                        <StoreIcon fontSize="large" />
+                    )}
                 </IconButton>
 
                 <Typography
                     variant="h6"
                     sx={{ flexGrow: 1, cursor: "pointer" }}
+                    onClick={
+                        showBackButton
+                            ? handleBack
+                            : () =>
+                                navigate(
+                                    isAdminRoute
+                                        ? `/${idLoja}/admin/pedidos`
+                                        : `/${idLoja}`
+                                )
+                    }
                 >
                     123Pedidos
                 </Typography>
@@ -77,6 +134,6 @@ export default function Navbar() {
                 )}
 
             </Toolbar>
-        </AppBar >
+        </AppBar>
     );
 }

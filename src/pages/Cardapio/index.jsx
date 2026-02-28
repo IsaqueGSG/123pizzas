@@ -38,6 +38,8 @@ export default function Cardapio() {
     p => p.categoriaId === categoriaSelecionada
   );
 
+  const produtosOrdednados = [...produtosFiltrados].sort((a, b) => a.nome.localeCompare(b.nome));
+
   const abrirModalOuAdicionar = (produto) => {
     if (produto.categoria?.extras?.length) {
       setProdutoSelecionado(produto);
@@ -102,7 +104,6 @@ export default function Cardapio() {
 
   return (
     <Box>
-      <CarrinhoDrawer />
 
       {loading && (
         <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
@@ -172,7 +173,7 @@ export default function Cardapio() {
             gap: 2,
           }}
         >
-          {produtosFiltrados.map((produto) => (
+          {produtosOrdednados.map((produto) => (
             <CardProduto
               modoMisto={modoMisto}
               produto={produto}
