@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { useLocation, Navigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import lojas from "../services/IdLojas.services";
 
 const LojaContext = createContext(null);
@@ -21,35 +21,32 @@ export function LojaProvider({ children }) {
   };
 
   useEffect(() => {
+    const pathSegments = location.pathname.split("/");
+    const idFromUrl = pathSegments[1];
     const saved = localStorage.getItem("idLoja");
 
-    if (!saved) {
-      setIdLojaState(null);
-      setReady(true);
-      return;
+    // PRIORIDADE 1: URL (web)
+    if (idFromUrl && idFromUrl !== "login") {
+      const existe = lojas.some(l => l.idLoja === idFromUrl);
+
+      if (existe) {
+        setIdLojaState(idFromUrl);
+        localStorage.setItem("idLoja", idFromUrl);
+        setReady(true);
+        return;
+      }
     }
 
-    const lojaExiste = lojas.some(l => l.idLoja === saved);
-
-    if (lojaExiste) {
-      setIdLojaState(saved);
-    } else {
-      localStorage.removeItem("idLoja");
-      setIdLojaState(null);
+    // PRIORIDADE 2: localStorage (electron)
+    if (saved) {
+      const existe = lojas.some(l => l.idLoja === saved);
+      setIdLojaState(existe ? saved : null);
     }
 
     setReady(true);
-  }, []);
+  }, [location.pathname]);
 
   if (!ready) return null;
-
-  const isPublicRoute =
-    location.pathname === "/login";
-
-  // 🔒 Proteção global
-  if (!idLoja && !isPublicRoute) {
-    return <Navigate to="/login" replace />;
-  }
 
   return (
     <LojaContext.Provider value={{ idLoja, setIdLoja }}>
@@ -57,5 +54,4 @@ export function LojaProvider({ children }) {
     </LojaContext.Provider>
   );
 }
-
 export const useLoja = () => useContext(LojaContext);

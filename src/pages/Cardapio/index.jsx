@@ -5,8 +5,6 @@ import { useCarrinho } from "../../contexts/CarrinhoContext";
 
 import CardProduto from "../../components/CardProduto";
 import ModalExtras from "../../components/ModalExtras";
-import Navbar from "../../components/Navbar";
-import CarrinhoDrawer from "../../components/CarrinhoDrawer";
 
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";

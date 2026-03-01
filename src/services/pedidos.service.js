@@ -8,8 +8,6 @@ import {
   updateDoc,
   deleteDoc,
   onSnapshot,
-  getDocs,
-  writeBatch
 } from "firebase/firestore";
 import { db } from "../config/firebase";
 
