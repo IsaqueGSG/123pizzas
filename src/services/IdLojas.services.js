@@ -2,6 +2,12 @@
 
 const Lojas = [
     {
+        idLoja: "demo",
+        img: "https://tse1.mm.bing.net/th/id/OIP.gVvi9ineTYCQmNLDmItrXQHaE6?rs=1&pid=ImgDetMain&o=7&rm=3",
+        nome: "Demosntração",
+        descricao: "Loja de demonstração para testes"
+    },
+    {
         idLoja: "chavao",
         img: "https://tse1.mm.bing.net/th/id/OIP.gVvi9ineTYCQmNLDmItrXQHaE6?rs=1&pid=ImgDetMain&o=7&rm=3",
         nome: "Familia Chavão",

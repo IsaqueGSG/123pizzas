@@ -22,25 +22,36 @@ export function LojaProvider({ children }) {
 
   useEffect(() => {
     const pathSegments = location.pathname.split("/");
-    const idFromUrl = pathSegments[1];
+    const firstSegment = pathSegments[1]; // ex: "", "demo", "chavao", "login"
+
     const saved = localStorage.getItem("idLoja");
 
-    // PRIORIDADE 1: URL (web)
-    if (idFromUrl && idFromUrl !== "login") {
-      const existe = lojas.some(l => l.idLoja === idFromUrl);
+    // 🔥 1. Se a URL contém uma loja válida → PRIORIDADE TOTAL (WEB)
+    const lojaDaUrl = lojas.find(l => l.idLoja === firstSegment);
 
-      if (existe) {
-        setIdLojaState(idFromUrl);
-        localStorage.setItem("idLoja", idFromUrl);
-        setReady(true);
-        return;
-      }
+    if (lojaDaUrl) {
+      setIdLojaState(lojaDaUrl.idLoja);
+      localStorage.setItem("idLoja", lojaDaUrl.idLoja);
+      setReady(true);
+      return;
     }
 
-    // PRIORIDADE 2: localStorage (electron)
+    // 🔒 2. Rotas que NÃO devem herdar localStorage
+    const rotasPublicasGlobais = ["", "login"];
+    // "" = "/"
+
+    if (rotasPublicasGlobais.includes(firstSegment)) {
+      setIdLojaState(null);
+      setReady(true);
+      return;
+    }
+
+    // 🖥️ 3. Fallback para Electron (quando não há loja na URL)
     if (saved) {
-      const existe = lojas.some(l => l.idLoja === saved);
-      setIdLojaState(existe ? saved : null);
+      const lojaExiste = lojas.some(l => l.idLoja === saved);
+      setIdLojaState(lojaExiste ? saved : null);
+    } else {
+      setIdLojaState(null);
     }
 
     setReady(true);

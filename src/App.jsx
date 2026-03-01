@@ -9,6 +9,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { PreferenciasProvider } from "./contexts/PreferenciasContext";
 import { CartProvider } from "./contexts/CarrinhoContext";
 
+import Home from "./pages/Home";
 import Cardapio from "./pages/Cardapio";
 import Checkout from "./pages/Checkout";
 import Login from "./pages/Login";
@@ -34,12 +35,13 @@ const App = () => {
 
             <Routes>
 
+              <Route path="/" element={<Home />} />
+
               {/* usuario loga na loja selecionada */}
               <Route path="login" element={<Login />} />
 
               {/* Navbar */}
               <Route path="/:idLoja" element={<RootLayout />}>
-
 
                 {/* contexto Publicos*/}
                 <Route element={<PreferenciasProvider><PublicLayout /></PreferenciasProvider>}>

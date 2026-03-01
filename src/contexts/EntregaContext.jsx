@@ -52,10 +52,11 @@ export function EntregaProvider({ children }) {
     const taxaMin = Number(preferencias?.taxaEntregaMinima || 0);
 
     const taxaCalculada = km * taxaKm;
+    const taxaFinal = Math.max(taxaMin, taxaCalculada);
 
-    return Number(Math.max(taxaMin, taxaCalculada).toFixed(2));
+    // arredonda para cima e retorna inteiro
+    return Math.ceil(taxaFinal);
   }
-
 
   async function geocodeGoogle(enderecoTexto) {
     const res = await fetch(
@@ -151,8 +152,8 @@ export function EntregaProvider({ children }) {
         rota,
         clearEndereco,
         atualizarCampo,
-        calcularEntrega, 
-        sessionToken,        
+        calcularEntrega,
+        sessionToken,
         setSessionToken,
       }}
     >
