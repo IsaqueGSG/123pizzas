@@ -67,10 +67,13 @@ export const AuthProvider = ({ children }) => {
 
   const signOut = async () => {
     await logout();
+
     setUser(null);
     setRole(null);
 
     localStorage.removeItem("idLoja");
+
+    window.location.href = "/login";
   };
 
   return (
@@ -85,7 +88,7 @@ export const AuthProvider = ({ children }) => {
         setOpenAdminDrawer
       }}
     >
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };
