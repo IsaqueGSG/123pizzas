@@ -17,6 +17,7 @@ import PrintIcon from '@mui/icons-material/Print';
 
 import Navbar from "../../components/Navbar";
 import AdminDrawer from "../../components/AdminDrawer";
+import AdminZonasEntrega from "../../components/AdminZonasEntregas";
 
 import { buscarCep, geocodeGoogle } from "../../services/entrega.service";
 import { imprimir, geraComandaHTML } from "../../services/impressora.service";
@@ -174,7 +175,7 @@ export default function AdminPreferencias() {
   }
 
   return (
-    <Box sx={{ p: 2,pb: 8 }}>
+    <Box sx={{ p: 2, pb: 8 }}>
 
       <AdminDrawer />
 
@@ -291,7 +292,13 @@ export default function AdminPreferencias() {
       {/* TAXA */}
       <Card sx={{ p: 2, mb: 3 }}>
         <Typography fontWeight="bold" gutterBottom>
-          💰 Taxa de entrega por km
+          💰 Taxa de entrega
+        </Typography>
+
+        <AdminZonasEntrega />
+
+        <Typography sx={{ my: 2 }} fontWeight="bold" gutterBottom>
+          Entrega por KM
         </Typography>
 
         <Box sx={{ display: "flex", gap: 1 }}>

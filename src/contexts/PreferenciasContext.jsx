@@ -21,6 +21,7 @@ const DEFAULT_PREFS = {
   },
   taxaEntregaKm: 0,
   taxaEntregaMinima: 0,
+  zonasEntrega: [],
   horarios: {
     segunda: { ativo: true, inicio: "18:00", fim: "23:00" },
     terca: { ativo: true, inicio: "18:00", fim: "23:00" },

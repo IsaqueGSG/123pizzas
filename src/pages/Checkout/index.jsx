@@ -460,10 +460,7 @@ export default function Checkout() {
                 <>
                   <Checkbox
                     checked={checkTroco}
-                    onChange={setCheckTroco}
-                    slotProps={{
-                      input: { 'aria-label': 'controlled' },
-                    }}
+                    onChange={(e) => setCheckTroco(e.target.checked)}
                   />
 
                   {

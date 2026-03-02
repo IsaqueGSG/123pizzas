@@ -30,74 +30,77 @@ const App = () => {
   return (
     <BrowserRouter>
       <LojaProvider>
-        <AuthProvider>
-          <CartProvider>
+        <PreferenciasProvider>
+          <AuthProvider>
+            <CartProvider>
 
-            <Routes>
 
-              <Route path="/" element={<Home />} />
+              <Routes>
 
-              {/* usuario loga na loja selecionada */}
-              <Route path="login" element={<Login />} />
+                <Route path="/" element={<Home />} />
 
-              {/* Navbar */}
-              <Route path="/:idLoja" element={<RootLayout />}>
+                {/* usuario loga na loja selecionada */}
+                <Route path="login" element={<Login />} />
 
-                {/* contexto Publicos*/}
-                <Route element={<PreferenciasProvider><PublicLayout /></PreferenciasProvider>}>
+                {/* Navbar */}
+                <Route path="/:idLoja" element={<RootLayout />}>
 
-                  <Route index element={<Cardapio />} />
+                  {/* contexto Publicos*/}
+                  <Route element={<PublicLayout />}>
 
-                  <Route path="checkout" element={<Checkout />} />
+                    <Route index element={<Cardapio />} />
+
+                    <Route path="checkout" element={<Checkout />} />
+
+                  </Route>
+
+                  {/* contexto Privados*/}
+                  <Route path="admin" element={<PrivateLayout />}>
+                    <Route
+                      path="produtos"
+                      element={<PrivateRoute><AdminProdutos /></PrivateRoute>}
+                    />
+                    <Route
+                      path="addproduto"
+                      element={<PrivateRoute><AddProduto /></PrivateRoute>}
+                    />
+                    <Route
+                      path="addcategoria"
+                      element={<PrivateRoute><AddCategoria /></PrivateRoute>}
+                    />
+                    <Route
+                      path="categorias"
+                      element={<PrivateRoute><AdminCategorias /></PrivateRoute>}
+                    />
+                    <Route
+                      path="editproduto/:IDproduto"
+                      element={<PrivateRoute><EditProduto /></PrivateRoute>}
+                    />
+                    <Route
+                      path="editcategoria/:categoriaId"
+                      element={<PrivateRoute><EditCategoria /></PrivateRoute>}
+                    />
+                    <Route
+                      path="pedidos"
+                      element={<PrivateRoute><AdminPedidos /></PrivateRoute>}
+                    />
+                    <Route
+                      path="preferencias"
+                      element={<PrivateRoute><AdminPreferencias /></PrivateRoute>}
+                    />
+                    <Route
+                      path="whatsapp"
+                      element={<PrivateRoute><WhatsQR /></PrivateRoute>}
+                    />
+                  </Route>
 
                 </Route>
 
-                {/* contexto Privados*/}
-                <Route path="admin" element={<PreferenciasProvider><PrivateLayout /></PreferenciasProvider>}>
-                  <Route
-                    path="produtos"
-                    element={<PrivateRoute><AdminProdutos /></PrivateRoute>}
-                  />
-                  <Route
-                    path="addproduto"
-                    element={<PrivateRoute><AddProduto /></PrivateRoute>}
-                  />
-                  <Route
-                    path="addcategoria"
-                    element={<PrivateRoute><AddCategoria /></PrivateRoute>}
-                  />
-                  <Route
-                    path="categorias"
-                    element={<PrivateRoute><AdminCategorias /></PrivateRoute>}
-                  />
-                  <Route
-                    path="editproduto/:IDproduto"
-                    element={<PrivateRoute><EditProduto /></PrivateRoute>}
-                  />
-                  <Route
-                    path="editcategoria/:categoriaId"
-                    element={<PrivateRoute><EditCategoria /></PrivateRoute>}
-                  />
-                  <Route
-                    path="pedidos"
-                    element={<PrivateRoute><AdminPedidos /></PrivateRoute>}
-                  />
-                  <Route
-                    path="preferencias"
-                    element={<PrivateRoute><AdminPreferencias /></PrivateRoute>}
-                  />
-                  <Route
-                    path="whatsapp"
-                    element={<PrivateRoute><WhatsQR /></PrivateRoute>}
-                  />
-                </Route>
+              </Routes>
+            </CartProvider>
 
-              </Route>
-
-            </Routes>
-          </CartProvider>
-
-        </AuthProvider>
+          </AuthProvider>
+        </PreferenciasProvider>
       </LojaProvider >
     </BrowserRouter>
   );

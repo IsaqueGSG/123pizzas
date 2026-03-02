@@ -38,7 +38,6 @@ export default function CarrinhoDrawer() {
   } = useCarrinho();
 
   const { preferencias, loading } = usePreferencias();
-  console.log(preferencias.horarios)
 
   const [agora, setAgora] = useState(new Date());
 
@@ -50,18 +49,23 @@ export default function CarrinhoDrawer() {
     return () => clearInterval(interval);
   }, []);
 
-  const aberto = !loading
-    ? abertoAgora(preferencias.horarios, agora)
+  const horarios = preferencias?.horarios;
+
+  const aberto = !loading && horarios
+    ? abertoAgora(horarios, agora)
     : false;
 
   const totalFormatado = Number(total || 0).toFixed(2);
+
+  if (!openCarrinho) return null;
 
   return (
     <Drawer
       disableEnforceFocus
       disableRestoreFocus
       ModalProps={{
-        keepMounted: false
+        keepMounted: false,
+        disableScrollLock: true
       }}
       variant="temporary"
       anchor="right"

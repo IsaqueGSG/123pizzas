@@ -130,20 +130,22 @@ ${Object.entries(itensPorTipo).map(([tipo, itens]) => `
       </div>
 
       ${item.borda?.nome
-        ? `<div class="sub"><b>Borda:</b> ${item.borda.nome}</div>`
+        ? `<div class="sub"><b>BORDA:</b> ${item.borda.nome}</div>`
         : ""
       }
 
       ${item.extras?.length
         ? `<div class="sub">
-            <b>Extras:</b> ${item.extras
-          .map(e => `↳ ${e.nome} (+${e.valor.toFixed(2)})\n`)}
+            <b>EXTRAS:</b><br/>
+         ${item.extras
+          .map(e => `   ↳ ${e.nome} (+${e.valor.toFixed(2)})`)
+          .join("<br/>")}
           </div>`
         : ""
       }
 
       ${item.observacao
-        ? `<div class="sub"><b>Obs:</b> ${item.observacao}</div>`
+        ? `<div class="sub"><b>OBS:</b> ${item.observacao}</div>`
         : ""
       }
     </div>

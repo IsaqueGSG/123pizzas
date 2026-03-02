@@ -1,9 +1,8 @@
 import { createContext, useContext, useState, useEffect } from "react";
+import booleanPointInPolygon from "@turf/boolean-point-in-polygon";
+import { point, polygon } from "@turf/helpers";
 
 const EntregaContext = createContext();
-
-
-const GEO_KEY = import.meta.env.VITE_GOOGLE_GEO_API_KEY;
 
 const estadoInicial = {
   placeId: "",
@@ -29,12 +28,11 @@ const estadoInicial = {
 
 import { usePreferencias } from "./PreferenciasContext";
 
-import { buscarCep } from "../services/entrega.service";
-import { getPlaceDetails } from "../services/googlePlaces.service";
 import { getPlaceDetailsFromJS } from "../services/googlePlaces.service";
 
 export function EntregaProvider({ children }) {
   const { preferencias } = usePreferencias();
+  const zonasEntrega = preferencias?.zonasEntrega || [];
   const enderecoLoja = preferencias?.enderecoLoja;
   const [sessionToken, setSessionToken] = useState(null);
 
@@ -47,6 +45,31 @@ export function EntregaProvider({ children }) {
     setEndereco(prev => ({ ...prev, [campo]: valor }));
   }
 
+  function encontrarZonaCliente(lat, lng, zonas) {
+    const ponto = point([lng, lat]);
+
+    for (const zona of zonas) {
+      const coords = zona.coordenadas.map(coord => [coord.lng, coord.lat]);
+
+      // fecha o polígono automaticamente (produção)
+      if (
+        coords.length > 0 &&
+        (coords[0][0] !== coords[coords.length - 1][0] ||
+          coords[0][1] !== coords[coords.length - 1][1])
+      ) {
+        coords.push(coords[0]);
+      }
+
+      const poly = polygon([coords]);
+
+      if (booleanPointInPolygon(ponto, poly)) {
+        return zona;
+      }
+    }
+
+    return null;
+  }
+
   function calcularTaxaEntrega(km) {
     const taxaKm = Number(preferencias?.taxaEntregaKm || 0);
     const taxaMin = Number(preferencias?.taxaEntregaMinima || 0);
@@ -56,19 +79,6 @@ export function EntregaProvider({ children }) {
 
     // arredonda para cima e retorna inteiro
     return Math.ceil(taxaFinal);
-  }
-
-  async function geocodeGoogle(enderecoTexto) {
-    const res = await fetch(
-      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
-        enderecoTexto
-      )}&key=${GEO_KEY}`
-    );
-
-    const data = await res.json();
-    if (data.status !== "OK") throw new Error("Endereço não localizado");
-
-    return data.results[0].geometry.location;
   }
 
   async function calcularEntrega() {
@@ -112,7 +122,15 @@ export function EntregaProvider({ children }) {
 
       const route = data.routes[0];
       const km = route.distance / 1000;
-      const taxa = calcularTaxaEntrega(km);
+      const zona = encontrarZonaCliente(destinoLat, destinoLng, zonasEntrega);
+
+      let taxa;
+
+      if (zona) {
+        taxa = zona.valor; // prioridade zona
+      } else {
+        taxa = calcularTaxaEntrega(km); // fallback km
+      }
 
       setEndereco(prev => ({
         ...prev,

@@ -32,12 +32,15 @@ export default function AdminDrawer() {
   const navigate = useNavigate();
   const { signOut, openAdminDrawer, setOpenAdminDrawer } = useAuth();
 
+  if (!openAdminDrawer) return null;
+
   return (
     <Drawer
       disableEnforceFocus
       disableRestoreFocus
       ModalProps={{
-        keepMounted: false
+        keepMounted: false,
+        disableScrollLock: true
       }}
       variant="temporary"
       anchor="right"

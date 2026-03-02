@@ -15,6 +15,7 @@ import Tab from "@mui/material/Tab";
 export default function Cardapio() {
   const { produtos, categorias, loading } = useProducts();
   const { addItem } = useCarrinho();
+  console.log("Produtos:", produtos);
 
   const [modoMisto, setModoMisto] = useState(false);
   const [saboresSelecionados, setSaboresSelecionados] = useState([]);
@@ -22,17 +23,17 @@ export default function Cardapio() {
   const [openModal, setOpenModal] = useState(false);
   const [categoriaSelecionada, setCategoriaSelecionada] = useState(null);
 
-  useEffect(() => {
-    if (categorias.length && !categoriaSelecionada) {
-      setCategoriaSelecionada(categorias[0].id);
-    }
-  }, [categorias]);
+  const categoriasAtivas = categorias.filter(cat =>
+    cat.status
+  );
 
-  const categoriaAtual = categorias.find(
+  const categoriaAtual = categoriasAtivas.find(
     c => c.id === categoriaSelecionada
   );
 
-  const produtosFiltrados = produtos.filter(
+  const produtosAtivos = produtos.filter(p => p.status);
+
+  const produtosFiltrados = produtosAtivos.filter(
     p => p.categoriaId === categoriaSelecionada
   );
 
@@ -100,6 +101,13 @@ export default function Cardapio() {
     setSaboresSelecionados([]);
   }, [categoriaSelecionada]);
 
+
+  useEffect(() => {
+    if (categoriasAtivas.length && !categoriaSelecionada) {
+      setCategoriaSelecionada(categoriasAtivas[0].id);
+    }
+  }, [categoriasAtivas]);
+
   return (
     <Box>
 
@@ -109,7 +117,7 @@ export default function Cardapio() {
         </Box>
       )}
 
-      {(categorias.length > 0 && categoriaSelecionada) ? (
+      {(categoriasAtivas.length > 0 && categoriaSelecionada) ? (
         <Tabs
           sx={{ mb: 2 }}
           variant="scrollable"
@@ -119,7 +127,7 @@ export default function Cardapio() {
           value={categoriaSelecionada}
           onChange={(e, newValue) => setCategoriaSelecionada(newValue)}
         >
-          {categorias.map(cat => (
+          {categoriasAtivas.map(cat => (
             <Tab
               key={cat.id}
               value={cat.id}
