@@ -12,7 +12,18 @@ import AdminDrawer from "../../components/AdminDrawer";
 import { useWhats } from "../../contexts/Whatsapp.Context";
 
 export default function WhatsQR() {
-  const { status, qr, loading, isDesktop, restartWhats } = useWhats();
+  const { status, qr, numero, isDesktop, restartWhats, logoutWhats } = useWhats();
+
+  const formatarNumero = (num) => {
+    if (!num) return "Carregando...";
+    const n = num.replace(/^55/, "");
+
+    if (n.length >= 11) {
+      return `+55 ${n.slice(0, 2)} ${n.slice(2, 7)}-${n.slice(7)}`;
+    }
+
+    return `+${num}`;
+  };
 
   const renderContent = () => {
     if (!isDesktop) {
@@ -22,9 +33,27 @@ export default function WhatsQR() {
     // ready
     if (status === "ready") {
       return (
-        <Typography fontWeight="bold">
-          ✅ WhatsApp conectado
-        </Typography>
+        <>
+          <Typography fontWeight="bold" fontSize={18}>
+            ✅ WhatsApp conectado
+          </Typography>
+
+          <Typography sx={{ mt: 1 }} color="text.secondary">
+            Número conectado:
+          </Typography>
+
+          <Typography fontWeight="bold" sx={{ mb: 3 }}>
+            {formatarNumero(numero)}
+          </Typography>
+
+          <Button
+            variant="contained"
+            color="error"
+            onClick={logoutWhats}
+          >
+            Encerrar sessão
+          </Button>
+        </>
       );
     }
 

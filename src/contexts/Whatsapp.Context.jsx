@@ -15,6 +15,7 @@ export function WhatsProvider({ children }) {
 
   const [status, setStatus] = useState(STATUS.DISCONNECTED);
   const [qr, setQr] = useState(null);
+  const [numero, setNumero] = useState(null);
 
   // iniciar sempre que abrir
   useEffect(() => {
@@ -39,6 +40,11 @@ export function WhatsProvider({ children }) {
 
       if (d.status === STATUS.READY) {
         setQr(null);
+        setNumero(d.numero || null); // 👈 novo
+      }
+
+      if (d.status !== STATUS.READY) {
+        setNumero(null);
       }
     });
 
@@ -57,13 +63,25 @@ export function WhatsProvider({ children }) {
     await window.electronAPI.initWhats(idLoja);
   };
 
+  const logoutWhats = async () => {
+  if (!isDesktop || !idLoja) return;
+
+  await window.electronAPI.logoutWhats(idLoja);
+
+  setNumero(null);
+  setQr(null);
+  setStatus(STATUS.DISCONNECTED);
+};
+
   return (
     <WhatsContext.Provider
       value={{
         status,
         qr,
         isDesktop,
-        restartWhats
+        restartWhats,
+        numero,
+        logoutWhats,
       }}
     >
       {children}
