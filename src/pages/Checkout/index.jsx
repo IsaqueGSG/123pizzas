@@ -7,7 +7,7 @@ import IconButton from "@mui/material/IconButton";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Avatar from "@mui/material/Avatar";
-import Toolbar from "@mui/material/Toolbar";
+import { FormControlLabel } from "@mui/material";
 import { Tab, Tabs, MenuItem, CircularProgress, Checkbox } from "@mui/material"
 
 import AddIcon from "@mui/icons-material/Add";
@@ -129,18 +129,21 @@ export default function Checkout() {
       return false;
     }
 
-    if (
-      cliente.formaPagamento.forma === "DINHEIRO" &&
-      !cliente.formaPagamento.obsPagamento
-    ) {
-      alert("Informe o valor para troco");
-      return false;
-    }
+    if (cliente.formaPagamento.forma === "DINHEIRO" && checkTroco) {
+      if (!cliente.formaPagamento.obsPagamento) {
+        alert("Informe o valor para troco");
+        return false;
+      }
 
-    const troco = Number(cliente.formaPagamento.obsPagamento || 0);
-    if (troco < valorTotalPedido && cliente.formaPagamento.forma === "DINHEIRO") {
-      alert("O valor para troco não pode ser menor que o valor total do pedido\n Total do pedido R$ " + valorTotalPedido.toFixed(2));
-      return false;
+      const troco = Number(cliente.formaPagamento.obsPagamento);
+
+      if (troco < valorTotalPedido) {
+        alert(
+          "O valor para troco não pode ser menor que o valor total do pedido\n Total do pedido R$ " +
+          valorTotalPedido.toFixed(2)
+        );
+        return false;
+      }
     }
 
     return true;
@@ -234,6 +237,18 @@ export default function Checkout() {
   }, []);
 
   const formasPagamento = ["PIX", "DINHEIRO", "CARTÃO"]
+
+  useEffect(() => {
+    if (!checkTroco) {
+      setCliente(prev => ({
+        ...prev,
+        formaPagamento: {
+          ...prev.formaPagamento,
+          obsPagamento: ""
+        }
+      }));
+    }
+  }, [checkTroco]);
 
   if (!mapsLoaded) return <CircularProgress />;
 
@@ -458,11 +473,16 @@ export default function Checkout() {
 
               {cliente.formaPagamento.forma === "DINHEIRO" && (
                 <>
-                  <Checkbox
-                    checked={checkTroco}
-                    onChange={(e) => setCheckTroco(e.target.checked)}
+                  <FormControlLabel
+                    sx={{ mt: 1 }}
+                    control={
+                      <Checkbox
+                        checked={checkTroco}
+                        onChange={(e) => setCheckTroco(e.target.checked)}
+                      />
+                    }
+                    label="Precisa de troco?"
                   />
-
                   {
                     checkTroco &&
                     <TextField
