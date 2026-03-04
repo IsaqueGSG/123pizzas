@@ -15,7 +15,6 @@ import Tab from "@mui/material/Tab";
 export default function Cardapio() {
   const { produtos, categorias, loading } = useProducts();
   const { addItem } = useCarrinho();
-  console.log("Produtos:", produtos);
 
   const [modoMisto, setModoMisto] = useState(false);
   const [saboresSelecionados, setSaboresSelecionados] = useState([]);

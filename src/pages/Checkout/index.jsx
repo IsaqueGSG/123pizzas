@@ -28,9 +28,12 @@ import { criarPedido } from "../../services/pedidos.service";
 
 export default function Checkout() {
   const { idLoja } = useLoja()
-  const { endereco, clearEndereco } = useEntrega()
+  const { enderecoLoja, endereco, clearEndereco } = useEntrega();
+  console.log("enderecoLoja", enderecoLoja);
+  const enderecoTexto = `${enderecoLoja.rua}, ${enderecoLoja.numero} - ${enderecoLoja.bairro} / ${enderecoLoja.cidade} - ${enderecoLoja.uf}`;
 
   const [checkTroco, setCheckTroco] = useState(false)
+  const [checkRetirarLoja, setCheckRetirarLoja] = useState(false)
 
   const navigate = useNavigate();
   const pedidoFinalizadoRef = useRef(false);
@@ -92,22 +95,24 @@ export default function Checkout() {
 
   const validacoes = () => {
 
-    if (!endereco?.placeId) {
-      alert("Selecione o endereço na busca");
-      setAba(1);
-      return false;
-    }
+    if (!checkRetirarLoja) {
+      if (!endereco?.placeId) {
+        alert("Selecione o endereço na busca");
+        setAba(1);
+        return false;
+      }
 
-    if (!endereco?.numero) {
-      alert("Informe o numero do endereço");
-      setAba(1);
-      return false;
-    }
+      if (!endereco?.numero) {
+        alert("Informe o numero do endereço");
+        setAba(1);
+        return false;
+      }
 
-    if (!endereco || Number(endereco.taxaEntrega ?? 0) <= 0) {
-      alert("Calcule a taxa de entrega antes de continuar");
-      setAba(1);
-      return false;
+      if (!endereco || Number(endereco.taxaEntrega ?? 0) <= 0) {
+        alert("Calcule a taxa de entrega antes de continuar");
+        setAba(1);
+        return false;
+      }
     }
 
     if (!cliente.nome || !cliente.telefone) {
@@ -161,6 +166,7 @@ export default function Checkout() {
         telefone: limparTelefone(cliente.telefone),
         endereco
       },
+      retirarNaLoja: checkRetirarLoja,
       itens: itens.map(item => ({ ...item })),
       total: valorTotalPedido,
       status: "novo",
@@ -399,7 +405,35 @@ export default function Checkout() {
 
           <Card sx={{ my: 2 }}>
             <CardContent>
-              <MapaEntrega />
+              <FormControlLabel
+                sx={{ mt: 1 }}
+                control={
+                  <Checkbox
+                    checked={checkRetirarLoja}
+                    onChange={(e) => setCheckRetirarLoja(e.target.checked)}
+                  />
+                }
+                label="Quero retirar na Loja."
+              />
+
+              <Card
+                variant="outlined"
+                sx={{ gridColumn: "1 / -1", my: 2, p: 2, bgcolor: "#f9f9f9" }}
+              >
+                <Typography fontWeight="bold">
+                  Endereço da Loja:
+                </Typography>
+                <Typography variant="body2" sx={{ mt: 1 }}>
+                  {enderecoTexto}
+                </Typography>
+              </Card>
+
+              {
+                !checkRetirarLoja && (
+                  <MapaEntrega />
+                )
+              }
+
             </CardContent>
           </Card>
         )

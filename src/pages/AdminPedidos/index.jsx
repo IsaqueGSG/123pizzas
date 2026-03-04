@@ -87,6 +87,8 @@ export default function AdminPedidos() {
       .sort((a, b) => b.createdAt.seconds - a.createdAt.seconds);
   }, [pedidos, abaAtiva]);
 
+  console.log("Pedidos filtrados:", pedidosFiltrados);
+
 
   return (
     <Box sx={{ p: 2 }}>
@@ -166,12 +168,10 @@ export default function AdminPedidos() {
                   <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                     <Box>
                       <Typography fontWeight="bold">
-                        {pedido.cliente?.nome}
+                        {pedido.cliente?.nome} - {new Date(pedido.createdAt.seconds * 1000).toLocaleString()}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {new Date(
-                          pedido.createdAt.seconds * 1000
-                        ).toLocaleString()}
+                        {pedido.retirarNaLoja ? "Retirar na loja" : pedido.cliente?.endereco?.enderecoFormatado || "Endereço não informado"}
                       </Typography>
                     </Box>
 

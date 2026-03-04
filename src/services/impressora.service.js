@@ -106,10 +106,14 @@ export function geraComandaHTML(pedido, largura = "80mm") {
 <div class="divider"></div>
 
 <div class="bold">Entrega:</div>
-<div>
-  ${endereco.rua || ""}, ${endereco.numero || ""}<br/>
-  ${endereco.bairro || ""} - ${endereco.cidade || ""}/${endereco.uf || ""}
-</div>
+${
+  pedido.retirarNaLoja
+    ? `<div>Retirar na loja</div>`
+    : `<div>
+        ${endereco.rua || ""}, ${endereco.numero || ""}<br/>
+        ${endereco.bairro || ""} - ${endereco.cidade || ""}/${endereco.uf || ""}
+      </div>`
+}
 
 ${endereco.observacao
       ? `<div class="sub"><b>Obs:</b> ${endereco.observacao}</div>`

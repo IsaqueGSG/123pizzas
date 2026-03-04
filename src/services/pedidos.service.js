@@ -11,13 +11,14 @@ import {
 } from "firebase/firestore";
 import { db } from "../config/firebase";
 
-export async function criarPedido(idLoja, { cliente, itens, total }) {
+export async function criarPedido(idLoja, { cliente, itens, total, retirarNaLoja }) {
   return addDoc(
     collection(db, "clientes123pedidos", idLoja, "pedidos"),
     {
       cliente,
       itens,
       total,
+      retirarNaLoja,
       status: "pendente",
       impresso: false,
       createdAt: serverTimestamp()
