@@ -27,6 +27,9 @@ export default function AdminProdutos() {
   const { idLoja } = useLoja();
   const navigate = useNavigate();
   const { produtos, categorias, loading, updateProdutosStatus, removeProduto, addProduto } = useProducts();
+  const categoriasOrdenadas = [...categorias].sort(
+    (a, b) => (a.posicao ?? 0) - (b.posicao ?? 0)
+  );
 
   const [abaAtiva, setAbaAtiva] = useState(0);
   const [produtosOriginais, setProdutosOriginais] = useState([]);
@@ -139,7 +142,7 @@ export default function AdminProdutos() {
         sx={{ mb: 2 }}
         variant="fullWidth"
       >
-        {categorias.map((cat, i) => (
+        {categoriasOrdenadas.map((cat, i) => (
           <Tab key={cat.id} label={cat.nome} />
         ))}
       </Tabs>

@@ -26,7 +26,6 @@ export async function duplicarCategoriaComProdutos(idLoja, categoriaId) {
 
     const categoriaOriginal = categoriaSnap.data();
 
-    // 🔥 Nome com cópia (aqui é o lugar correto que você perguntou antes)
     const novaCategoria = {
       ...categoriaOriginal,
       nome: `${categoriaOriginal.nome} (Cópia ${new Date().toLocaleTimeString("pt-BR", {
@@ -83,6 +82,20 @@ export async function updateCategoriaStatusBatch(idLoja, categorias) {
   categorias.forEach(cat => {
     const ref = doc(db, "clientes123pedidos", idLoja, "categorias", cat.id);
     batch.update(ref, { status: cat.status });
+  });
+
+  await batch.commit();
+}
+
+export async function updateCategoriasPosicaoBatch(idLoja, categorias) {
+  const batch = writeBatch(db);
+
+  categorias.forEach(cat => {
+    const ref = doc(db, "clientes123pedidos", idLoja, "categorias", cat.id);
+
+    batch.update(ref, {
+      posicao: cat.posicao
+    });
   });
 
   await batch.commit();

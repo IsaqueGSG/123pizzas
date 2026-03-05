@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 
 import { useProducts } from "../../contexts/ProdutosContext";
 import { useCarrinho } from "../../contexts/CarrinhoContext";
@@ -25,6 +25,11 @@ export default function Cardapio() {
   const categoriasAtivas = categorias.filter(cat =>
     cat.status
   );
+  const categoriasOrdenadas = useMemo(() => {
+    return [...categoriasAtivas].sort(
+      (a, b) => (a.posicao ?? 0) - (b.posicao ?? 0)
+    );
+  }, [categoriasAtivas]);
 
   const categoriaAtual = categoriasAtivas.find(
     c => c.id === categoriaSelecionada
@@ -39,7 +44,8 @@ export default function Cardapio() {
   const produtosOrdednados = [...produtosFiltrados].sort((a, b) => a.nome.localeCompare(b.nome));
 
   const abrirModalOuAdicionar = (produto) => {
-    if (produto.categoria?.extras?.length) {
+    // se tiver extras ou bordas → abrir modal
+    if (produto.categoria?.extras?.length || produto.categoria?.bordas?.length) {
       setProdutoSelecionado(produto);
       setOpenModal(true);
       return;
@@ -102,10 +108,10 @@ export default function Cardapio() {
 
 
   useEffect(() => {
-    if (categoriasAtivas.length && !categoriaSelecionada) {
-      setCategoriaSelecionada(categoriasAtivas[0].id);
+    if (categoriasOrdenadas.length && !categoriaSelecionada) {
+      setCategoriaSelecionada(categoriasOrdenadas[0].id);
     }
-  }, [categoriasAtivas]);
+  }, [categoriasOrdenadas]);
 
   return (
     <Box>
@@ -126,7 +132,7 @@ export default function Cardapio() {
           value={categoriaSelecionada}
           onChange={(e, newValue) => setCategoriaSelecionada(newValue)}
         >
-          {categoriasAtivas.map(cat => (
+          {categoriasOrdenadas.map(cat => (
             <Tab
               key={cat.id}
               value={cat.id}

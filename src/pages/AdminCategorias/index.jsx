@@ -17,6 +17,7 @@ import Navbar from "../../components/Navbar";
 import AdminDrawer from "../../components/AdminDrawer";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import ProductMenu from "../../components/MenuOptions";
+import PosicaoCategorias from "../../components/PosicaoCategorias";
 
 import { updateCategoriaStatusBatch, deleteCategoria, duplicarCategoriaComProdutos } from "../../services/categorias.service";
 import { deleteProdutosPorCat } from "../../services/produtos.service";
@@ -27,6 +28,8 @@ export default function AdminCategorias() {
   const { idLoja } = useLoja();
   const navigate = useNavigate();
   const { addCategoria, addProduto, categorias, loading, updateCategoriasStatus, removeCategoria, removeProdutosPorCategoria } = useProducts();
+
+  const [openOrdenar, setOpenOrdenar] = useState(false);
 
   const [cloneCategorias, setCloneCategorias] = useState([]);
   useEffect(() => {
@@ -118,10 +121,17 @@ export default function AdminCategorias() {
         </Typography>
 
         <Button
+          variant="outlined"
+          onClick={() => setOpenOrdenar(true)}
+        >
+          Ordenar Categorias
+        </Button>
+
+        <Button
           variant="contained"
           onClick={() => navigate(`/${idLoja}/admin/addcategoria`)}
         >
-          Adicionar Nova Categoria
+          +
         </Button>
       </Box>
 
@@ -232,6 +242,11 @@ export default function AdminCategorias() {
             console.error("Erro ao excluir categoria:", error);
           }
         }}
+      />
+
+      <PosicaoCategorias
+        open={openOrdenar}
+        onClose={() => setOpenOrdenar(false)}
       />
     </Box>
   );
