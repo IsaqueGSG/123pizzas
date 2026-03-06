@@ -1,5 +1,7 @@
 // ./services/idLojas.services.jsx
 
+import chavaoImg from '../assets/chavaopizzas.jpg';
+
 const Lojas = [
     {
         idLoja: "demo",
@@ -9,7 +11,7 @@ const Lojas = [
     },
     {
         idLoja: "chavao",
-        img: "https://tse1.mm.bing.net/th/id/OIP.gVvi9ineTYCQmNLDmItrXQHaE6?rs=1&pid=ImgDetMain&o=7&rm=3",
+        img: chavaoImg,
         nome: "Familia Chavão",
         descricao: "Pizzaria, padaria e restaurante"
     },
