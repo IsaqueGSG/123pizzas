@@ -43,6 +43,8 @@ export function PreferenciasProvider({ children }) {
   const [preferencias, setPreferencias] = useState(DEFAULT_PREFS);
 
   useEffect(() => {
+    if (!idLoja) return;
+
     async function carregar() {
       const data = await getPreferencias(idLoja);
 

@@ -6,7 +6,6 @@ export function unlockAudio() {
 
   try {
     audioElement = new Audio();
-    audioElement.src = campainha;
     audioElement.volume = 0;
     audioElement.muted = true;
 
@@ -31,29 +30,22 @@ export function unlockAudio() {
   }
 }
 
-let audioPool = null;
+const audioPool = new Map();
 
 export function tocarAudio(src) {
   const unlocked = sessionStorage.getItem("audioUnlocked") === "true";
+  if (!unlocked) return;
 
-  if (!unlocked) {
-    console.warn("🔇 Áudio bloqueado pelo navegador");
-    return;
+  let audio = audioPool.get(src);
+
+  if (!audio) {
+    audio = new Audio(src);
+    audio.volume = 1;
+    audioPool.set(src, audio);
   }
 
-  try {
-    if (!audioPool) {
-      audioPool = new Audio(src);
-      audioPool.volume = 1;
-    }
-
-    audioPool.currentTime = 0; // reinicia som
-    audioPool.play().catch((err) => {
-      console.error("Erro ao tocar áudio:", err);
-    });
-  } catch (err) {
-    console.error("Erro geral de áudio:", err);
-  }
+  audio.currentTime = 0;
+  audio.play().catch(console.error);
 }
 
 

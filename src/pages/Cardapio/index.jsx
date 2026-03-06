@@ -117,12 +117,12 @@ export default function Cardapio() {
     <Box>
 
       {loading && (
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+        <Box sx={{ height: "100vh", display: "flex", justifyContent: "center", alignItems: "center" }}>
           <CircularProgress />
         </Box>
       )}
 
-      {(categoriasAtivas.length > 0 && categoriaSelecionada) ? (
+      {!loading && (categoriasAtivas.length > 0 && categoriaSelecionada) ? (
         <Tabs
           sx={{ mb: 2 }}
           variant="scrollable"

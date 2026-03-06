@@ -106,14 +106,10 @@ export default function AdminCategorias() {
     }
   };
 
-
   return (
     <Box sx={{ p: 2, pb: 8 }}>
 
       <AdminDrawer />
-
-      {loading && <CircularProgress sx={{ mt: 3 }} />}
-
 
       <Box sx={{ display: "flex", justifyContent: "space-between" }}>
         <Typography variant="h5" fontWeight="bold" gutterBottom>
@@ -136,6 +132,14 @@ export default function AdminCategorias() {
       </Box>
 
       <Divider sx={{ my: 2 }} />
+
+      {
+        loading && (
+          <Box sx={{ height: "100vh", display: "flex", justifyContent: "center", alignItems: "center" }}>
+            <CircularProgress />
+          </Box>
+        )
+      }
 
       {/* ---------- LISTA DE CATEGORIAS ---------- */}
       {categorias.length > 0 && (

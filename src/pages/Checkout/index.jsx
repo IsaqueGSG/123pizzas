@@ -256,7 +256,10 @@ export default function Checkout() {
     }
   }, [checkTroco]);
 
-  if (!mapsLoaded) return <CircularProgress />;
+  if (!mapsLoaded) return
+  <Box sx={{ height: "100vh", display: "flex", justifyContent: "center", alignItems: "center" }}>
+    <CircularProgress />
+  </Box>;
 
   return (
     <Box sx={{ p: 2, pt: 0, pb: 22 }}>

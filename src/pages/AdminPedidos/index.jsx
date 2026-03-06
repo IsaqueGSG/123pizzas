@@ -12,7 +12,6 @@ import {
 } from "@mui/material";
 import PrintIcon from '@mui/icons-material/Print';
 
-import Navbar from "../../components/Navbar";
 import AdminDrawer from "../../components/AdminDrawer";
 import ConfirmDialog from "../../components/ConfirmDialog";
 
@@ -86,9 +85,6 @@ export default function AdminPedidos() {
       .filter(p => p.status === statusTabs[abaAtiva])
       .sort((a, b) => b.createdAt.seconds - a.createdAt.seconds);
   }, [pedidos, abaAtiva]);
-
-  console.log("Pedidos filtrados:", pedidosFiltrados);
-
 
   return (
     <Box sx={{ p: 2 }}>

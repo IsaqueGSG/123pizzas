@@ -132,7 +132,12 @@ export default function AdminProdutos() {
       </Box>
 
 
-      {loading && <CircularProgress sx={{ mt: 3 }} />}
+      {loading && (
+        <Box sx={{ height: "100vh", display: "flex", justifyContent: "center", alignItems: "center" }}>
+          <CircularProgress />
+        </Box>
+      )}
+
       <Divider sx={{ mt: 2 }} />
 
       {/* ---------- ABAS ---------- */}
@@ -159,7 +164,7 @@ export default function AdminProdutos() {
               gap: 2
             }}
           >
-            {produtosPorCategoria[categorias[abaAtiva].nome]?.map((prod) => (
+            {produtosPorCategoria[categoriasOrdenadas[abaAtiva]?.nome]?.map((prod) => (
               <Card key={prod.id}>
                 <Box
                   sx={{
