@@ -13,7 +13,13 @@ const Lojas = [
         idLoja: "chavao",
         img: chavaoImg,
         nome: "Familia Chavão",
-        descricao: "Pizzaria, padaria e restaurante"
+        descricao: "Pizzaria"
+    },
+    {
+        idLoja: "chavaoMix",
+        img: chavaoImg,
+        nome: "Familia Chavão Mix",
+        descricao: "Padaria e restaurante"
     },
     {
         idLoja: "acaisena",

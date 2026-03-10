@@ -12,6 +12,11 @@ import Button from "@mui/material/Button";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Typography from "@mui/material/Typography";
+import LockClockIcon from "@mui/icons-material/LockClock";
+
 export default function Cardapio() {
   const { produtos, categorias, loading } = useProducts();
   const { addItem } = useCarrinho();
@@ -22,24 +27,55 @@ export default function Cardapio() {
   const [openModal, setOpenModal] = useState(false);
   const [categoriaSelecionada, setCategoriaSelecionada] = useState(null);
 
-  const categoriasAtivas = categorias.filter(cat =>
-    cat.status
-  );
+  function categoriaDisponivel(cat) {
+    const inicio = cat?.horarioFuncionamento?.inicio;
+    const fim = cat?.horarioFuncionamento?.fim;
+
+    if (!inicio || !fim) return true;
+
+    const agora = new Date();
+    const horaAtual = agora.toTimeString().slice(0, 5);
+
+    if (inicio <= fim) {
+      return horaAtual >= inicio && horaAtual <= fim;
+    }
+
+    // caso passe da meia-noite
+    return horaAtual >= inicio || horaAtual <= fim;
+  }
+
+  const categoriasAtivas = categorias.filter(cat => cat.status);
+
+  useEffect(() => {
+    if (!categoriasAtivas.find(c => c.id === categoriaSelecionada)) {
+      setCategoriaSelecionada(categoriasAtivas[0]?.id || null);
+    }
+  }, [categoriasAtivas, categoriaSelecionada]);
+
   const categoriasOrdenadas = useMemo(() => {
-    return [...categoriasAtivas].sort(
-      (a, b) => (a.posicao ?? 0) - (b.posicao ?? 0)
-    );
+    return [...categoriasAtivas].sort((a, b) => {
+      const aDisponivel = categoriaDisponivel(a);
+      const bDisponivel = categoriaDisponivel(b);
+
+      // primeiro disponíveis
+      if (aDisponivel !== bDisponivel) {
+        return aDisponivel ? -1 : 1;
+      }
+
+      // depois pela posição
+      return (a.posicao ?? 0) - (b.posicao ?? 0);
+    });
   }, [categoriasAtivas]);
 
   const categoriaAtual = categoriasAtivas.find(
     c => c.id === categoriaSelecionada
   );
 
-  const produtosAtivos = produtos.filter(p => p.status);
+  const categoriaAberta = categoriaAtual
+    ? categoriaDisponivel(categoriaAtual)
+    : false;
 
-  const produtosFiltrados = produtosAtivos.filter(
-    p => p.categoriaId === categoriaSelecionada
-  );
+  const produtosFiltrados = produtos.filter(p => p.status && p.categoriaId === categoriaSelecionada);
 
   const produtosOrdednados = [...produtosFiltrados].sort((a, b) => a.nome.localeCompare(b.nome));
 
@@ -145,7 +181,7 @@ export default function Cardapio() {
       )}
 
 
-      <Box sx={{ p: 2, pt: 0 }}>
+      <Box sx={{ p: 2, pt: 0, position: "relative" }}>
         {categoriaAtual?.permiteMisto && (
           <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
             <Button
@@ -169,6 +205,55 @@ export default function Cardapio() {
             >
               1/2
             </Button>
+          </Box>
+        )}
+
+        {categoriaAtual && !categoriaAberta && (
+          <Box
+            sx={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 10,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "flex-start",
+              alignItems: "center",
+              background: "rgba(255,255,255,0.5)",
+              backdropFilter: "blur(4px)"
+            }}
+          >
+            <Card
+              sx={{
+                mt: "20vh",
+                borderRadius: 3,
+                background: "linear-gradient(135deg, #f5f5f5, #fafafa)",
+                border: "1px solid rgba(0,0,0,0.06)",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.08)"
+              }}
+            >
+              <CardContent
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  textAlign: "center",
+                  gap: 1
+                }}
+              >
+                <LockClockIcon sx={{ fontSize: 36, opacity: 0.7 }} />
+
+                <Typography variant="h6" fontWeight={600}>
+                  {categoriaAtual.nome} indisponível agora
+                </Typography>
+
+                <Typography variant="body2" color="text.secondary">
+                  Disponível das{" "}
+                  <strong>{categoriaAtual?.horarioFuncionamento?.inicio}</strong>
+                  {" "}às{" "}
+                  <strong>{categoriaAtual?.horarioFuncionamento?.fim}</strong>
+                </Typography>
+              </CardContent>
+            </Card>
           </Box>
         )}
 
@@ -245,6 +330,6 @@ export default function Cardapio() {
         )}
 
       </Box>
-    </Box>
+    </Box >
   );
 }

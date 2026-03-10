@@ -11,13 +11,14 @@ import {
   Toolbar
 } from "@mui/material";
 import PrintIcon from '@mui/icons-material/Print';
+import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 
 import AdminDrawer from "../../components/AdminDrawer";
 import ConfirmDialog from "../../components/ConfirmDialog";
 
 import { updatePedidoStatus, deletarPedido, marcarComoImpresso } from "../../services/pedidos.service";
 import { imprimir, geraComandaHTML } from "../../services/impressora.service";
-import { enviarMensagemElectron } from "../../services/whatsapp.service";
+import { enviarMensagemElectron, enviarMensagem } from "../../services/whatsapp.service";
 
 import { useLoja } from "../../contexts/LojaContext";
 import { usePreferencias } from "../../contexts/PreferenciasContext";
@@ -167,26 +168,34 @@ export default function AdminPedidos() {
                         {pedido.cliente?.nome} - {new Date(pedido.createdAt.seconds * 1000).toLocaleString()}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {pedido.retirarNaLoja ? "Retirar na loja" : pedido.cliente?.endereco?.enderecoFormatado || "Endereço não informado"}
+                        {pedido.retirarNaLoja ? "Retirar na loja" : pedido.cliente?.endereco?.enderecoFormatado.slice(0,50) || "Endereço não informado"}
                       </Typography>
                     </Box>
 
-                    <IconButton
-                      color="inherit"
-                      onClick={async () => {
-                        const larguraImpressao = preferencias?.impressao?.largura || "80mm";
-                        if (!window.electronAPI) {
-                          const html = geraComandaHTML(pedido, larguraImpressao);
-                          imprimir(html);
-                        } else {
-                          console.log("impressao electron")
-                          const result = await window.electronAPI.imprimirPedido(pedido, larguraImpressao);
-                          console.log("RESULTADO IMPRESSÃO:", result);
-                        }
-                      }}
-                    >
-                      <PrintIcon />
-                    </IconButton>
+                    <Box>
+                      <IconButton
+                        color="inherit"
+                        onClick={async () => {
+                          const larguraImpressao = preferencias?.impressao?.largura || "80mm";
+                          if (!window.electronAPI) {
+                            const html = geraComandaHTML(pedido, larguraImpressao);
+                            imprimir(html);
+                          } else {
+                            console.log("impressao electron")
+                            const result = await window.electronAPI.imprimirPedido(pedido, larguraImpressao);
+                            console.log("RESULTADO IMPRESSÃO:", result);
+                          }
+                        }}
+                      >
+                        <PrintIcon />
+                      </IconButton>
+                      <IconButton
+                        color="inherit"
+                        onClick={async () => enviarMensagem(pedido, "")}
+                      >
+                        <WhatsAppIcon />
+                      </IconButton>
+                    </Box>
                   </Box>
 
                   <Divider sx={{ my: 1 }} />

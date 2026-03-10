@@ -35,6 +35,7 @@ export default function AdminCategorias() {
   useEffect(() => {
     if (!categorias) return;
 
+    console.log("Categorias atualizadas:", categorias);
     const cloneCat = [...categorias]
       .map(c => ({ ...c }))
       .sort((a, b) =>
@@ -185,6 +186,17 @@ export default function AdminCategorias() {
                       </Typography>
                     ))
                     : "Nenhuma borda"}
+                </Box>
+
+                <Box sx={{ mt: 1 }}>
+                  <Typography variant="subtitle2">Horario:</Typography>
+                  {categoria.horarioFuncionamento?.inicio && categoria.horarioFuncionamento?.fim ? (
+                    <Typography sx={{ fontSize: 13 }}>
+                      {categoria.horarioFuncionamento.inicio} - {categoria.horarioFuncionamento.fim}
+                    </Typography>
+                  ) : (
+                    "Horário não definido"
+                  )}
                 </Box>
 
                 <Box sx={{ mt: "auto", display: "flex", justifyContent: "flex-end" }}>

@@ -29,7 +29,12 @@ export default function CategoriaForm({
             limiteExtras: 5,
             extras: [],
             bordas: [],
-            createdAt: null
+            createdAt: null,
+            horarioFuncionamento: {
+                inicio: "00:00",
+                fim: "23:59"
+            }
+
         }
     );
 
@@ -137,7 +142,11 @@ export default function CategoriaForm({
                     limiteExtras: 5,
                     extras: [],
                     bordas: [],
-                    createdAt: null
+                    createdAt: null,
+                    horarioFuncionamento: {
+                        inicio: "00:00",
+                        fim: "23:59"
+                    }
                 })
             }
 
@@ -161,7 +170,6 @@ export default function CategoriaForm({
                 {mode === "add" ? "Nova Categoria" : "Editar Categoria"}
             </Typography>
 
-
             <TextField
                 label="Nome da categoria"
                 fullWidth
@@ -170,6 +178,42 @@ export default function CategoriaForm({
                     setCategoria(prev => ({ ...prev, nome: e.target.value }))
                 }
             />
+
+            <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+                <TextField
+                    label="Início"
+                    type="time"
+                    value={categoria?.horarioFuncionamento?.inicio || "00:00"}
+                    onChange={(e) =>
+                        setCategoria(prev => ({
+                            ...prev,
+                            horarioFuncionamento: {
+                                ...(prev.horarioFuncionamento || {}),
+                                inicio: e.target.value
+                            }
+                        }))
+                    }
+                    InputLabelProps={{ shrink: true }}
+                    fullWidth
+                />
+
+                <TextField
+                    label="Fim"
+                    type="time"
+                    value={categoria?.horarioFuncionamento?.fim || "23:59"}
+                    onChange={(e) =>
+                        setCategoria(prev => ({
+                            ...prev,
+                            horarioFuncionamento: {
+                                ...(prev.horarioFuncionamento || {}),
+                                fim: e.target.value
+                            }
+                        }))
+                    }
+                    InputLabelProps={{ shrink: true }}
+                    fullWidth
+                />
+            </Box>
 
             <Divider sx={{ my: 2 }} />
 
