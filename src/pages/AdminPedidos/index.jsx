@@ -8,7 +8,8 @@ import {
   Divider,
   Tabs,
   Tab,
-  Toolbar
+  FormControlLabel,
+  Switch,
 } from "@mui/material";
 import PrintIcon from '@mui/icons-material/Print';
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
@@ -16,9 +17,9 @@ import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import AdminDrawer from "../../components/AdminDrawer";
 import ConfirmDialog from "../../components/ConfirmDialog";
 
-import { updatePedidoStatus, deletarPedido, marcarComoImpresso } from "../../services/pedidos.service";
+import { deletarPedido, atualizarPedido, processarPedido } from "../../services/pedidos.service";
 import { imprimir, geraComandaHTML } from "../../services/impressora.service";
-import { enviarMensagemElectron, enviarMensagem } from "../../services/whatsapp.service";
+import { enviarMensagem } from "../../services/whatsapp.service";
 
 import { useLoja } from "../../contexts/LojaContext";
 import { usePreferencias } from "../../contexts/PreferenciasContext";
@@ -27,7 +28,7 @@ import { usePedidosRealtime } from "../../contexts/PedidosRealtimeContext";
 export default function AdminPedidos() {
   const { idLoja } = useLoja()
   const { preferencias } = usePreferencias();
-  const { pedidos, loading } = usePedidosRealtime();
+  const { pedidos, loading, autoAceitarPedidos, toggleAutoAceitar } = usePedidosRealtime();
 
   const statusTabs = ["pendente", "preparando", "finalizado", "cancelado"];
   const [abaAtiva, setAbaAtiva] = useState(0);
@@ -36,31 +37,18 @@ export default function AdminPedidos() {
   const [pedidoSelecionado, setPedidoSelecionado] = useState(null);
 
   const handlePreparar = async (pedido) => {
+    if (pedido.impresso) return;
     try {
-      await updatePedidoStatus(idLoja, pedido.id, "preparando");
-
-      enviarMensagemElectron(idLoja, pedido);
-
-      const larguraImpressao = preferencias?.impressao?.largura || "80mm";
-      if (!window.electronAPI) {
-        const html = geraComandaHTML(pedido, larguraImpressao);
-        imprimir(html);
-      } else {
-        console.log("impressao electron")
-        const result = await window.electronAPI.imprimirPedido(pedido, larguraImpressao);
-        console.log("RESULTADO IMPRESSÃO:", result);
-      }
-
-      await marcarComoImpresso(idLoja, pedido.id);
+      await processarPedido({
+        idLoja,
+        pedido,
+        preferencias
+      });
 
     } catch (error) {
       console.error("Erro ao iniciar preparo:", error);
       alert("Erro ao iniciar preparo");
     }
-  };
-
-  const handleCancelar = async (pedido) => {
-    await updatePedidoStatus(idLoja, pedido.id, "cancelado");
   };
 
   const handleExcluir = async () => {
@@ -97,6 +85,15 @@ export default function AdminPedidos() {
           Gestão de pedidos
         </Typography>
 
+        <FormControlLabel
+          control={
+            <Switch
+              checked={autoAceitarPedidos}
+              onChange={toggleAutoAceitar}
+            />
+          }
+          label="Aceitar e imprimir automaticamente"
+        />
 
         <Button
           variant="contained"
@@ -168,7 +165,7 @@ export default function AdminPedidos() {
                         {pedido.cliente?.nome} - {new Date(pedido.createdAt.seconds * 1000).toLocaleString()}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {pedido.retirarNaLoja ? "Retirar na loja" : pedido.cliente?.endereco?.enderecoFormatado.slice(0,50) || "Endereço não informado"}
+                        {pedido.retirarNaLoja ? "Retirar na loja" : pedido.cliente?.endereco?.enderecoFormatado.slice(0, 50) || "Endereço não informado"}
                       </Typography>
                     </Box>
 
@@ -263,7 +260,7 @@ export default function AdminPedidos() {
                           variant="outlined"
                           color="error"
                           fullWidth
-                          onClick={() => handleCancelar(pedido)}
+                          onClick={() => atualizarPedido(idLoja, pedido.id, { status: "cancelado" })}
                         >
                           Cancelar
                         </Button>
@@ -294,7 +291,7 @@ export default function AdminPedidos() {
                         variant="contained"
                         color="success"
                         fullWidth
-                        onClick={() => updatePedidoStatus(idLoja, pedido.id, "finalizado")}
+                        onClick={() => atualizarPedido(idLoja, pedido.id, { status: "finalizado" })}
                       >
                         Finalizar pedido
                       </Button>

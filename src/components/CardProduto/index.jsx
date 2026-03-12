@@ -19,7 +19,7 @@ import { useCarrinho } from "../../contexts/CarrinhoContext";
 const IMG_FALLBACK =
   "https://cdn-icons-png.flaticon.com/512/1046/1046784.png"; // talheres/comida
 
-export default function CardProduto({ produto, onSelecionar, selecionado, modoMisto }) {
+export default function CardProduto({ produto, onSelecionar, selecionado, modoMisto, foraDeHorario }) {
   const { itens, incrementar, decrementar } = useCarrinho();
   const [expandir, setExpandir] = useState(false);
   const [imgError, setImgError] = useState(false);
@@ -148,6 +148,7 @@ export default function CardProduto({ produto, onSelecionar, selecionado, modoMi
             variant="contained"
             size="small"
             onClick={onSelecionar}
+            disabled={foraDeHorario}
             sx={{
               textTransform: "none",
               fontWeight: "bold",

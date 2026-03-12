@@ -180,13 +180,49 @@ export default function Cardapio() {
         <h1>Ainda nao há produtos nessa Loja</h1>
       )}
 
-
       <Box sx={{ p: 2, pt: 0, position: "relative" }}>
+
+        {categoriaAtual && !categoriaAberta && (
+          <Card
+            sx={{
+              my: 1,
+              borderRadius: 3,
+              background: "linear-gradient(135deg, #f5f5f5, #fafafa)",
+              border: "1px solid rgba(0,0,0,0.06)",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.08)"
+            }}
+          >
+            <CardContent
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                textAlign: "center",
+                gap: 1
+              }}
+            >
+              <LockClockIcon sx={{ fontSize: 36, opacity: 0.7 }} />
+
+              <Typography variant="h6" fontWeight={600}>
+                Produtos indisponíveis agora
+              </Typography>
+
+              <Typography variant="body2" color="text.secondary">
+                Disponível das{" "}
+                <strong>{categoriaAtual?.horarioFuncionamento?.inicio}</strong>
+                {" "}às{" "}
+                <strong>{categoriaAtual?.horarioFuncionamento?.fim}</strong>
+              </Typography>
+            </CardContent>
+          </Card>
+        )}
+
         {categoriaAtual?.permiteMisto && (
           <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
             <Button
               fullWidth
               variant={!modoMisto ? "contained" : "outlined"}
+              disabled={categoriaAtual && !categoriaAberta}
               onClick={() => {
                 setModoMisto(false);
                 setSaboresSelecionados([]);
@@ -198,6 +234,7 @@ export default function Cardapio() {
             <Button
               fullWidth
               variant={modoMisto ? "contained" : "outlined"}
+              disabled={categoriaAtual && !categoriaAberta}
               onClick={() => {
                 setModoMisto(true);
                 setSaboresSelecionados([]);
@@ -205,55 +242,6 @@ export default function Cardapio() {
             >
               1/2
             </Button>
-          </Box>
-        )}
-
-        {categoriaAtual && !categoriaAberta && (
-          <Box
-            sx={{
-              position: "absolute",
-              inset: 0,
-              zIndex: 10,
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "flex-start",
-              alignItems: "center",
-              background: "rgba(255,255,255,0.5)",
-              backdropFilter: "blur(4px)"
-            }}
-          >
-            <Card
-              sx={{
-                mt: "20vh",
-                borderRadius: 3,
-                background: "linear-gradient(135deg, #f5f5f5, #fafafa)",
-                border: "1px solid rgba(0,0,0,0.06)",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.08)"
-              }}
-            >
-              <CardContent
-                sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  textAlign: "center",
-                  gap: 1
-                }}
-              >
-                <LockClockIcon sx={{ fontSize: 36, opacity: 0.7 }} />
-
-                <Typography variant="h6" fontWeight={600}>
-                  {categoriaAtual.nome} indisponível agora
-                </Typography>
-
-                <Typography variant="body2" color="text.secondary">
-                  Disponível das{" "}
-                  <strong>{categoriaAtual?.horarioFuncionamento?.inicio}</strong>
-                  {" "}às{" "}
-                  <strong>{categoriaAtual?.horarioFuncionamento?.fim}</strong>
-                </Typography>
-              </CardContent>
-            </Card>
           </Box>
         )}
 
@@ -276,6 +264,7 @@ export default function Cardapio() {
               key={produto.id}
               selecionado={saboresSelecionados.some(s => s.id === produto.id)}
               onSelecionar={() => selecionarProduto(produto)}
+              foraDeHorario={categoriaAtual && !categoriaAberta}
             />
           ))}
         </Box>

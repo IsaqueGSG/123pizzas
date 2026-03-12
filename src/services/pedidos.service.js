@@ -11,6 +11,9 @@ import {
 } from "firebase/firestore";
 import { db } from "../config/firebase";
 
+import { imprimir, geraComandaHTML } from "./impressora.service";
+import { enviarMensagemElectron } from "./whatsapp.service";
+
 export async function criarPedido(idLoja, { cliente, itens, total, retirarNaLoja }) {
   return addDoc(
     collection(db, "clientes123pedidos", idLoja, "pedidos"),
@@ -24,18 +27,6 @@ export async function criarPedido(idLoja, { cliente, itens, total, retirarNaLoja
       createdAt: serverTimestamp()
     }
   );
-}
-
-export async function updatePedidoStatus(idLoja, pedidoId, status) {
-  const ref = doc(
-    db,
-    "clientes123pedidos",
-    idLoja,
-    "pedidos",
-    pedidoId
-  );
-
-  await updateDoc(ref, { status });
 }
 
 export async function deletarPedido(idLoja, pedidoId) {
@@ -61,10 +52,42 @@ export function escutarPedidos(idLoja, callback) {
   });
 }
 
-export async function marcarComoImpresso(idLoja, pedidoId) {
-  await updateDoc(
-    doc(db, "clientes123pedidos", idLoja, "pedidos", pedidoId),
-    { impresso: true }
+
+export async function atualizarPedido(idLoja, pedidoId, dados) {
+  const ref = doc(
+    db,
+    "clientes123pedidos",
+    idLoja,
+    "pedidos",
+    pedidoId
   );
+
+  await updateDoc(ref, dados);
+}
+
+export async function processarPedido({
+  idLoja,
+  pedido,
+  preferencias
+}) {
+
+  await atualizarPedido(idLoja, pedido.id, {
+    status: "preparando"
+  });
+
+  enviarMensagemElectron(idLoja, pedido);
+
+  const largura = preferencias?.impressao?.largura || "80mm";
+
+  if (!window.electronAPI) {
+    const html = geraComandaHTML(pedido, largura);
+    imprimir(html);
+  } else {
+    await window.electronAPI.imprimirPedido(pedido, largura);
+  }
+
+  await atualizarPedido(idLoja, pedido.id, {
+    impresso: true
+  });
 }
 
