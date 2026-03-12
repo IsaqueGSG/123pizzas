@@ -33,6 +33,13 @@ export default function AdminPedidos() {
   const statusTabs = ["pendente", "preparando", "finalizado", "cancelado"];
   const [abaAtiva, setAbaAtiva] = useState(0);
 
+  const hoje = new Date();
+  hoje.setMinutes(hoje.getMinutes() - hoje.getTimezoneOffset());
+
+  const [dataFiltro, setDataFiltro] = useState(
+    hoje.toISOString().slice(0, 10)
+  );
+
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pedidoSelecionado, setPedidoSelecionado] = useState(null);
 
@@ -69,11 +76,44 @@ export default function AdminPedidos() {
     }
   };
 
+  const pedidosPorData = useMemo(() => {
+
+    if (!dataFiltro) return pedidos;
+
+    return pedidos.filter(p => {
+      const dataPedido = new Date(p.createdAt.seconds * 1000)
+        .toISOString()
+        .slice(0, 10);
+
+      return dataPedido === dataFiltro;
+    });
+
+  }, [pedidos, dataFiltro]);
+
   const pedidosFiltrados = useMemo(() => {
-    return pedidos
+
+    return pedidosPorData
       .filter(p => p.status === statusTabs[abaAtiva])
       .sort((a, b) => b.createdAt.seconds - a.createdAt.seconds);
-  }, [pedidos, abaAtiva]);
+
+  }, [pedidosPorData, abaAtiva]);
+
+  const contadoresStatus = useMemo(() => {
+    const contadores = {
+      pendente: 0,
+      preparando: 0,
+      finalizado: 0,
+      cancelado: 0
+    };
+
+    pedidosPorData.forEach(p => {
+      if (contadores[p.status] !== undefined) {
+        contadores[p.status]++;
+      }
+    });
+
+    return contadores;
+  }, [pedidosPorData]);
 
   return (
     <Box sx={{ p: 2 }}>
@@ -85,6 +125,17 @@ export default function AdminPedidos() {
           Gestão de pedidos
         </Typography>
 
+        <input
+          type="date"
+          value={dataFiltro}
+          onChange={(e) => setDataFiltro(e.target.value)}
+          style={{
+            padding: "6px",
+            borderRadius: "4px",
+            border: "1px solid #ccc"
+          }}
+        />
+
         <FormControlLabel
           control={
             <Switch
@@ -94,7 +145,7 @@ export default function AdminPedidos() {
           }
           label="Aceitar e imprimir automaticamente"
         />
-
+        
         <Button
           variant="contained"
           onClick={() => {
@@ -124,7 +175,7 @@ export default function AdminPedidos() {
         {statusTabs.map((status) => (
           <Tab
             key={status}
-            label={`${status.toUpperCase()} (${pedidos.filter(p => p.status === status).length})`}
+            label={`${status.toUpperCase()} (${contadoresStatus[status]})`}
           />
         ))}
       </Tabs>
