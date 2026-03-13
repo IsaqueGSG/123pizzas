@@ -33,11 +33,8 @@ export default function AdminPedidos() {
   const statusTabs = ["pendente", "preparando", "finalizado", "cancelado"];
   const [abaAtiva, setAbaAtiva] = useState(0);
 
-  const hoje = new Date();
-  hoje.setMinutes(hoje.getMinutes() - hoje.getTimezoneOffset());
-
   const [dataFiltro, setDataFiltro] = useState(
-    hoje.toISOString().slice(0, 10)
+    new Date().toLocaleDateString("sv-SE")
   );
 
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -80,15 +77,22 @@ export default function AdminPedidos() {
 
     if (!dataFiltro) return pedidos;
 
-    return pedidos.filter(p => {
-      const dataPedido = new Date(p.createdAt.seconds * 1000)
-        .toISOString()
-        .slice(0, 10);
+    // 🔥 cria data LOCAL corretamente
+    const [ano, mes, dia] = dataFiltro.split("-").map(Number);
+    const inicio = new Date(ano, mes - 1, dia, 0, 0, 0, 0);
+    const fim = new Date(ano, mes - 1, dia, 23, 59, 59, 999);
 
-      return dataPedido === dataFiltro;
+    return pedidos.filter(p => {
+      if (!p.createdAt?.seconds) return false;
+
+      const d = new Date(p.createdAt.seconds * 1000);
+
+      return d >= inicio && d <= fim;
     });
 
   }, [pedidos, dataFiltro]);
+
+  console.log("PEDIDOS FILTRADOS:", { dataFiltro, pedidosPorData });
 
   const pedidosFiltrados = useMemo(() => {
 
@@ -145,7 +149,7 @@ export default function AdminPedidos() {
           }
           label="Aceitar e imprimir automaticamente"
         />
-        
+
         <Button
           variant="contained"
           onClick={() => {
