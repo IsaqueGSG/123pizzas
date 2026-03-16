@@ -22,6 +22,7 @@ import EditCategoria from "./pages/EditCategoria";
 import AdminPedidos from "./pages/AdminPedidos";
 import AdminPreferencias from "./pages/AdminPreferencias";
 import WhatsQR from "./pages/WhatsappQR";
+import AdminRelatorios from "./pages/AdminRelatorios";
 
 import PrivateRoute from "./components/PrivateRoute";
 
@@ -91,6 +92,14 @@ const App = () => {
                     <Route
                       path="whatsapp"
                       element={<PrivateRoute><WhatsQR /></PrivateRoute>}
+                    />
+                    <Route
+                      path="whatsapp"
+                      element={<PrivateRoute><WhatsQR /></PrivateRoute>}
+                    />
+                    <Route
+                      path="relatorios"
+                      element={<PrivateRoute><AdminRelatorios /></PrivateRoute>}
                     />
                   </Route>
 

@@ -18,6 +18,7 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import RoomServiceIcon from '@mui/icons-material/RoomService';
 import CategoryIcon from '@mui/icons-material/Category';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
+import AssessmentIcon from "@mui/icons-material/Assessment";
 
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
@@ -95,6 +96,13 @@ export default function AdminDrawer() {
           <ListItemButton onClick={() => navigate(`/${idLoja}/admin/whatsapp`)}>
             <WhatsAppIcon sx={{ mr: 2 }} />
             <ListItemText primary="Whatsapp" />
+          </ListItemButton>
+        </ListItem>
+
+        <ListItem disablePadding>
+          <ListItemButton onClick={() => navigate(`/${idLoja}/admin/relatorios`)}>
+            <AssessmentIcon sx={{ mr: 2 }} />
+            <ListItemText primary="Relatorios" />
           </ListItemButton>
         </ListItem>
 

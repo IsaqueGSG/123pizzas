@@ -91,7 +91,9 @@ export default function Cardapio() {
       id: produto.id,
       nome: produto.nome,
       valor: produto.valor,
-      img: produto.img
+      img: produto.img,
+      categoriaId: produto.categoriaId,
+      categoriaNome: produto.categoria?.nome || "Sem categoria"
     });
   };
 
@@ -126,7 +128,9 @@ export default function Cardapio() {
           img: p1.img,
           misto: true,
           sabores: [p1, p2],
-          categoria: categoriaAtual // importante para extras
+          categoria: categoriaAtual,// importante para extras
+          categoriaId: categoriaAtual.id,
+          categoriaNome: categoriaAtual.nome
         };
 
         setProdutoSelecionado(produtoMisto);
@@ -303,6 +307,10 @@ export default function Cardapio() {
                 nome: produtoSelecionado.nome,
                 valor: precoFinal,
                 img: produtoSelecionado.img,
+
+                categoriaId: produtoSelecionado.categoria?.id,
+                categoriaNome: produtoSelecionado.categoria?.nome,
+
                 extras,
                 borda,
                 observacao,

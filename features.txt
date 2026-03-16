@@ -1,0 +1,21 @@
+mensagem automaticas ao
+-aceitar
+-finalizar
+-cancelar pedido
+
+criar relatorios
+-produtos + vendidos
+-pagamentos + usados
+-mapa de calor mensal/semanal(algo parecido)
+
+criar tabela de endereço/clientes
+
+criar operacoes em lote em
+-produtos
+-pedidos
+-categorias
+
+login de cliente
+-salvar dados
+
+melhorar UX e UI

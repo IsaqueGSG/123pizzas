@@ -510,14 +510,6 @@ export default function AdminPreferencias() {
         </Box>
       </Card >
 
-
-      <Card sx={{ p: 2, mb: 3 }}>
-        <a
-          href="https://drive.google.com/drive/folders/1PXOp7L5Abd8xxwIOCp3WO7YDALkDEnaC?usp=sharing">
-          Baixar versão desktop - https://drive.google.com/drive/folders/1PXOp7L5Abd8xxwIOCp3WO7YDALkDEnaC?usp=sharing
-        </a>
-      </Card>
-
       {/* SALVAR */}
       <Box
         sx={{

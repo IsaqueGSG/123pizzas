@@ -92,8 +92,6 @@ export default function AdminPedidos() {
 
   }, [pedidos, dataFiltro]);
 
-  console.log("PEDIDOS FILTRADOS:", { dataFiltro, pedidosPorData });
-
   const pedidosFiltrados = useMemo(() => {
 
     return pedidosPorData
@@ -101,6 +99,9 @@ export default function AdminPedidos() {
       .sort((a, b) => b.createdAt.seconds - a.createdAt.seconds);
 
   }, [pedidosPorData, abaAtiva]);
+
+  console.log(pedidosFiltrados);
+
 
   const contadoresStatus = useMemo(() => {
     const contadores = {
@@ -220,7 +221,12 @@ export default function AdminPedidos() {
                         {pedido.cliente?.nome} - {new Date(pedido.createdAt.seconds * 1000).toLocaleString()}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {pedido.retirarNaLoja ? "Retirar na loja" : pedido.cliente?.endereco?.enderecoFormatado.slice(0, 50) || "Endereço não informado"}
+                        {pedido.retirarNaLoja ?
+                          "Retirar na loja" :
+                          (() => {
+                            const { rua, numero, bairro } = pedido.cliente?.endereco;
+                            return `${rua}, ${numero} - ${bairro}`;
+                          })()}
                       </Typography>
                     </Box>
 
@@ -295,9 +301,14 @@ export default function AdminPedidos() {
                   <Box sx={{ mt: "auto", pt: 2 }}>
                     <Divider sx={{ mb: 1 }} />
 
-                    <Typography fontWeight="bold">
-                      Total: R$ {pedido.total.toFixed(2)}
-                    </Typography>
+                    <Box>
+                      <Typography fontWeight="bold">
+                        Total: R$ {pedido.total.toFixed(2)}
+                      </Typography>
+                      <Typography fontWeight="bold">
+                        Forma de pagamento: {pedido.cliente.formaPagamento.forma} {pedido.cliente.formaPagamento.obs ? `- ${pedido.cliente.formaPagamento.obs}` : "" }
+                      </Typography>
+                    </Box>
 
                     {/* AÇÕES PARA PENDENTE */}
                     {pedido.status === "pendente" && (
