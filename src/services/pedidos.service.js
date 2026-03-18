@@ -83,7 +83,16 @@ export async function processarPedido({
     const html = geraComandaHTML(pedido, largura);
     imprimir(html);
   } else {
-    await window.electronAPI.imprimirPedido(pedido, largura);
+
+    try {
+      await window.electronAPI.imprimirPedido(pedido, largura);
+    } catch (error) {
+
+      alert("Erro ao imprimir no Electron:", error);
+      const html = geraComandaHTML(pedido, largura);
+      imprimir(html);
+    }
+
   }
 
   await atualizarPedido(idLoja, pedido.id, {

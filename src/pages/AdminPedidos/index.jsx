@@ -55,6 +55,19 @@ export default function AdminPedidos() {
     }
   };
 
+  const handleFinalizar = async (pedido) => {
+
+    try {
+      await atualizarPedido(idLoja, pedido.id, { status: "finalizado" });
+
+      const msg = `Seu pedido foi finalizado e ${pedido.retirarNaLoja ? "pode ser retirado" : "está a caminho"}!`;
+      enviarMensagem(pedido, msg);
+    } catch (error) {
+      console.error("Erro ao finalizar pedido:", error);
+      alert("Erro ao finalizar pedido");
+    }
+  };
+
   const handleExcluir = async () => {
     if (!pedidoSelecionado) return;
 
@@ -99,9 +112,6 @@ export default function AdminPedidos() {
       .sort((a, b) => b.createdAt.seconds - a.createdAt.seconds);
 
   }, [pedidosPorData, abaAtiva]);
-
-  console.log(pedidosFiltrados);
-
 
   const contadoresStatus = useMemo(() => {
     const contadores = {
@@ -306,7 +316,7 @@ export default function AdminPedidos() {
                         Total: R$ {pedido.total.toFixed(2)}
                       </Typography>
                       <Typography fontWeight="bold">
-                        Forma de pagamento: {pedido.cliente.formaPagamento.forma} {pedido.cliente.formaPagamento.obs ? `- ${pedido.cliente.formaPagamento.obs}` : "" }
+                        Forma de pagamento: {pedido.cliente.formaPagamento.forma} {pedido.cliente.formaPagamento.obs ? `- ${pedido.cliente.formaPagamento.obs}` : ""}
                       </Typography>
                     </Box>
 
@@ -357,7 +367,7 @@ export default function AdminPedidos() {
                         variant="contained"
                         color="success"
                         fullWidth
-                        onClick={() => atualizarPedido(idLoja, pedido.id, { status: "finalizado" })}
+                        onClick={() => handleFinalizar(pedido)}
                       >
                         Finalizar pedido
                       </Button>

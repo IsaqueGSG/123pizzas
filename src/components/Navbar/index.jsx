@@ -47,9 +47,28 @@ export default function Navbar() {
 
         const path = location.pathname;
 
-        // 🔐 Se estiver no admin
+        // 🔐 ROTAS ADMIN ESPECÍFICAS
         if (path.startsWith(`/${idLoja}/admin`)) {
-            // sempre volta para a home do admin
+
+            // PRODUTOS
+            if (
+                path.includes("/addproduto") ||
+                path.includes("/editproduto")
+            ) {
+                navigate(`/${idLoja}/admin/produtos`);
+                return;
+            }
+
+            // CATEGORIAS
+            if (
+                path.includes("/addcategoria") ||
+                path.includes("/editcategoria")
+            ) {
+                navigate(`/${idLoja}/admin/categorias`);
+                return;
+            }
+
+            // 🔙 fallback admin → home admin
             navigate(`/${idLoja}/admin/pedidos`);
             return;
         }
