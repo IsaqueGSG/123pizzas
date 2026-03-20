@@ -109,7 +109,6 @@ export default function WhatsQR() {
 
   return (
     <Box sx={{ p: 2 }}>
-
       <AdminDrawer />
 
       <Card
@@ -122,6 +121,27 @@ export default function WhatsQR() {
         }}
       >
         {renderContent()}
+
+        {/* 🔽 Ações extras somente quando desconectado */}
+        {isDesktop && status !== "ready" && (
+          <>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ mt: 3, display: "block" }}
+            >
+              QR não carregou? Gere um novo código abaixo.
+            </Typography>
+
+            <Button
+              sx={{ mt: 2 }}
+              variant="outlined"
+              onClick={restartWhats}
+            >
+              Gerar novo QR
+            </Button>
+          </>
+        )}
       </Card>
     </Box>
   );

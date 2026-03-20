@@ -58,20 +58,27 @@ export function WhatsProvider({ children }) {
     if (!isDesktop || !idLoja) return;
 
     setQr(null);
+    setNumero(null);
     setStatus(STATUS.DISCONNECTED);
+
+    // ⭐ força reset completo
+    await window.electronAPI.logoutWhats(idLoja);
+
+    // pequena pausa para garantir limpeza
+    await new Promise(r => setTimeout(r, 500));
 
     await window.electronAPI.initWhats(idLoja);
   };
 
   const logoutWhats = async () => {
-  if (!isDesktop || !idLoja) return;
+    if (!isDesktop || !idLoja) return;
 
-  await window.electronAPI.logoutWhats(idLoja);
+    await window.electronAPI.logoutWhats(idLoja);
 
-  setNumero(null);
-  setQr(null);
-  setStatus(STATUS.DISCONNECTED);
-};
+    setNumero(null);
+    setQr(null);
+    setStatus(STATUS.DISCONNECTED);
+  };
 
   return (
     <WhatsContext.Provider

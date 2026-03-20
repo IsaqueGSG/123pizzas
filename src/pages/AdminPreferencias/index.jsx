@@ -134,6 +134,16 @@ export default function AdminPreferencias() {
         setSelecionada(salva);
         setPrinterSalva(salva);
       }
+
+      const larguraLocal = await window.electronAPI.getLargura();
+
+      setPrefs(prev => ({
+        ...prev,
+        impressao: {
+          ...prev.impressao,
+          largura: larguraLocal
+        }
+      }));
     }
 
     load();
@@ -409,7 +419,10 @@ export default function AdminPreferencias() {
                 },
                 "total": 236.28
               }
-              const larguraImpressao = preferencias?.impressao?.largura || "80mm";
+              const larguraImpressao =
+                window.electronAPI
+                  ? await window.electronAPI.getLargura()
+                  : "80mm";
               if (!window.electronAPI) {
                 const html = geraComandaHTML(pedido, larguraImpressao);
                 imprimir(html);
@@ -446,15 +459,23 @@ export default function AdminPreferencias() {
             fullWidth
             size="small"
             value={prefs.impressao?.largura || "80mm"}
-            onChange={e =>
+            onChange={async (e) => {
+              const largura = e.target.value;
+
+              // sempre atualizar UI
               setPrefs(prev => ({
                 ...prev,
                 impressao: {
                   ...prev.impressao,
-                  largura: e.target.value
+                  largura
                 }
-              }))
-            }
+              }));
+
+              // salvar local no desktop
+              if (window.electronAPI) {
+                await window.electronAPI.setLargura(largura);
+              }
+            }}
           >
             <MenuItem value="58mm">58mm — cupom estreito</MenuItem>
             <MenuItem value="80mm">80mm — cupom padrão</MenuItem>
