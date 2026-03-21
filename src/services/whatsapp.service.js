@@ -74,11 +74,11 @@ export function gerarMensagemConfirmacao(pedido) {
 }
 
 
-export function enviarMensagem(pedido, texto) {
+export function enviarMensagemManualmente(pedido, texto) {
   const telefone = pedido.cliente?.telefone;
 
   if (!telefone) {
-    console.warn("Pedido sem telefone, WhatsApp não enviado");
+    console.alert(`Pedido de ${pedido.cliente.nome}/${pedido.cliente?.endereco.rua} esta sem telefone, WhatsApp não enviado`);
     return;
   }
 
@@ -90,18 +90,19 @@ export function enviarMensagem(pedido, texto) {
   window.open(url, "_blank");
 }
 
-export async function enviarMensagemElectron(idLoja, pedido) {
-  const texto = gerarMensagemConfirmacao(pedido)
-
-  if (!window.electronAPI) {
-    return enviarMensagem(pedido, texto);
-  }
+export async function enviarMensagemElectronAutomatica(idLoja, pedido) {
 
   const telefone = pedido.cliente?.telefone;
 
   if (!telefone) {
-    console.warn("Pedido sem telefone");
+    console.alert(`Pedido de ${pedido.cliente.nome}/${pedido.cliente?.endereco.rua} esta sem telefone, WhatsApp não enviado`);
     return;
+  }
+
+  const texto = gerarMensagemConfirmacao(pedido)
+
+  if (!window.electronAPI) {
+    return enviarMensagemManualmente(pedido, texto);
   }
 
   const res = await window.electronAPI.enviarWhats(idLoja, telefone, texto);

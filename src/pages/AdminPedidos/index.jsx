@@ -19,7 +19,7 @@ import ConfirmDialog from "../../components/ConfirmDialog";
 
 import { deletarPedido, atualizarPedido, processarPedido } from "../../services/pedidos.service";
 import { imprimir, geraComandaHTML } from "../../services/impressora.service";
-import { enviarMensagem } from "../../services/whatsapp.service";
+import { enviarMensagemManualmente, enviarMensagemElectronAutomatica } from "../../services/whatsapp.service";
 
 import { useLoja } from "../../contexts/LojaContext";
 import { usePreferencias } from "../../contexts/PreferenciasContext";
@@ -61,7 +61,7 @@ export default function AdminPedidos() {
       await atualizarPedido(idLoja, pedido.id, { status: "finalizado" });
 
       const msg = `Seu pedido foi finalizado e ${pedido.retirarNaLoja ? "pode ser retirado" : "está a caminho"}!`;
-      enviarMensagem(pedido, msg);
+      enviarMensagemElectronAutomatica(idLoja, pedido, msg);
     } catch (error) {
       console.error("Erro ao finalizar pedido:", error);
       alert("Erro ao finalizar pedido");
@@ -224,44 +224,50 @@ export default function AdminPedidos() {
                   }}
                 >
 
-                  {/* CABEÇALHO */}
-                  <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                    <Box>
-                      <Typography fontWeight="bold">
-                        {pedido.cliente?.nome} - {new Date(pedido.createdAt.seconds * 1000).toLocaleString()}
+                  {/* CABEÇALHO DO CARD */}
+                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <Box sx={{ flex: 1 }}>
+
+                      {/* Nome do Cliente e Data */}
+                      <Typography variant="subtitle1" fontWeight="bold" sx={{ lineHeight: 1.2 }}>
+                        {pedido.cliente?.nome}  {new Date(pedido.createdAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(pedido.createdAt.seconds * 1000).toLocaleDateString()}
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {pedido.retirarNaLoja ?
-                          "Retirar na loja" :
-                          (() => {
-                            const { rua, numero, bairro } = pedido.cliente?.endereco;
-                            return `${rua}, ${numero} - ${bairro}`;
-                          })()}
+
+                      {/* Endereço/Localização */}
+                      <Typography variant="body2" color="text.secondary" >
+                        {pedido.retirarNaLoja ? (
+                          "📍 Retirar na Loja"
+                        ) : (
+                          <>
+                            {pedido.cliente?.endereco?.rua}, {pedido.cliente?.endereco?.numero} {pedido.cliente?.endereco?.bairro}
+                          </>
+                        )}
                       </Typography>
                     </Box>
 
-                    <Box>
+                    {/* Ações Rápidas */}
+                    <Box sx={{ display: "flex", gap: 0.5 }}>
                       <IconButton
-                        color="inherit"
+                        color="primary"
                         onClick={async () => {
                           const larguraImpressao = preferencias?.impressao?.largura || "80mm";
                           if (!window.electronAPI) {
                             const html = geraComandaHTML(pedido, larguraImpressao);
                             imprimir(html);
                           } else {
-                            console.log("impressao electron")
-                            const result = await window.electronAPI.imprimirPedido(pedido, larguraImpressao);
-                            console.log("RESULTADO IMPRESSÃO:", result);
+                            await window.electronAPI.imprimirPedido(pedido, larguraImpressao);
                           }
                         }}
+                        sx={{ border: '1px solid', borderColor: 'divider' }}
                       >
-                        <PrintIcon />
+                        <PrintIcon fontSize="small" />
                       </IconButton>
                       <IconButton
-                        color="inherit"
-                        onClick={async () => enviarMensagem(pedido, "")}
+                        color="success"
+                        onClick={() => enviarMensagemManualmente(pedido, "")}
+                        sx={{ border: '1px solid', borderColor: 'divider' }}
                       >
-                        <WhatsAppIcon />
+                        <WhatsAppIcon fontSize="small" />
                       </IconButton>
                     </Box>
                   </Box>

@@ -12,7 +12,7 @@ import {
 import { db } from "../config/firebase";
 
 import { imprimir, geraComandaHTML } from "./impressora.service";
-import { enviarMensagemElectron } from "./whatsapp.service";
+import { enviarMensagemElectronAutomatica } from "./whatsapp.service";
 
 export async function criarPedido(idLoja, { cliente, itens, total, retirarNaLoja }) {
   return addDoc(
@@ -75,11 +75,10 @@ export async function processarPedido({
     status: "preparando"
   });
 
-  enviarMensagemElectron(idLoja, pedido);
-
-  const largura = preferencias?.impressao?.largura || "80mm";
+  enviarMensagemElectronAutomatica(idLoja, pedido);
 
   if (!window.electronAPI) {
+    const largura = preferencias?.impressao?.largura || "80mm";
     const html = geraComandaHTML(pedido, largura);
     imprimir(html);
   } else {
