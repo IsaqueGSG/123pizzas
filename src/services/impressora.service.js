@@ -1,4 +1,28 @@
 
+function obterCategoriaItem(item) {
+
+  // 1️⃣ Campo direto do seu banco
+  if (item.categoriaNome?.trim()) {
+    return item.categoriaNome.trim();
+  }
+
+  // 2️⃣ Caso venha dentro de categoria
+  if (item.categoria?.nome?.trim()) {
+    return item.categoria.nome.trim();
+  }
+
+  // 3️⃣ Pizza mista → pegar categoria do primeiro sabor
+  if (item.sabores?.length) {
+    const nome = item.sabores[0]?.categoria?.nome;
+    if (nome?.trim()) return nome.trim();
+  }
+
+  // 4️⃣ Fallback
+  if (item.tipo?.trim()) return item.tipo.trim();
+
+  return "Itens";
+}
+
 export function imprimir(html) {
   const win = window.open("", "_blank");
 
@@ -42,11 +66,14 @@ export function geraComandaHTML(pedido, largura = "80mm") {
   const pagamento = pedido.cliente?.formaPagamento || {};
   let subTotalItens = 0
 
-  const itensPorTipo = pedido.itens.reduce((acc, item) => {
-    const tipo = item.tipo || "Itens";
-    if (!acc[tipo]) acc[tipo] = [];
-    subTotalItens += item.valor * (item.quantidade ?? 1)
-    acc[tipo].push(item);
+  const itensPorCategoria = pedido.itens.reduce((acc, item) => {
+    const categoria = obterCategoriaItem(item);
+
+    if (!acc[categoria]) acc[categoria] = [];
+    acc[categoria].push(item);
+
+    subTotalItens += item.valor * (item.quantidade ?? 1);
+
     return acc;
   }, {});
 
@@ -106,14 +133,13 @@ export function geraComandaHTML(pedido, largura = "80mm") {
 <div class="divider"></div>
 
 <div class="bold">Entrega:</div>
-${
-  pedido.retirarNaLoja
-    ? `<div>Retirar na loja</div>`
-    : `<div>
+${pedido.retirarNaLoja
+      ? `<div>Retirar na loja</div>`
+      : `<div>
         ${endereco.rua || ""}, ${endereco.numero || ""}<br/>
         ${endereco.bairro || ""} - ${endereco.cidade || ""}/${endereco.uf || ""}
       </div>`
-}
+    }
 
 ${endereco.observacao
       ? `<div class="sub"><b>Obs:</b> ${endereco.observacao}</div>`
@@ -122,7 +148,7 @@ ${endereco.observacao
 
 <div class="divider"></div>
 
-${Object.entries(itensPorTipo).map(([tipo, itens]) => `
+${Object.entries(itensPorCategoria).map(([tipo, itens]) => `
   <div class="bold" style="margin-top:6px">
     ${tipo.toUpperCase()}
   </div>

@@ -19,7 +19,8 @@ import ConfirmDialog from "../../components/ConfirmDialog";
 
 import { deletarPedido, atualizarPedido, processarPedido } from "../../services/pedidos.service";
 import { imprimir, geraComandaHTML } from "../../services/impressora.service";
-import { enviarMensagemManualmente, enviarMensagemElectronAutomatica } from "../../services/whatsapp.service";
+import { enviarMensagemWhatsApp } from "../../services/whatsapp.service";
+import { abrirConversaWhatsApp } from "../../services/whatsapp.service";
 
 import { useLoja } from "../../contexts/LojaContext";
 import { usePreferencias } from "../../contexts/PreferenciasContext";
@@ -60,8 +61,14 @@ export default function AdminPedidos() {
     try {
       await atualizarPedido(idLoja, pedido.id, { status: "finalizado" });
 
-      const msg = `Seu pedido foi finalizado e ${pedido.retirarNaLoja ? "pode ser retirado" : "está a caminho"}!`;
-      enviarMensagemElectronAutomatica(idLoja, pedido, msg);
+      const texto = `Olá ${pedido.cliente.nome}, seu pedido foi finalizado e ${pedido.retirarNaLoja ? "você pode retirá-lo" : "está a caminho"}!`;
+
+      await enviarMensagemWhatsApp(
+        idLoja,
+        pedido.cliente.telefone,
+        texto
+      );
+
     } catch (error) {
       console.error("Erro ao finalizar pedido:", error);
       alert("Erro ao finalizar pedido");
@@ -85,6 +92,26 @@ export default function AdminPedidos() {
       alert("Erro ao excluir pedido");
     }
   };
+
+  function obterCategoriaItem(item) {
+
+    if (item.categoriaNome?.trim()) {
+      return item.categoriaNome.trim();
+    }
+
+    if (item.categoria?.nome?.trim()) {
+      return item.categoria.nome.trim();
+    }
+
+    if (item.sabores?.length) {
+      const nome = item.sabores[0]?.categoria?.nome;
+      if (nome?.trim()) return nome.trim();
+    }
+
+    if (item.tipo?.trim()) return item.tipo.trim();
+
+    return "Itens";
+  }
 
   const pedidosPorData = useMemo(() => {
 
@@ -264,7 +291,9 @@ export default function AdminPedidos() {
                       </IconButton>
                       <IconButton
                         color="success"
-                        onClick={() => enviarMensagemManualmente(pedido, "")}
+                        onClick={() =>
+                          abrirConversaWhatsApp(pedido.cliente.telefone)
+                        }
                         sx={{ border: '1px solid', borderColor: 'divider' }}
                       >
                         <WhatsAppIcon fontSize="small" />
@@ -275,40 +304,70 @@ export default function AdminPedidos() {
                   <Divider sx={{ my: 1 }} />
 
                   {/* ITENS */}
-                  {pedido.itens.map((item, index) => (
-                    <Box key={index} sx={{ mb: 1 }}>
-                      <Typography fontWeight="bold">
-                        {item.quantidade}x {item.nome}
+                  {Object.entries(
+                    pedido.itens.reduce((acc, item) => {
+                      const cat = obterCategoriaItem(item);
+                      if (!acc[cat]) acc[cat] = [];
+                      acc[cat].push(item);
+                      return acc;
+                    }, {})
+                  ).map(([categoria, itens]) => (
+
+                    <Box key={categoria} sx={{ mb: 2 }}>
+
+                      {/* TÍTULO DA CATEGORIA */}
+                      <Typography
+                        variant="subtitle2"
+                        fontWeight="bold"
+                        sx={{
+                          mt: 1,
+                          mb: 0.5,
+                          color: "text.secondary"
+                        }}
+                      >
+                        🍽️ {categoria.toUpperCase()}
                       </Typography>
 
-                      <Typography variant="body2">
-                        Valor unitário: R$ {item.valor.toFixed(2)}
-                      </Typography>
+                      {/* ITENS DA CATEGORIA */}
+                      {itens.map((item, index) => (
+                        <Box key={index} sx={{ mb: 1 }}>
 
-                      {item.borda?.nome && (
-                        <Typography variant="body2">
-                          Borda: {item.borda.nome}
-                        </Typography>
-                      )}
+                          <Typography fontWeight="bold">
+                            {item.quantidade}x {item.nome}
+                          </Typography>
 
-                      {Array.isArray(item.extras) && item.extras.length > 0 && (
-                        <Typography variant="body2">
-                          Extras:{" "}
-                          {item.extras
-                            .map((e) => `${e.nome} (+R$ ${e.valor.toFixed(2)})`)
-                            .join(", ")}
-                        </Typography>
-                      )}
+                          <Typography variant="body2">
+                            Valor unitário: R$ {item.valor.toFixed(2)}
+                          </Typography>
 
-                      {item?.observacao && (
-                        <Typography variant="body2">
-                          Obs: {item.observacao}
-                        </Typography>
-                      )}
+                          {item.borda?.nome && (
+                            <Typography variant="body2">
+                              Borda: {item.borda.nome}
+                            </Typography>
+                          )}
 
-                      <Typography variant="body2" fontWeight="bold">
-                        Subtotal: R$ {(item.valor * (item.quantidade ?? 1)).toFixed(2)}
-                      </Typography>
+                          {Array.isArray(item.extras) && item.extras.length > 0 && (
+                            <Typography variant="body2">
+                              Extras:{" "}
+                              {item.extras
+                                .map((e) => `${e.nome} (+R$ ${e.valor.toFixed(2)})`)
+                                .join(", ")}
+                            </Typography>
+                          )}
+
+                          {item?.observacao && (
+                            <Typography variant="body2">
+                              Obs: {item.observacao}
+                            </Typography>
+                          )}
+
+                          <Typography variant="body2" fontWeight="bold">
+                            Subtotal: R$ {(item.valor * (item.quantidade ?? 1)).toFixed(2)}
+                          </Typography>
+
+                        </Box>
+                      ))}
+
                     </Box>
                   ))}
 

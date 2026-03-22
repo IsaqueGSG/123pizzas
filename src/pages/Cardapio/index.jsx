@@ -75,9 +75,11 @@ export default function Cardapio() {
     ? categoriaDisponivel(categoriaAtual)
     : false;
 
-  const produtosFiltrados = produtos.filter(p => p.status && p.categoriaId === categoriaSelecionada);
-
-  const produtosOrdednados = [...produtosFiltrados].sort((a, b) => a.nome.localeCompare(b.nome));
+  const produtosOrdenados = useMemo(() => {
+    return produtos
+      .filter(p => p.status && p.categoriaId === categoriaSelecionada)
+      .sort((a, b) => a.nome.localeCompare(b.nome));
+  }, [produtos, categoriaSelecionada]); // Só roda se os produtos ou a categoria mudarem
 
   const abrirModalOuAdicionar = (produto) => {
     // se tiver extras ou bordas → abrir modal
@@ -261,7 +263,7 @@ export default function Cardapio() {
             gap: 2,
           }}
         >
-          {produtosOrdednados.map((produto) => (
+          {produtosOrdenados.map((produto) => (
             <CardProduto
               modoMisto={modoMisto}
               produto={produto}

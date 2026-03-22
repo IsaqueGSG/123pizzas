@@ -1,4 +1,26 @@
-// WhatsApp.service.js
+function obterCategoriaItem(item) {
+
+  // 1️⃣ Campo direto (mais confiável)
+  if (item.categoriaNome?.trim()) {
+    return item.categoriaNome.trim();
+  }
+
+  // 2️⃣ Categoria dentro do objeto
+  if (item.categoria?.nome?.trim()) {
+    return item.categoria.nome.trim();
+  }
+
+  // 3️⃣ Pizza mista → pegar categoria do primeiro sabor
+  if (item.sabores?.length) {
+    const nome = item.sabores[0]?.categoria?.nome;
+    if (nome?.trim()) return nome.trim();
+  }
+
+  // 4️⃣ Fallback
+  if (item.tipo?.trim()) return item.tipo.trim();
+
+  return "Itens";
+}
 
 export function gerarMensagemConfirmacao(pedido) {
   const data = pedido.createdAt?.seconds
@@ -10,11 +32,14 @@ export function gerarMensagemConfirmacao(pedido) {
 
   let subTotalItens = 0;
 
-  const itensPorTipo = pedido.itens.reduce((acc, item) => {
-    const tipo = item.tipo || "Itens";
-    if (!acc[tipo]) acc[tipo] = [];
+  const itensPorCategoria = pedido.itens.reduce((acc, item) => {
+    const categoria = obterCategoriaItem(item);
+
+    if (!acc[categoria]) acc[categoria] = [];
+    acc[categoria].push(item);
+
     subTotalItens += item.valor * (item.quantidade ?? 1);
-    acc[tipo].push(item);
+
     return acc;
   }, {});
 
@@ -25,30 +50,37 @@ export function gerarMensagemConfirmacao(pedido) {
   mensagem += `📞 ${pedido.cliente?.telefone || ""}\n\n`;
 
   mensagem += `📍 *Entrega:*\n`;
-  mensagem += `${endereco.rua || ""}, ${endereco.numero || ""}\n`;
-  mensagem += `${endereco.bairro || ""} - ${endereco.cidade || ""}/${endereco.uf || ""}\n`;
+  if (pedido.retirarNaLoja) {
+    mensagem += `Retirar na loja.\n\n`;
+  } else {
+    mensagem += `${endereco.rua || ""}, ${endereco.numero || ""}\n`;
+    mensagem += `${endereco.bairro || ""} - ${endereco.cidade || ""}/${endereco.uf || ""}\n`;
+  }
 
   if (endereco.observacao) {
     mensagem += `Obs: ${endereco.observacao}\n`;
   }
 
-  Object.entries(itensPorTipo).forEach(([tipo, itens]) => {
-    mensagem += `*${tipo.toUpperCase()}*\n`;
+  Object.entries(itensPorCategoria).forEach(([categoria, itens]) => {
+    mensagem += `🍽️ *${categoria.toUpperCase()}*\n`;
 
     itens.forEach(item => {
       mensagem += `• ${item.quantidade}x ${item.nome}\n`;
 
       if (item.borda?.nome) {
-        mensagem += `   ↳ Borda: ${item.borda.nome}\n`;
+        mensagem += `   Borda: ${item.borda.nome}\n`;
       }
 
       if (item.extras?.length) {
-        mensagem += `   Extras: ${item.extras
-          .map(e => `↳ ${e.nome} (+${e.valor.toFixed(2)})`)}\n`;
+        mensagem += `   Extras:\n`;
+
+        item.extras.forEach(e => {
+          mensagem += `    ↳ ${e.nome} (+${e.valor.toFixed(2)})\n`;
+        });
       }
 
       if (item.observacao) {
-        mensagem += `   ↳ Obs: ${item.observacao}\n`;
+        mensagem += `\n   Obs: ${item.observacao}`;
       }
     });
 
@@ -73,41 +105,70 @@ export function gerarMensagemConfirmacao(pedido) {
   return mensagem;
 }
 
-
-export function enviarMensagemManualmente(pedido, texto) {
-  const telefone = pedido.cliente?.telefone;
-
+export async function enviarMensagemWhatsApp(idLoja, telefone, texto) {
   if (!telefone) {
-    console.alert(`Pedido de ${pedido.cliente.nome}/${pedido.cliente?.endereco.rua} esta sem telefone, WhatsApp não enviado`);
+    console.warn("Telefone não informado. WhatsApp não enviado.");
+    alert("Telefone não informado. WhatsApp não enviado.");
+    return { ok: false, erro: "Telefone ausente" };
+  }
+
+  if (!texto || !texto.trim()) {
+    console.warn("Texto vazio. WhatsApp não enviado.");
+    alert("Texto vazio. WhatsApp não enviado.");
+    return { ok: false, erro: "Texto vazio" };
+  }
+
+  const numeroLimpo = telefone.replace(/\D/g, "");
+
+  try {
+    // ✅ Se estiver rodando no Electron → envio automático
+    if (window.electronAPI?.enviarWhats) {
+      const res = await window.electronAPI.enviarWhats(
+        idLoja,
+        numeroLimpo,
+        texto.trim()
+      );
+
+      if (!res?.ok) {
+        console.error("Erro WhatsApp:", res?.erro);
+      }
+
+      return res;
+    }
+
+    // 🌐 Fallback navegador → abre WhatsApp Web
+    const textoCodificado = encodeURIComponent(texto.trim());
+    const url = `https://wa.me/55${numeroLimpo}?text=${textoCodificado}`;
+
+    window.open(url, "_blank", "noreferrer");
+
+    return { ok: true, modo: "manual" };
+
+  } catch (erro) {
+    console.error("Erro ao enviar WhatsApp:", erro);
+    return { ok: false, erro };
+  }
+}
+
+export function abrirConversaWhatsApp(telefone) {
+  if (!telefone) {
+    alert("Telefone não informado");
     return;
   }
 
   const numeroLimpo = telefone.replace(/\D/g, "");
-  const textoLimpo = encodeURIComponent(texto.trim());
 
-  const url = `https://wa.me/55${numeroLimpo}?text=${textoLimpo}`;
+  const numeroComDDI = numeroLimpo.startsWith("55")
+    ? numeroLimpo
+    : `55${numeroLimpo}`;
 
-  window.open(url, "_blank");
-}
+  const url = `https://wa.me/${numeroComDDI}`;
 
-export async function enviarMensagemElectronAutomatica(idLoja, pedido) {
-
-  const telefone = pedido.cliente?.telefone;
-
-  if (!telefone) {
-    console.alert(`Pedido de ${pedido.cliente.nome}/${pedido.cliente?.endereco.rua} esta sem telefone, WhatsApp não enviado`);
-    return;
-  }
-
-  const texto = gerarMensagemConfirmacao(pedido)
-
-  if (!window.electronAPI) {
-    return enviarMensagemManualmente(pedido, texto);
-  }
-
-  const res = await window.electronAPI.enviarWhats(idLoja, telefone, texto);
-
-  if (!res?.ok) {
-    console.error("Erro WhatsApp:", res?.erro);
+  // 🖥️ Se estiver no Electron
+  if (window.electronAPI?.openExternal) {
+    window.electronAPI.openExternal(url);
+  } else {
+    // 🌐 Navegador
+    window.open(url, "_blank", "noreferrer");
   }
 }

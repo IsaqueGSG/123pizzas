@@ -43,6 +43,7 @@ export default function CardProduto({ produto, onSelecionar, selecionado, modoMi
       {produto.img && !imgError ? (
         <CardMedia
           component="img"
+          loading="lazy"
           image={produto.img}
           onError={() => setImgError(true)}
           sx={{

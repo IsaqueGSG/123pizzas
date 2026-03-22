@@ -12,7 +12,10 @@ import {
 import { db } from "../config/firebase";
 
 import { imprimir, geraComandaHTML } from "./impressora.service";
-import { enviarMensagemElectronAutomatica } from "./whatsapp.service";
+import {
+  enviarMensagemWhatsApp,
+  gerarMensagemConfirmacao
+} from "./whatsapp.service";
 
 export async function criarPedido(idLoja, { cliente, itens, total, retirarNaLoja }) {
   return addDoc(
@@ -75,23 +78,27 @@ export async function processarPedido({
     status: "preparando"
   });
 
-  enviarMensagemElectronAutomatica(idLoja, pedido);
+  const texto = gerarMensagemConfirmacao(pedido);
+
+  await enviarMensagemWhatsApp(
+    idLoja,
+    pedido.cliente.telefone,
+    texto
+  );
+
+  const largura = preferencias?.impressao?.largura || "80mm";
 
   if (!window.electronAPI) {
-    const largura = preferencias?.impressao?.largura || "80mm";
     const html = geraComandaHTML(pedido, largura);
     imprimir(html);
   } else {
-
     try {
       await window.electronAPI.imprimirPedido(pedido, largura);
     } catch (error) {
-
       alert("Erro ao imprimir no Electron:", error);
       const html = geraComandaHTML(pedido, largura);
       imprimir(html);
     }
-
   }
 
   await atualizarPedido(idLoja, pedido.id, {
