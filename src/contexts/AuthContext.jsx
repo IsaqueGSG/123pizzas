@@ -37,6 +37,13 @@ export const AuthProvider = ({ children }) => {
         setUser(firebaseUser);
         setRole(null);
         setLoading(false);
+
+        // ⭐ se está criando loja → ir para confirmação
+        const modoRegistro = sessionStorage.getItem("modoRegistro");
+        if (modoRegistro) {
+          navigate("/confirmar-criacao");
+        }
+
         return;
       }
 
@@ -47,7 +54,7 @@ export const AuthProvider = ({ children }) => {
 
         if (!result.allowed) {
           setLoading(false);
-          navigate("/registrar-loja");
+          navigate("/");
           return;
         }
 
@@ -67,12 +74,13 @@ export const AuthProvider = ({ children }) => {
   }, [idLoja, navigate]);
 
   const login = async () => {
-    if (!idLoja) {
-      alert("Loja não definida");
-      return;
+    try {
+      await loginWithGoogle();
+      return true;
+    } catch (e) {
+      console.error(e);
+      return false;
     }
-
-    await loginWithGoogle();
   };
 
   const signOut = async () => {

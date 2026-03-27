@@ -23,7 +23,8 @@ import AdminPedidos from "./pages/AdminPedidos";
 import AdminPreferencias from "./pages/AdminPreferencias";
 import WhatsQR from "./pages/WhatsappQR";
 import AdminRelatorios from "./pages/AdminRelatorios";
-import RegistrarLoja from "./pages/RegistrarLoja";
+import RegistroSaaS from "./pages/RegistroSaaS";
+import ConfirmarCriacao from "./pages/ConfirmarCriacao";
 
 
 import PrivateRoute from "./components/PrivateRoute";
@@ -44,7 +45,8 @@ const App = () => {
 
                 {/* usuario loga na loja selecionada */}
                 <Route path="login" element={<Login />} />
-                <Route path="/registrar-loja" element={<RegistrarLoja />} />
+                <Route path="/registro-saas" element={<RegistroSaaS />} />
+                <Route path="/confirmar-criacao" element={<ConfirmarCriacao />} />
 
                 {/* Navbar */}
                 <Route path="/:idLoja" element={<RootLayout />}>
@@ -91,10 +93,6 @@ const App = () => {
                     <Route
                       path="preferencias"
                       element={<PrivateRoute><AdminPreferencias /></PrivateRoute>}
-                    />
-                    <Route
-                      path="whatsapp"
-                      element={<PrivateRoute><WhatsQR /></PrivateRoute>}
                     />
                     <Route
                       path="whatsapp"
