@@ -1,14 +1,24 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import lojas from "../services/IdLojas.services";
+import { getLojas } from "../services/lojas.service";
 
 const LojaContext = createContext(null);
 
 export function LojaProvider({ children }) {
   const location = useLocation();
 
+  const [lojas, setLojas] = useState([]);
   const [idLoja, setIdLojaState] = useState(null);
   const [ready, setReady] = useState(false);
+
+  // 🔥 1. Carregar lojas do Firestore
+  useEffect(() => {
+    async function carregar() {
+      const data = await getLojas();
+      setLojas(data);
+    }
+    carregar();
+  }, []); // roda apenas uma vez
 
   const setIdLoja = (lojaId) => {
     if (lojaId) {
@@ -20,13 +30,16 @@ export function LojaProvider({ children }) {
     }
   };
 
+  // 🔥 2. Resolver loja da URL após carregar lojas
   useEffect(() => {
+    if (!lojas) return; // null enquanto carrega
+
     const pathSegments = location.pathname.split("/");
-    const firstSegment = pathSegments[1]; // ex: "", "demo", "chavao", "login"
+    const firstSegment = pathSegments[1];
 
     const saved = localStorage.getItem("idLoja");
 
-    // 🔥 1. Se a URL contém uma loja válida → PRIORIDADE TOTAL (WEB)
+    // ⭐ 1. Prioridade → URL
     const lojaDaUrl = lojas.find(l => l.idLoja === firstSegment);
 
     if (lojaDaUrl) {
@@ -36,9 +49,8 @@ export function LojaProvider({ children }) {
       return;
     }
 
-    // 🔒 2. Rotas que NÃO devem herdar localStorage
+    // 🔒 Rotas globais
     const rotasPublicasGlobais = ["", "login"];
-    // "" = "/"
 
     if (rotasPublicasGlobais.includes(firstSegment)) {
       setIdLojaState(null);
@@ -46,7 +58,7 @@ export function LojaProvider({ children }) {
       return;
     }
 
-    // 🖥️ 3. Fallback para Electron (quando não há loja na URL)
+    // 🖥️ Fallback Electron
     if (saved) {
       const lojaExiste = lojas.some(l => l.idLoja === saved);
       setIdLojaState(lojaExiste ? saved : null);
@@ -55,14 +67,16 @@ export function LojaProvider({ children }) {
     }
 
     setReady(true);
-  }, [location.pathname]);
+
+  }, [location.pathname, lojas]); // 👈 agora depende das lojas
 
   if (!ready) return null;
 
   return (
-    <LojaContext.Provider value={{ idLoja, setIdLoja }}>
+    <LojaContext.Provider value={{ lojas, idLoja, setIdLoja, ready }}>
       {children}
     </LojaContext.Provider>
   );
 }
+
 export const useLoja = () => useContext(LojaContext);

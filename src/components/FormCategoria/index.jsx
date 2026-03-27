@@ -248,12 +248,22 @@ export default function CategoriaForm({
                 <>
                     <Box sx={{ display: 'flex', gap: 1, my: 1 }}>
                         <TextField fullWidth label="Nome da borda" value={novaBordaNome} onChange={e => setNovaBordaNome(e.target.value)} />
-                        <TextField fullWidth label="Valor" type="number" value={novaBordaValor}
+                        <TextField
+                            fullWidth
+                            label="Valor"
+                            type="number"
+                            value={novaBordaValor}
                             onChange={(e) => {
-                                if (e.target.value < 0) {
-                                    setNovaBordaValor(0)
-                                }
-                                setNovaBordaValor(e.target.value)
+                                const value = Number(e.target.value);
+                                setNovaBordaValor(value < 0 ? 0 : value);
+                            }}
+                            helperText={novaBordaValor == 0 ? "Valor não pode ser zero" : ""}
+                            sx={{
+                                "& .MuiOutlinedInput-root": {
+                                    "& fieldset": {
+                                        borderColor: novaBordaValor == 0 ? "orange" : undefined,
+                                    },
+                                },
                             }}
                         />
                         <Button
@@ -305,16 +315,26 @@ export default function CategoriaForm({
 
                     <Box sx={{ display: 'flex', gap: 1, my: 1 }}>
                         <TextField fullWidth label="Nome do extra" value={novoExtraNome} onChange={e => setNovoExtraNome(e.target.value)} />
-                        <TextField fullWidth label="Valor" type="number" value={novoExtraValor}
+                        <TextField
+                            fullWidth
+                            label="Valor"
+                            type="number"
+                            value={novoExtraValor}
                             onChange={(e) => {
-                                if (e.target.value < 0) {
-                                    setNovoExtraValor(0)
-                                }
-                                setNovoExtraValor(e.target.value)
+                                const value = Number(e.target.value);
+                                setNovoExtraValor(value < 0 ? 0 : value);
+                            }}
+                            helperText={novoExtraValor == 0 ? "Atenção:valor esta zero" : ""}
+                            sx={{
+                                "& .MuiOutlinedInput-root": {
+                                    "& fieldset": {
+                                        borderColor: novoExtraValor == 0 ? "orange" : undefined,
+                                    },
+                                },
                             }}
                         />
                         <Button
-                            disabled={!novoExtraNome.trim() || novoExtraValor <= 0}
+                            disabled={!novoExtraNome.trim() || novoExtraValor < 0}
                             fullWidth variant="contained"
                             onClick={adicionarExtra}
                         >

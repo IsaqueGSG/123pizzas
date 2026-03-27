@@ -12,11 +12,10 @@ import { useEffect } from "react";
 
 import { useAuth } from "../../contexts/AuthContext";
 import { useLoja } from "../../contexts/LojaContext";
-import lojas from "../../services/IdLojas.services";
 
 const Login = () => {
   const { login, user, role, loading } = useAuth();
-  const { idLoja, setIdLoja } = useLoja();
+  const { lojas, idLoja, setIdLoja } = useLoja();
   const navigate = useNavigate();
 
   // redirect após login

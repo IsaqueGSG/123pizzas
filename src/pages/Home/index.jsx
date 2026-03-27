@@ -21,13 +21,13 @@ import DashboardIcon from "@mui/icons-material/Dashboard";
 import LayersIcon from "@mui/icons-material/Layers";
 import BoltIcon from "@mui/icons-material/Bolt";
 import RestaurantMenuIcon from "@mui/icons-material/RestaurantMenu";
-import PhoneIphoneIcon from "@mui/icons-material/PhoneIphone";
-import SupportAgentIcon from "@mui/icons-material/SupportAgent";
-import SpeedIcon from "@mui/icons-material/Speed";
 import { useNavigate } from "react-router-dom";
-import lojas from "../../services/IdLojas.services";
+import { useLoja } from "../../contexts/LojaContext";
+
 
 export default function Landing() {
+  const { lojas } = useLoja()
+
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -341,7 +341,7 @@ export default function Landing() {
                           left: 0,
                           right: 0,
                           bottom: 0,
-                        
+
                         } : {}
                       }}
                     >

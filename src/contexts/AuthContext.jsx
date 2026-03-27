@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   loginWithGoogle,
   logout,
@@ -13,6 +14,7 @@ import { useLoja } from "../contexts/LojaContext";
 const AuthContext = createContext({});
 
 export const AuthProvider = ({ children }) => {
+  const navigate = useNavigate();
   const { idLoja } = useLoja();
 
   const [user, setUser] = useState(null);
@@ -20,11 +22,19 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [openAdminDrawer, setOpenAdminDrawer] = useState(false);
 
-  // 🔥 revalida sempre que loja mudar
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (!firebaseUser || !idLoja) {
+
+      if (!firebaseUser) {
         setUser(null);
+        setRole(null);
+        setLoading(false);
+        return;
+      }
+
+      // 🔥 usuário existe, mas não está em uma loja específica
+      if (!idLoja) {
+        setUser(firebaseUser);
         setRole(null);
         setLoading(false);
         return;
@@ -36,13 +46,13 @@ export const AuthProvider = ({ children }) => {
         const result = await getUserRole(idLoja, firebaseUser.email);
 
         if (!result.allowed) {
-          await logout();
-          setUser(null);
-          setRole(null);
-        } else {
-          setUser(firebaseUser);
-          setRole(result.role);
+          setLoading(false);
+          navigate("/registrar-loja");
+          return;
         }
+
+        setUser(firebaseUser);
+        setRole(result.role);
 
       } catch (err) {
         console.error(err);
@@ -54,7 +64,7 @@ export const AuthProvider = ({ children }) => {
     });
 
     return () => unsubscribe();
-  }, [idLoja]);
+  }, [idLoja, navigate]);
 
   const login = async () => {
     if (!idLoja) {

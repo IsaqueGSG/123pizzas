@@ -23,6 +23,8 @@ import AdminPedidos from "./pages/AdminPedidos";
 import AdminPreferencias from "./pages/AdminPreferencias";
 import WhatsQR from "./pages/WhatsappQR";
 import AdminRelatorios from "./pages/AdminRelatorios";
+import RegistrarLoja from "./pages/RegistrarLoja";
+
 
 import PrivateRoute from "./components/PrivateRoute";
 
@@ -42,6 +44,7 @@ const App = () => {
 
                 {/* usuario loga na loja selecionada */}
                 <Route path="login" element={<Login />} />
+                <Route path="/registrar-loja" element={<RegistrarLoja />} />
 
                 {/* Navbar */}
                 <Route path="/:idLoja" element={<RootLayout />}>

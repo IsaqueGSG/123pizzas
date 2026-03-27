@@ -4,9 +4,9 @@ import { useLoja } from "../../contexts/LojaContext";
 
 export default function PrivateRoute({ children }) {
   const { user, role, loading } = useAuth();
-  const { idLoja } = useLoja();
+  const { ready } = useLoja();
 
-  if (loading || !idLoja) {
+  if (loading || !ready) {
     return <div>Carregando...</div>;
   }
 

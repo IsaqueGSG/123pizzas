@@ -4,16 +4,12 @@ import {
   Box,
   Typography,
   CircularProgress,
-  Toolbar,
   Card,
   Switch,
   Button,
-  Tabs,
-  Tab,
   Divider,
 } from "@mui/material";
 
-import Navbar from "../../components/Navbar";
 import AdminDrawer from "../../components/AdminDrawer";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import ProductMenu from "../../components/MenuOptions";
