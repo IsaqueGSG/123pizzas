@@ -29,9 +29,10 @@ import { criarPedido } from "../../services/pedidos.service";
 export default function Checkout() {
   const { idLoja } = useLoja()
   const { enderecoLoja, endereco, clearEndereco } = useEntrega();
-  console.log("enderecoLoja", enderecoLoja);
-  const enderecoTexto = `${enderecoLoja.rua}, ${enderecoLoja.numero} - ${enderecoLoja.bairro} / ${enderecoLoja.cidade} - ${enderecoLoja.uf}`;
-
+  const enderecoTexto = enderecoLoja
+    ? `${enderecoLoja.rua}, ${enderecoLoja.numero} - ${enderecoLoja.bairro} / ${enderecoLoja.cidade} - ${enderecoLoja.uf}`
+    : "";
+    
   const [checkTroco, setCheckTroco] = useState(false)
   const [checkRetirarLoja, setCheckRetirarLoja] = useState(false)
 
@@ -256,10 +257,22 @@ export default function Checkout() {
     }
   }, [checkTroco]);
 
-  if (!mapsLoaded) return
-  <Box sx={{ height: "100vh", display: "flex", justifyContent: "center", alignItems: "center" }}>
-    <CircularProgress />
-  </Box>;
+  const ready = mapsLoaded && enderecoLoja;
+
+  if (!ready) {
+    return (
+      <Box
+        sx={{
+          height: "100vh",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center"
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ p: 2, pt: 0, pb: 22 }}>
