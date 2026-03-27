@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 import {
   Box,
   Typography,
@@ -7,12 +9,7 @@ import {
   CardContent,
   Container,
   Stack,
-  Divider,
   Chip,
-  Paper,
-  Avatar,
-  useTheme,
-  useMediaQuery
 } from "@mui/material";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
@@ -22,15 +19,23 @@ import LayersIcon from "@mui/icons-material/Layers";
 import BoltIcon from "@mui/icons-material/Bolt";
 import RestaurantMenuIcon from "@mui/icons-material/RestaurantMenu";
 import { useNavigate } from "react-router-dom";
-import { useLoja } from "../../contexts/LojaContext";
 
+import { getLojas } from "../../services/lojas.service";
 
 export default function Landing() {
-  const { lojas } = useLoja()
+
+  const [lojas, setLojas] = useState([]);
+  // ⭐ carregar lista de lojas (necessário para Electron)
+  useEffect(() => {
+    async function carregarLojas() {
+      const data = await getLojas();
+      setLojas(data);
+    }
+
+    carregarLojas();
+  }, []);
 
   const navigate = useNavigate();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const features = [
     {
@@ -65,12 +70,6 @@ export default function Landing() {
     }
   ];
 
-  const stats = [
-    { value: "50k+", label: "Pedidos Realizados" },
-    { value: "24/7", label: "Suporte Disponível" },
-    { value: "100%", label: "Satisfação" }
-  ];
-
   return (
     <Box sx={{ overflowX: 'hidden' }}>
       {/* HERO SECTION */}
@@ -96,7 +95,7 @@ export default function Landing() {
       >
         <Container maxWidth="lg">
           <Grid container spacing={4} alignItems="center">
-            <Grid item xs={12} md={7}>
+            <Grid>
               <Typography
                 variant="h1"
                 sx={{
@@ -223,7 +222,7 @@ export default function Landing() {
 
           <Grid display={"flex"} justifyContent={"center"} container spacing={3}>
             {features.map((item, index) => (
-              <Grid item xs={12} sm={6} md={4} key={index}>
+              <Grid key={index}>
                 <Card
                   elevation={0}
                   sx={{
@@ -306,7 +305,7 @@ export default function Landing() {
           <Box sx={{ display: 'flex', justifyContent: 'center' }}>
             <Grid container spacing={4}>
               {lojas.filter((loja) => loja.idLoja !== "demo").map((loja) => (
-                <Grid item xs={12} sm={6} md={4} key={loja.idLoja}>
+                <Grid key={loja.idLoja}>
                   <Card
                     onClick={() => navigate(`/${loja.idLoja}`)}
                     sx={{
@@ -422,7 +421,7 @@ export default function Landing() {
 
           <Grid container spacing={4} justifyContent="center">
             {/* BASIC PLAN */}
-            <Grid item xs={12} md={4}>
+            <Grid>
               <Card
                 elevation={0}
                 sx={{
@@ -487,7 +486,7 @@ export default function Landing() {
             </Grid>
 
             {/* PROFESSIONAL PLAN */}
-            <Grid item xs={12} md={4}>
+            <Grid>
               <Card
                 elevation={0}
                 sx={{

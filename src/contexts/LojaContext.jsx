@@ -1,79 +1,87 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { getLojas } from "../services/lojas.service";
+import { getLoja } from "../services/lojas.service";
 
 const LojaContext = createContext(null);
 
 export function LojaProvider({ children }) {
   const location = useLocation();
 
-  const [lojas, setLojas] = useState([]);
+  const [loja, setLoja] = useState(null);
   const [idLoja, setIdLojaState] = useState(null);
   const [ready, setReady] = useState(false);
 
-  // 🔥 1. Carregar lojas do Firestore
-  useEffect(() => {
-    async function carregar() {
-      const data = await getLojas();
-      setLojas(data);
-    }
-    carregar();
-  }, []); // roda apenas uma vez
-
-  const setIdLoja = (lojaId) => {
+  const setIdLoja = async (lojaId) => {
     if (lojaId) {
       localStorage.setItem("idLoja", lojaId);
       setIdLojaState(lojaId);
+
+      const data = await getLoja(lojaId);
+      setLoja(data || null);
+
     } else {
       localStorage.removeItem("idLoja");
       setIdLojaState(null);
+      setLoja(null);
     }
   };
 
-  // 🔥 2. Resolver loja da URL após carregar lojas
+  // ⭐ resolver loja por prioridade
   useEffect(() => {
-    if (!lojas) return; // null enquanto carrega
+    async function resolverLoja() {
+      const pathSegments = location.pathname.split("/");
+      const firstSegment = pathSegments[1];
 
-    const pathSegments = location.pathname.split("/");
-    const firstSegment = pathSegments[1];
+      const rotasGlobais = ["", "login"];
 
-    const saved = localStorage.getItem("idLoja");
+      // 🔒 Rotas globais → usar localStorage
+      if (rotasGlobais.includes(firstSegment)) {
+        const saved = localStorage.getItem("idLoja");
 
-    // ⭐ 1. Prioridade → URL
-    const lojaDaUrl = lojas.find(l => l.idLoja === firstSegment);
+        if (saved) {
+          const data = await getLoja(saved);
 
-    if (lojaDaUrl) {
-      setIdLojaState(lojaDaUrl.idLoja);
-      localStorage.setItem("idLoja", lojaDaUrl.idLoja);
+          if (data) {
+            setLoja(data);
+            setIdLojaState(data.idLoja);
+          } else {
+            localStorage.removeItem("idLoja");
+          }
+        }
+
+        setReady(true);
+        return;
+      }
+
+      // 🌐 URL define loja (modo web)
+      const data = await getLoja(firstSegment);
+
+      if (!data) {
+        setReady(true);
+        return;
+      }
+
+      setLoja(data);
+      setIdLojaState(data.idLoja);
+      localStorage.setItem("idLoja", data.idLoja);
+
       setReady(true);
-      return;
     }
 
-    // 🔒 Rotas globais
-    const rotasPublicasGlobais = ["", "login"];
-
-    if (rotasPublicasGlobais.includes(firstSegment)) {
-      setIdLojaState(null);
-      setReady(true);
-      return;
-    }
-
-    // 🖥️ Fallback Electron
-    if (saved) {
-      const lojaExiste = lojas.some(l => l.idLoja === saved);
-      setIdLojaState(lojaExiste ? saved : null);
-    } else {
-      setIdLojaState(null);
-    }
-
-    setReady(true);
-
-  }, [location.pathname, lojas]); // 👈 agora depende das lojas
+    resolverLoja();
+  }, [location.pathname]);
 
   if (!ready) return null;
 
   return (
-    <LojaContext.Provider value={{ lojas, idLoja, setIdLoja, ready }}>
+    <LojaContext.Provider
+      value={{
+        loja,
+        idLoja,
+        setIdLoja,
+        ready
+      }}
+    >
       {children}
     </LojaContext.Provider>
   );

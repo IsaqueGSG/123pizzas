@@ -1,3 +1,6 @@
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+
 import {
   Button,
   CircularProgress,
@@ -7,21 +10,33 @@ import {
   FormControl,
   InputLabel
 } from "@mui/material";
-import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
 
 import { useAuth } from "../../contexts/AuthContext";
 import { useLoja } from "../../contexts/LojaContext";
 
+import { getLojas } from "../../services/lojas.service";
+
 const Login = () => {
   const { login, user, role, loading } = useAuth();
-  const { lojas, idLoja, setIdLoja } = useLoja();
+  const { idLoja, setIdLoja } = useLoja();
   const navigate = useNavigate();
+
+  const [lojas, setLojas] = useState([]);
+  const [loadingLojas, setLoadingLojas] = useState(true);
+
+  useEffect(() => {
+    async function carregarLojas() {
+      const data = await getLojas();
+      setLojas(data);
+      setLoadingLojas(false);
+    }
+    carregarLojas();
+  }, []);
 
   // redirect após login
   useEffect(() => {
     if (user && role === "admin" && !loading && idLoja) {
-      navigate(`/${idLoja}/admin/produtos`, { replace: true });
+      navigate(`/${idLoja}/admin/pedidos`, { replace: true });
     }
   }, [user, role, loading, idLoja, navigate]);
 
@@ -43,17 +58,21 @@ const Login = () => {
       {/* SELECT DA LOJA */}
       <FormControl fullWidth>
         <InputLabel>Selecione a loja</InputLabel>
-        <Select
-          value={idLoja || ""}
-          label="Selecione a loja"
-          onChange={(e) => setIdLoja(e.target.value)}
-        >
-          {lojas.map((loja) => (
-            <MenuItem key={loja.idLoja} value={loja.idLoja}>
-              {loja.nome}
-            </MenuItem>
-          ))}
-        </Select>
+        {loadingLojas ? (
+          <CircularProgress />
+        ) : (
+          <Select
+            value={idLoja || ""}
+            label="Selecione a loja"
+            onChange={(e) => setIdLoja(e.target.value)}
+          >
+            {lojas.map((loja) => (
+              <MenuItem key={loja.idLoja} value={loja.idLoja}>
+                {loja.nome}
+              </MenuItem>
+            ))}
+          </Select>
+        )}
       </FormControl>
 
       {/* BOTÃO LOGIN */}
