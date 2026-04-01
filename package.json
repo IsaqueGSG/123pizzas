@@ -19,6 +19,7 @@
     "@mui/material": "^7.3.6",
     "@mui/styled-engine-sc": "^7.3.6",
     "@turf/turf": "^7.3.4",
+    "axios": "^1.14.0",
     "firebase": "^12.7.0",
     "leaflet": "^1.9.4",
     "leaflet-draw": "^1.0.4",

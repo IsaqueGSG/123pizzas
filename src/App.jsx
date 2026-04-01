@@ -23,7 +23,8 @@ import AdminPedidos from "./pages/AdminPedidos";
 import AdminPreferencias from "./pages/AdminPreferencias";
 import WhatsQR from "./pages/WhatsappQR";
 import AdminRelatorios from "./pages/AdminRelatorios";
-import RegistroSaaS from "./pages/RegistroSaaS";
+import RegistroLoja from "./pages/RegistroLoja";
+import RegistroCobranca from "./pages/RegistroCobranca";
 import ConfirmarCriacao from "./pages/ConfirmarCriacao";
 
 
@@ -45,7 +46,8 @@ const App = () => {
 
                 {/* usuario loga na loja selecionada */}
                 <Route path="login" element={<Login />} />
-                <Route path="/registro-saas" element={<RegistroSaaS />} />
+                <Route path="/registro-saas" element={<RegistroLoja />} />
+                <Route path="/registro-cobranca" element={<RegistroCobranca />} />
                 <Route path="/confirmar-criacao" element={<ConfirmarCriacao />} />
 
                 {/* Navbar */}

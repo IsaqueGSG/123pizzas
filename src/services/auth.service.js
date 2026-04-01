@@ -5,7 +5,7 @@ import { auth, provider, db } from "../config/firebase";
 export const loginWithGoogle = async () => {
   const result = await signInWithPopup(auth, provider);
   return result.user;
-};
+}; 
 
 export const logout = async () => {
   await signOut(auth);

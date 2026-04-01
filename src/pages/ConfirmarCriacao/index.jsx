@@ -1,3 +1,4 @@
+import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -20,25 +21,29 @@ import { writeBatch } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import {
     doc,
-    setDoc,
-    getDoc,
+    collection,
     serverTimestamp,
-    Timestamp
+    Timestamp,
+    getDoc
 } from "firebase/firestore";
 
 export default function ConfirmarCriacao() {
-    const batch = writeBatch(db);
-    const { user } = useAuth();
+    const { user, loading: loadingAuth } = useAuth();
     const navigate = useNavigate();
 
-    const [dados, setDados] = useState(null);
+    const APIURL = import.meta.env.VITE_API_RENDER_ASAAS;
+
     const [loading, setLoading] = useState(false);
+    const [dados, setDados] = useState(null);
     const [erro, setErro] = useState("");
 
+    const [tentativas, setTentativas] = useState(0);
     const [openSucesso, setOpenSucesso] = useState(false);
 
     // 🔎 Carrega dados do cadastro
     useEffect(() => {
+        if (loadingAuth) return; // ⛔ espera o Firebase
+
         if (!user) {
             navigate("/registro-saas");
             return;
@@ -52,81 +57,9 @@ export default function ConfirmarCriacao() {
         }
 
         setDados(JSON.parse(raw));
-    }, [user, navigate]);
+    }, [user, loadingAuth, navigate]);
 
-    // 🚀 Criar loja de verdade
-    const criarLoja = async () => {
-        setErro("");
-        setLoading(true);
-
-        try {
-            const { loja, cobranca } = dados;
-            const slug = loja.slug;
-
-            const lojaRef = doc(db, "clientes123pedidos", slug);
-
-            const snap = await getDoc(lojaRef);
-
-            if (snap.exists()) {
-                setErro("Já existe uma loja com esse endereço");
-                setLoading(false);
-                return;
-            }
-
-            // 🔥 CRIA BATCH AQUI (dentro da função)
-            const batch = writeBatch(db);
-
-            const emailId = user.email.toLowerCase();
-
-            const userRef = doc(
-                db,
-                "clientes123pedidos",
-                slug,
-                "usuarios",
-                emailId
-            );
-
-            // 🏪 Loja
-            batch.set(lojaRef, {
-                nome: loja.nomeLoja,
-                telefone: loja.telefone,
-                cobranca,
-                assinatura: {
-                    status: "trial",
-                    plano: "basico",
-                    trialEndsAt: Timestamp.fromDate(
-                        new Date(Date.now() + 15 * 24 * 60 * 60 * 1000)
-                    )
-                },
-                createdAt: serverTimestamp()
-            });
-
-            // 👤 Usuário
-            batch.set(userRef, {
-                role: "admin",
-                isOwner: true,
-                createdAt: serverTimestamp()
-            });
-
-            // 🔥 EXECUTA TUDO JUNTO
-            await batch.commit();
-
-            // 🧹 Limpa
-            sessionStorage.removeItem("registroSaaS");
-            sessionStorage.removeItem("modoRegistro");
-
-            localStorage.setItem("idLoja", slug);
-
-            window.location.href = `/${slug}/admin/pedidos`;
-
-        } catch (err) {
-            console.error(err);
-            setErro("Erro ao criar loja");
-            setLoading(false);
-        }
-    };
-
-    if (!dados) {
+    if (loadingAuth || !dados) {
         return (
             <Box sx={{ p: 4 }}>
                 <CircularProgress />
@@ -134,7 +67,121 @@ export default function ConfirmarCriacao() {
         );
     }
 
-    const { loja, cobranca } = dados;
+    const { loja, cobranca, plano } = dados;
+
+    // 🚀 Criar loja de verdade
+    const criarLoja = async () => {
+        if (loading) return;
+
+        setErro("");
+        setLoading(true);
+
+        try {
+
+            const lojaRef = doc(db, "clientes123pedidos", loja.slug);
+            const idLoja = loja.slug;
+
+            const snap = await getDoc(lojaRef);
+
+            if (snap.exists()) {
+                setErro("Este link já está em uso");
+                setLoading(false);
+                return;
+            }
+
+            if (!/^[a-z0-9]{3,20}$/.test(loja.slug)) {
+                setErro("Slug inválido");
+                setLoading(false);
+                return;
+            }
+
+            const userRef = doc(
+                db,
+                "clientes123pedidos",
+                idLoja,
+                "usuarios",
+                user.email.toLowerCase()
+            );
+
+            // 🔥 batch
+            const batch = writeBatch(db);
+
+            batch.set(lojaRef, {
+                id: idLoja,
+                nome: loja.nomeLoja,
+                slug: loja.slug,
+                telefone: loja.telefone,
+                cobranca,
+                assinatura: {
+                    status: "criando",
+                    etapa: "firestore_ok",
+                    plano: plano,
+                    trialEndsAt: Timestamp.fromDate(
+                        new Date(Date.now() + 15 * 24 * 60 * 60 * 1000)
+                    )
+                },
+
+                createdAt: serverTimestamp()
+            });
+
+            batch.set(userRef, {
+                role: "admin",
+                isOwner: true,
+                createdAt: serverTimestamp()
+            });
+
+            await batch.commit();
+
+            localStorage.setItem("idLoja", idLoja);
+
+            // 🔥 chama backend
+            const token = await user.getIdToken();
+            const res = await axios.post(APIURL + "/setup-subscription", {
+                idLoja,
+                cobranca
+            }, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                },
+                timeout: 20000
+            });
+
+
+            if (res.data?.success || res.data?.already) {
+                sessionStorage.removeItem("registroSaaS");
+                sessionStorage.removeItem("modoRegistro");
+
+                setLoading(false);
+                setOpenSucesso(true);
+                return;
+            }
+
+        } catch (err) {
+            const mensagem =
+                err.response?.data?.error ||
+                err.response?.data?.errors?.[0]?.description ||
+                err.message ||
+                "Erro ao configurar assinatura.";
+
+            if (err.response?.status === 409) {
+                setErro("Estamos finalizando sua conta...");
+
+                if (tentativas < 3) {
+                    setTentativas(prev => prev + 1);
+
+                    setTimeout(() => {
+                        criarLoja();
+                    }, 3000);
+                }
+
+                setLoading(false);
+                return;
+            }
+
+            setErro(mensagem);
+            setLoading(false);
+        }
+    };
 
     return (
         <Box
@@ -183,6 +230,22 @@ export default function ConfirmarCriacao() {
                     </Typography>
                 )}
 
+
+                <Button
+                    fullWidth
+                    disabled={loading}
+                    variant="contained"
+                    color="warning"
+                    onClick={() => {
+                        sessionStorage.removeItem("registroSaaS");
+                        sessionStorage.removeItem("modoRegistro");
+                        navigate("/registro-saas");
+                    }}
+                    sx={{ mt: 2 }}
+                >
+                    Recomeçar
+                </Button>
+
                 <Button
                     fullWidth
                     variant="contained"
@@ -196,6 +259,8 @@ export default function ConfirmarCriacao() {
                         "Criar minha loja"
                     )}
                 </Button>
+
+
             </Paper>
 
             <Dialog open={openSucesso} disableEscapeKeyDown>
@@ -215,7 +280,7 @@ export default function ConfirmarCriacao() {
                     <Button
                         variant="contained"
                         onClick={() => {
-                            window.location.href = "/login";
+                            window.location.href = `/${loja.slug}/admin/pedidos`;
                         }}
                     >
                         Acessar minha loja

@@ -14,7 +14,6 @@ import { useLoja } from "../contexts/LojaContext";
 const AuthContext = createContext({});
 
 export const AuthProvider = ({ children }) => {
-  const navigate = useNavigate();
   const { idLoja } = useLoja();
 
   const [user, setUser] = useState(null);
@@ -24,54 +23,19 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setUser(firebaseUser);
 
-      if (!firebaseUser) {
-        setUser(null);
-        setRole(null);
-        setLoading(false);
-        return;
-      }
-
-      // 🔥 usuário existe, mas não está em uma loja específica
-      if (!idLoja) {
-        setUser(firebaseUser);
-        setRole(null);
-        setLoading(false);
-
-        // ⭐ se está criando loja → ir para confirmação
-        const modoRegistro = sessionStorage.getItem("modoRegistro");
-        if (modoRegistro) {
-          navigate("/confirmar-criacao");
-        }
-
-        return;
-      }
-
-      setLoading(true);
-
-      try {
+      if (firebaseUser && idLoja) {
         const result = await getUserRole(idLoja, firebaseUser.email);
-
-        if (!result.allowed) {
-          setLoading(false);
-          navigate("/");
-          return;
-        }
-
-        setUser(firebaseUser);
-        setRole(result.role);
-
-      } catch (err) {
-        console.error(err);
-        setUser(null);
+        setRole(result.role); // Seta admin, viewer ou null
+      } else {
         setRole(null);
       }
 
       setLoading(false);
     });
-
     return () => unsubscribe();
-  }, [idLoja, navigate]);
+  }, [idLoja]);
 
   const login = async () => {
     try {

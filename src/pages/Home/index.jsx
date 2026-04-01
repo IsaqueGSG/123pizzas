@@ -37,6 +37,33 @@ export default function Landing() {
 
   const navigate = useNavigate();
 
+  const PLANOS = [
+    {
+      id: "basico",
+      nome: "Básico",
+      preco: 100,
+      precoFormatado: "R$100/mês",
+      features: [
+        "Cardápio digital",
+        "Painel admin",
+        "Pedidos WhatsApp"
+      ]
+    },
+    {
+      id: "profissional",
+      nome: "Profissional",
+      preco: 150,
+      precoFormatado: "R$150/mês",
+      destaque: true,
+      features: [
+        "Tudo do básico",
+        "Pedidos automáticos",
+        "Impressão automática",
+        "Mensagens automáticas"
+      ]
+    }
+  ];
+
   const features = [
     {
       title: "Cardápio Digital Personalizado",
@@ -306,85 +333,117 @@ export default function Landing() {
             <Grid container spacing={4}>
               {lojas.filter((loja) => loja.idLoja !== "demo").map((loja) => (
                 <Grid key={loja.idLoja}>
-                  <Card
-                    onClick={() => navigate(`/${loja.idLoja}`)}
-                    sx={{
-                      cursor: 'pointer',
-                      position: 'relative',
-                      overflow: 'hidden',
-                      borderRadius: 3,
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        transform: 'translateY(-4px)',
-                        boxShadow: 12,
-                        '& .store-overlay': {
-                          opacity: 1
-                        }
-                      }
-                    }}
-                  >
-                    <Box
+                  <Grid item xs={12} sm={6} md={4}>
+                    <Card
+                      onClick={() => navigate(`/${loja.idLoja}`)}
                       sx={{
-                        height: 160,
-                        background: loja.img
-                          ? `url(${loja.img}) center/cover`
-                          : 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
+                        cursor: 'pointer',
                         position: 'relative',
-                        '&::before': loja.img ? {
-                          content: '""',
+                        overflow: 'hidden',
+                        borderRadius: 3,
+                        transition: 'all 0.3s ease',
+                        height: 320,       // altura padrão
+                        width: 260,        // largura padrão
+                        display: 'flex',
+                        flexDirection: 'column',
+                        '&:hover': {
+                          transform: 'translateY(-4px)',
+                          boxShadow: 12,
+                          '& .store-overlay': {
+                            opacity: 1
+                          }
+                        }
+                      }}
+                    >
+                      {/* Imagem topo */}
+                      <Box
+                        sx={{
+                          height: 160,
+                          background: loja.img
+                            ? `url(${loja.img}) center/cover`
+                            : 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          position: 'relative',
+                          '&::before': loja.img ? {
+                            content: '""',
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            bgcolor: 'rgba(0,0,0,0.25)' // overlay leve
+                          } : {}
+                        }}
+                      />
+
+                      {/* Conteúdo */}
+                      <CardContent
+                        sx={{
+                          textAlign: 'center',
+                          position: 'relative',
+                          flexGrow: 1,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+                          {loja.nome}
+                        </Typography>
+                        <Typography color="text.secondary" sx={{ mb: 2 }}>
+                          {loja.descricao}
+                        </Typography>
+
+                        {/* Botão elegante */}
+                        <Button
+                          variant="contained"
+                          size="medium"
+                          sx={{
+                            borderRadius: 3,
+                            fontWeight: 600,
+                            textTransform: "none",
+                            background: "linear-gradient(135deg, #2563eb 0%, #1e40af 100%)",
+                            color: "white",
+                            boxShadow: 4,
+                            "&:hover": {
+                              background: "linear-gradient(135deg, #1e40af 0%, #2563eb 100%)",
+                              boxShadow: 8,
+                              transform: "scale(1.03)"
+                            }
+                          }}
+                        >
+                          Ver Cardápio
+                        </Button>
+                      </CardContent>
+
+                      {/* Overlay ao passar o mouse */}
+                      <Box
+                        className="store-overlay"
+                        sx={{
                           position: 'absolute',
                           top: 0,
                           left: 0,
                           right: 0,
                           bottom: 0,
+                          bgcolor: 'rgba(37, 99, 235, 0.9)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          opacity: 0,
+                          transition: 'opacity 0.3s ease',
+                          color: 'white',
+                          flexDirection: 'column',
+                          gap: 1
+                        }}
+                      >
+                        <RestaurantMenuIcon sx={{ fontSize: 40 }} />
+                        <Typography variant="h6">Visualizar Cardápio</Typography>
+                      </Box>
+                    </Card>
+                  </Grid>
 
-                        } : {}
-                      }}
-                    >
-
-                    </Box>
-
-                    <CardContent sx={{ textAlign: 'center', position: 'relative' }}>
-                      <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                        {loja.nome}
-                      </Typography>
-                      <Typography color="text.secondary" sx={{ mb: 2 }}>
-                        {loja.descricao}
-                      </Typography>
-                      <Chip
-                        label="Ver Cardápio"
-                        size="small"
-                        color="primary"
-                        variant="outlined"
-                      />
-                    </CardContent>
-
-                    <Box
-                      className="store-overlay"
-                      sx={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        bgcolor: 'rgba(37, 99, 235, 0.9)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        opacity: 0,
-                        transition: 'opacity 0.3s ease',
-                        color: 'white',
-                        flexDirection: 'column',
-                        gap: 1
-                      }}
-                    >
-                      <RestaurantMenuIcon sx={{ fontSize: 40 }} />
-                      <Typography variant="h6">Visualizar Cardápio</Typography>
-                    </Box>
-                  </Card>
                 </Grid>
               ))}
             </Grid>
@@ -420,153 +479,67 @@ export default function Landing() {
           </Box>
 
           <Grid container spacing={4} justifyContent="center">
-            {/* BASIC PLAN */}
-            <Grid>
-              <Card
-                elevation={0}
-                sx={{
-                  p: 4,
-                  borderRadius: 4,
-                  border: '1px solid',
-                  borderColor: 'grey.200',
-                  height: '100%',
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    transform: 'translateY(-8px)',
-                    boxShadow: 8
-                  }
-                }}
-              >
-                <Typography variant="overline" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-                  BÁSICO
-                </Typography>
 
-                <Box sx={{ my: 3 }}>
-                  <Typography component="span" variant="h3" sx={{ fontWeight: 700 }}>
-                    R$100
-                  </Typography>
-                  <Typography component="span" variant="subtitle1" color="text.secondary">
-                    /mês
-                  </Typography>
-                </Box>
+            {
+              PLANOS.map((plano) => (
+                <Grid key={plano.id} item xs={12} sm={6} md={4}>
+                  <Card
+                    elevation={0}
+                    sx={{
+                      p: 4,
+                      borderRadius: 4,
+                      border: '1px solid',
+                      borderColor: 'grey.200',
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column', // organiza em coluna
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        transform: 'translateY(-8px)',
+                        boxShadow: 8
+                      }
+                    }}
+                  >
+                    <Typography variant="overline" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                      {plano.nome.toUpperCase()}
+                    </Typography>
 
-                <Stack spacing={2} sx={{ my: 4 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Box component="span" sx={{ color: 'success.main', fontSize: 20 }}>✓</Box>
-                    <Typography>Cardápio digital completo</Typography>
-                  </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Box component="span" sx={{ color: 'success.main', fontSize: 20 }}>✓</Box>
-                    <Typography>Painel administrativo</Typography>
-                  </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Box component="span" sx={{ color: 'success.main', fontSize: 20 }}>✓</Box>
-                    <Typography>Pedidos via WhatsApp</Typography>
-                  </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Box component="span" sx={{ color: 'success.main', fontSize: 20 }}>✓</Box>
-                    <Typography>Suporte por email</Typography>
-                  </Box>
-                </Stack>
+                    <Box sx={{ my: 3 }}>
+                      <Typography component="span" variant="h3" sx={{ fontWeight: 700 }}>
+                        {plano.precoFormatado}
+                      </Typography>
+                    </Box>
 
-                <Button
-                  variant="outlined"
-                  fullWidth
-                  size="large"
-                  onClick={() => window.open(`https://wa.me/5511958077745?text=Olá, gostaria de assinar o plano básico do 123pedidos`, "_blank")}
-                  sx={{
-                    py: 1.5,
-                    borderRadius: 2,
-                    fontWeight: 600
-                  }}
-                >
-                  Começar Agora
-                </Button>
-              </Card>
-            </Grid>
+                    <Stack spacing={2} sx={{ my: 4 }}>
+                      {plano.features.map((feature, index) => (
+                        <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Box component="span" sx={{ color: 'success.main', fontSize: 20 }}>✓</Box>
+                          <Typography>{feature}</Typography>
+                        </Box>
+                      ))}
+                    </Stack>
 
-            {/* PROFESSIONAL PLAN */}
-            <Grid>
-              <Card
-                elevation={0}
-                sx={{
-                  p: 4,
-                  borderRadius: 4,
-                  border: '2px solid',
-                  borderColor: 'primary.main',
-                  height: '100%',
-                  position: 'relative',
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    transform: 'translateY(-8px)',
-                    boxShadow: 12
-                  }
-                }}
-              >
-                <Chip
-                  label="MAIS ESCOLHIDO"
-                  color="primary"
-                  size="small"
-                  sx={{
-                    position: 'absolute',
-                    top: -12,
-                    right: 24,
-                    fontWeight: 600
-                  }}
-                />
+                    {/* O segredo está aqui */}
+                    <Button
+                      variant="outlined"
+                      fullWidth
+                      size="large"
+                      onClick={() => navigate(`/registro-saas?p=${plano.id}`)}
+                      sx={{
+                        py: 1.5,
+                        borderRadius: 2,
+                        fontWeight: 600,
+                        mt: 'auto' // empurra o botão para o final
+                      }}
+                    >
+                      Começar Agora
+                    </Button>
+                  </Card>
 
-                <Typography variant="overline" sx={{ color: 'primary.main', fontWeight: 600 }}>
-                  PROFISSIONAL
-                </Typography>
+                </Grid>
+              ))
+            }
 
-                <Box sx={{ my: 3 }}>
-                  <Typography component="span" variant="h2" sx={{ fontWeight: 700, color: 'primary.main' }}>
-                    R$150
-                  </Typography>
-                  <Typography component="span" variant="subtitle1" color="text.secondary">
-                    /mês
-                  </Typography>
-                </Box>
-
-                <Stack spacing={2} sx={{ my: 4 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Box component="span" sx={{ color: 'success.main', fontSize: 20 }}>✓</Box>
-                    <Typography fontWeight={500}>Tudo do plano Básico</Typography>
-                  </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Box component="span" sx={{ color: 'success.main', fontSize: 20 }}>✓</Box>
-                    <Typography>Pedidos automáticos</Typography>
-                  </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Box component="span" sx={{ color: 'success.main', fontSize: 20 }}>✓</Box>
-                    <Typography>Impressão automática</Typography>
-                  </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Box component="span" sx={{ color: 'success.main', fontSize: 20 }}>✓</Box>
-                    <Typography>Mensagens automáticas</Typography>
-                  </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Box component="span" sx={{ color: 'success.main', fontSize: 20 }}>✓</Box>
-                    <Typography>Suporte prioritário 24/7</Typography>
-                  </Box>
-                </Stack>
-
-                <Button
-                  variant="contained"
-                  fullWidth
-                  size="large"
-                  onClick={() => window.open(`https://wa.me/5511958077745?text=Olá, gostaria de assinar o plano profissional do 123pedidos`, "_blank")}
-                  sx={{
-                    py: 1.5,
-                    borderRadius: 2,
-                    fontWeight: 600,
-                    fontSize: '1.1rem'
-                  }}
-                >
-                  Quero este plano
-                </Button>
-              </Card>
-            </Grid>
           </Grid>
         </Container>
       </Box>
@@ -619,7 +592,7 @@ export default function Landing() {
             variant="contained"
             size="large"
             startIcon={<WhatsAppIcon />}
-            onClick={() => window.open(`https://wa.me/5511958077745?text=Olá, gostaria de mais informações sobre o 123pedidos`, "_blank")}
+            onClick={() => window.open(`https://wa.me/5511958077745?text=Olá, gostaria de mais informações sobre o plano de assinatura.`, "_blank")}
             sx={{
               px: 6,
               py: 2,
