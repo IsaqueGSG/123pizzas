@@ -8,9 +8,8 @@ import {
 import { MapContainer, TileLayer, Marker, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { useEffect } from "react";
+import { useRef, useEffect, useState, useMemo } from "react";
 
-import CampoEnderecoGoogle from "../CampoEnderecoGoogle";
 import { useEntrega } from "../../contexts/EntregaContext";
 
 // FIX ÍCONE LEAFLET
@@ -56,8 +55,9 @@ const lojaIcon = L.divIcon({
     iconAnchor: [17, 34],
 });
 
+
 export default function MapaEntrega() {
-    const { endereco, rota, atualizarCampo, calcularEntrega, enderecoLoja } = useEntrega();
+    const { endereco, rota, atualizarCampo, calcularEntrega, enderecoLoja, setSessionToken } = useEntrega();
 
     function AjustarZoom({ rota }) {
         const map = useMap();
@@ -73,7 +73,59 @@ export default function MapaEntrega() {
     }
 
     const temRota = Array.isArray(rota) && rota.length > 0;
-    const temCoordenadasCliente = endereco.lat && endereco.lng;
+    const temCoordenadasCliente =
+        endereco.lat !== null && endereco.lng !== null;
+
+
+    //campo endereço de entrega google autocomplete + número + observação
+    const inputRef = useRef(null);
+    const autocompleteRef = useRef(null);
+    const sessionTokenRef = useRef(null);
+
+    const [loaded, setLoaded] = useState(false);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (window.google?.maps?.places && inputRef.current) {
+                clearInterval(interval);
+
+                sessionTokenRef.current =
+                    new window.google.maps.places.AutocompleteSessionToken();
+
+                autocompleteRef.current =
+                    new window.google.maps.places.Autocomplete(inputRef.current, {
+                        componentRestrictions: { country: "br" },
+                        fields: ["place_id", "formatted_address", "geometry", "name"],
+                        types: ["address"],
+                    });
+
+                autocompleteRef.current.addListener("place_changed", () => {
+                    const place = autocompleteRef.current.getPlace();
+
+                    if (!place.geometry) return;
+
+                    atualizarCampo("placeId", place.place_id);
+                    atualizarCampo("enderecoFormatado", place.formatted_address);
+                    atualizarCampo("lat", place.geometry.location.lat());
+                    atualizarCampo("lng", place.geometry.location.lng());
+
+                    setSessionToken(sessionTokenRef.current);
+
+                    sessionTokenRef.current =
+                        new window.google.maps.places.AutocompleteSessionToken();
+                });
+
+                setLoaded(true);
+            }
+        }, 300);
+
+        return () => clearInterval(interval);
+    }, []);
+
+    const polyline = useMemo(
+        () => Array.isArray(rota) ? rota.map(p => [p.lat, p.lng]) : [],
+        [rota]
+    );
 
     return (
         <>
@@ -90,7 +142,16 @@ export default function MapaEntrega() {
                     mt: 1
                 }}
             >
-                <CampoEnderecoGoogle />
+                <TextField
+                    label="Endereço de entrega"
+                    fullWidth
+                    size="small"
+                    inputRef={inputRef}
+                    placeholder="Digite seu endereço (Rua, número, bairro)"
+                    InputProps={{
+                        endAdornment: !loaded ? <CircularProgress size={20} /> : null,
+                    }}
+                />
 
                 <TextField
                     label="Número"
@@ -117,7 +178,7 @@ export default function MapaEntrega() {
                 variant="contained"
                 fullWidth
                 onClick={calcularEntrega}
-                disabled={endereco.loading}
+                disabled={endereco.loading || !endereco.lat}
             >
                 Calcular taxa
             </Button>
@@ -163,7 +224,7 @@ export default function MapaEntrega() {
                                 icon={clienteIcon}
                             />
 
-                            <Polyline positions={rota.map(p => [p.lat, p.lng])} />
+                            <Polyline positions={polyline} />
 
                             <AjustarZoom rota={rota} />
                         </MapContainer>

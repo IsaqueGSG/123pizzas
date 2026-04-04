@@ -100,7 +100,7 @@ export function gerarMensagemConfirmacao(pedido) {
   mensagem += `Taxa de entrega: R$ ${(endereco.taxaEntrega ?? 0).toFixed(2)}\n`;
   mensagem += `\n*TOTAL: R$ ${pedido.total.toFixed(2)}*\n\n`;
 
-  mensagem += `Obrigado pela preferência ❤️`;
+  mensagem += `Assim que o pedido for preparado, você será notificado ❤️`;
 
   return mensagem;
 }

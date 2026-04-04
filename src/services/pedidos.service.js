@@ -74,9 +74,7 @@ export async function processarPedido({
   preferencias
 }) {
 
-  await atualizarPedido(idLoja, pedido.id, {
-    status: "preparando"
-  });
+  await atualizarPedido(idLoja, pedido.id, { status: "preparando" });
 
   const texto = gerarMensagemConfirmacao(pedido);
 

@@ -81,6 +81,68 @@ export function EntregaProvider({ children }) {
     return Math.ceil(taxaFinal);
   }
 
+  function fetchComTimeout(url, tempo = 4000) {
+    return Promise.race([
+      fetch(url),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Timeout OSRM")), tempo)
+      )
+    ]);
+  }
+
+  function calcularRotaGoogleJS(origem, destino) {
+    return new Promise((resolve, reject) => {
+      if (!window.google) {
+        return reject(new Error("Google Maps não carregado"));
+      }
+
+      const directionsService = new window.google.maps.DirectionsService();
+
+      directionsService.route(
+        {
+          origin: origem,
+          destination: destino,
+          travelMode: window.google.maps.TravelMode.DRIVING
+        },
+        (result, status) => {
+          if (status !== "OK") {
+            return reject(new Error("Erro no DirectionsService"));
+          }
+
+          const route = result.routes[0];
+          const leg = route.legs[0];
+
+          const km = leg.distance.value / 1000;
+
+          const polyline = route.overview_path.map(p => ({
+            lat: p.lat(),
+            lng: p.lng()
+          }));
+
+          resolve({ km, polyline });
+        }
+      );
+    });
+  }
+
+  function esperarGoogle() {
+    return new Promise((resolve, reject) => {
+      if (window.google?.maps) return resolve();
+
+      const interval = setInterval(() => {
+        if (window.google?.maps) {
+          clearInterval(interval);
+          resolve();
+        }
+      }, 100);
+
+      setTimeout(() => {
+        clearInterval(interval);
+        reject(new Error("Google Maps não carregou"));
+      }, 5000);
+    });
+  }
+
   async function calcularEntrega() {
     try {
       setEndereco(prev => ({ ...prev, loading: true, erro: "" }));
@@ -108,24 +170,89 @@ export function EntregaProvider({ children }) {
       const destinoLng = Number(details.lng);
       const destinoLat = Number(details.lat);
 
-      // Mantém seu OSRM (perfeito e gratuito)
-      const url =
-        `https://router.project-osrm.org/route/v1/driving/` +
-        `${lojaLng},${lojaLat};${destinoLng},${destinoLat}` +
-        `?overview=full&geometries=geojson`;
+      let km = 0;
+      let rotaCoords = [];
 
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Erro ao calcular rota");
+      const cacheKey = `${lojaLat},${lojaLng}_${destinoLat},${destinoLng}`;
+      const rotaCache = sessionStorage.getItem(cacheKey);
+      let usarCache = false;
 
-      const data = await res.json();
-      if (!data.routes?.length) throw new Error("Rota não encontrada");
+      if (rotaCache) {
+        const parsed = JSON.parse(rotaCache);
 
-      const route = data.routes[0];
-      const km = route.distance / 1000;
+        const EXPIRA_EM = 1000 * 60 * 60; // 1 hora
+
+        if (
+          parsed?.km &&
+          parsed?.rota?.length > 0 &&
+          Date.now() - parsed.timestamp < EXPIRA_EM
+        ) {
+          km = parsed.km;
+          rotaCoords = parsed.rota;
+          usarCache = true;
+        }
+      }
+
+      if (!usarCache) {
+        try {
+          console.log("Calculando rota com OSRM...");
+          // 🔥 OSRM
+          const url =
+            `https://router.project-osrm.org/route/v1/driving/` +
+            `${lojaLng},${lojaLat};${destinoLng},${destinoLat}` +
+            `?overview=full&geometries=geojson`;
+
+          const res = await fetchComTimeout(url, 4000);
+
+          if (!res || !res.ok) throw new Error("OSRM offline");
+
+          const data = await res.json();
+
+          if (!data.routes?.length) throw new Error("Sem rota OSRM");
+
+          const route = data.routes[0];
+
+          km = route.distance / 1000;
+
+          rotaCoords = route.geometry.coordinates.map(([lng, lat]) => ({
+            lat,
+            lng
+          }));
+
+        } catch (err) {
+          console.warn("⚠️ OSRM falhou:", err.message);
+
+          try {
+            console.log("Calculando rota com google...");
+
+            esperarGoogle();
+            const result = await calcularRotaGoogleJS(
+              { lat: lojaLat, lng: lojaLng },
+              { lat: destinoLat, lng: destinoLng }
+            );
+
+            km = result.km;
+            rotaCoords = result.polyline;
+
+          } catch (googleErr) {
+            console.error("❌ Google também falhou:", googleErr);
+            throw new Error("Não foi possível calcular a rota no momento");
+          }
+        }
+      }
+
+      sessionStorage.setItem(
+        cacheKey,
+        JSON.stringify({
+          km,
+          rota: rotaCoords,
+          timestamp: Date.now()
+        })
+      );
+
+
       const zona = encontrarZonaCliente(destinoLat, destinoLng, zonasEntrega);
-
       let taxa;
-
       if (zona) {
         taxa = zona.valor; // prioridade zona
       } else {
@@ -146,9 +273,7 @@ export function EntregaProvider({ children }) {
         loading: false
       }));
 
-      setRota(
-        route.geometry.coordinates.map(([lng, lat]) => ({ lat, lng }))
-      );
+      setRota(rotaCoords);
 
     } catch (err) {
       setEndereco(prev => ({
@@ -157,10 +282,10 @@ export function EntregaProvider({ children }) {
         loading: false,
         taxaEntrega: 0
       }));
+
+      setRota([]);
     }
   }
-
-
 
   return (
     <EntregaContext.Provider

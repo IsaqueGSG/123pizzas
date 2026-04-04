@@ -23,81 +23,95 @@ function toDate(ts) {
   return new Date(ts.seconds * 1000);
 }
 
-function filtrarPedidos(pedidos, periodo) {
-  const hoje = new Date();
-
+function filtrarPedidos(pedidos, filtros) {
   return pedidos.filter(p => {
     if (p.status !== "finalizado") return false;
 
-    const d = toDate(p.createdAt);
+    const dataPedido = toDate(p.createdAt);
 
-    if (periodo === "hoje") {
-      return (
-        d.getDate() === hoje.getDate() &&
-        d.getMonth() === hoje.getMonth() &&
-        d.getFullYear() === hoje.getFullYear()
-      );
+    // 🔥 intervalo completo (data + hora)
+    if (filtros.dataHoraInicio) {
+      const inicio = new Date(filtros.dataHoraInicio);
+      if (dataPedido < inicio) return false;
     }
 
-    if (periodo === "semana") {
-      const inicio = new Date();
-      inicio.setDate(hoje.getDate() - 7);
-      return d >= inicio;
+    if (filtros.dataHoraFim) {
+      const fim = new Date(filtros.dataHoraFim);
+      if (dataPedido > fim) return false;
     }
 
-    if (periodo === "mes") {
-      return (
-        d.getMonth() === hoje.getMonth() &&
-        d.getFullYear() === hoje.getFullYear()
-      );
-    }
+    // 🚚 Tipo
+    if (filtros.tipo === "entrega" && p.retirarNaLoja) return false;
+    if (filtros.tipo === "retirada" && !p.retirarNaLoja) return false;
 
     return true;
   });
 }
 
 function resolverCategoria(item, produtos, categorias) {
-  // 1️⃣ Nova estrutura (ideal)
-  if (item.categoriaNome) return item.categoriaNome;
+  if (!item) return "Outros";
+
+  // 1️⃣ Nova estrutura
+  if (item.categoriaNome?.trim()) {
+    return item.categoriaNome.trim();
+  }
 
   // 2️⃣ Estrutura intermediária
-  if (item?.categoria?.nome) return item.categoria.nome;
+  if (item?.categoria?.nome?.trim()) {
+    return item.categoria.nome.trim();
+  }
 
-  // 3️⃣ Produto atual pelo ID
-  if (item.id) {
+  // 3️⃣ Produto pelo ID
+  if (item.id && Array.isArray(produtos)) {
     const prod = produtos.find(p => p.id === item.id);
 
-    if (prod?.categoriaId) {
+    if (prod?.categoriaId && Array.isArray(categorias)) {
       const cat = categorias.find(c => c.id === prod.categoriaId);
       if (cat?.nome) return cat.nome;
     }
   }
 
-  // 4️⃣ Pizza mista antiga
-  if (item?.sabores?.length) {
+  // 4️⃣ Sabores (PIZZA)
+  if (Array.isArray(item.sabores) && item.sabores.length > 0) {
     const sabor = item.sabores[0];
 
-    if (sabor?.categoria?.nome) return sabor.categoria.nome;
+    if (sabor?.categoria?.nome) {
+      return sabor.categoria.nome;
+    }
 
-    const prod = produtos.find(p => p.id === sabor?.id);
+    if (sabor?.id && Array.isArray(produtos)) {
+      const prod = produtos.find(p => p.id === sabor.id);
 
-    if (prod?.categoriaId) {
-      const cat = categorias.find(c => c.id === prod.categoriaId);
-      if (cat?.nome) return cat.nome;
+      if (prod?.categoriaId && Array.isArray(categorias)) {
+        const cat = categorias.find(c => c.id === prod.categoriaId);
+        if (cat?.nome) return cat.nome;
+      }
     }
   }
 
-  // 5️⃣ Último fallback
   return "Outros";
 }
 
-function gerarRelatorio(pedidos, produtos, categorias) {
+function gerarRelatorio(pedidos, produtos, categorias, filtros) {
   const r = {
     totalVendas: 0,
     totalPedidos: 0,
-    totalEntregas: 0,
+
+    totalEntrega: 0,
     totalRetirada: 0,
-    pagamentos: {},
+
+    valorEntrega: 0,
+    valorRetirada: 0,
+
+    taxaEntrega: 0,
+
+    pagamentos: {
+      dinheiro: 0,
+      cartao: 0,
+      pix: 0,
+      outros: 0
+    },
+
     categorias: {}
   };
 
@@ -105,33 +119,44 @@ function gerarRelatorio(pedidos, produtos, categorias) {
     r.totalPedidos++;
     r.totalVendas += p.total || 0;
 
-    if (p.retirarNaLoja) r.totalRetirada++;
-    else r.totalEntregas++;
+    if (p.retirarNaLoja) {
+      r.totalRetirada++;
+      r.valorRetirada += p.total || 0;
+    } else {
+      r.totalEntrega++;
+      r.valorEntrega += p.total || 0;
+      r.taxaEntrega += p.taxaEntrega || 0;
+    }
 
-    const forma = p?.cliente?.formaPagamento?.forma || "NÃO INFORMADO";
-    r.pagamentos[forma] =
-      (r.pagamentos[forma] || 0) + p.total;
+    // 💳 Pagamentos
+    const forma = (p?.cliente?.formaPagamento?.forma || "").toLowerCase();
 
+    if (forma.includes("dinheiro")) {
+      r.pagamentos.dinheiro += p.total;
+    } else if (forma.includes("pix")) {
+      r.pagamentos.pix += p.total;
+    } else if (forma.includes("cart")) {
+      r.pagamentos.cartao += p.total;
+    } else {
+      r.pagamentos.outros += p.total;
+    }
+
+    // 🍕 Categorias
     p.itens?.forEach(item => {
-      const nome = item.nome || "Sem nome";
-      const qtd = item.quantidade || 1;
-      const subtotal = (item.valor || 0) * qtd;
+      const categoria = resolverCategoria(item, produtos, categorias);
 
-      const categoria = resolverCategoria(
-        item,
-        produtos,
-        categorias
-      );
-
-      if (!r.categorias[categoria]) {
-        r.categorias[categoria] = {};
+      if (filtros.categoria !== "todas" && filtros.categoria !== categoria) {
+        return;
       }
 
+      if (!r.categorias[categoria]) r.categorias[categoria] = {};
+
+      const nome = item.nome;
+      const qtd = item.quantidade || 1;
+      const subtotal = item.valor * qtd;
+
       if (!r.categorias[categoria][nome]) {
-        r.categorias[categoria][nome] = {
-          quantidade: 0,
-          subtotal: 0
-        };
+        r.categorias[categoria][nome] = { quantidade: 0, subtotal: 0 };
       }
 
       r.categorias[categoria][nome].quantidade += qtd;
@@ -139,27 +164,36 @@ function gerarRelatorio(pedidos, produtos, categorias) {
     });
   });
 
-  r.ticketMedio =
-    r.totalPedidos > 0
-      ? r.totalVendas / r.totalPedidos
-      : 0;
-
   return r;
 }
 
 export default function RelatoriosPage() {
   const { pedidos, loading } = usePedidosRealtime();
   const { produtos, categorias } = useProducts();
-  const [periodo, setPeriodo] = useState("hoje");
+
+  const agora = new Date();
+
+  const [filtros, setFiltros] = useState({
+    dataHoraInicio: new Date(agora.setHours(0, 0, 0, 0))
+      .toISOString()
+      .slice(0, 16),
+
+    dataHoraFim: new Date()
+      .toISOString()
+      .slice(0, 16),
+
+    tipo: "todos",
+    categoria: "todas"
+  });
 
   const pedidosFiltrados = useMemo(
-    () => filtrarPedidos(pedidos, periodo),
-    [pedidos, periodo]
+    () => filtrarPedidos(pedidos, filtros),
+    [pedidos, filtros]
   );
 
   const relatorio = useMemo(
-    () => gerarRelatorio(pedidosFiltrados, produtos, categorias),
-    [pedidosFiltrados, produtos, categorias]
+    () => gerarRelatorio(pedidosFiltrados, produtos, categorias, filtros),
+    [pedidosFiltrados, produtos, categorias, filtros]
   );
 
   const pagamentosOrdenados = Object.entries(
@@ -177,30 +211,39 @@ export default function RelatoriosPage() {
   }
 
   return (
-    <Box p={3}>
+    <Box p={3} pb={12}>
       <Typography variant="h4" gutterBottom>
         📊 Relatórios
       </Typography>
 
       {/* Filtro */}
-      <ToggleButtonGroup
-        value={periodo}
-        exclusive
-        onChange={(e, v) => v && setPeriodo(v)}
-        sx={{ mb: 3 }}
-      >
-        <ToggleButton value="hoje">Hoje</ToggleButton>
-        <ToggleButton value="semana">Semana</ToggleButton>
-        <ToggleButton value="mes">Mês</ToggleButton>
-      </ToggleButtonGroup>
+      <Box display="flex" gap={2} flexWrap="wrap" mb={3}>
+
+        <input
+          type="datetime-local"
+          onChange={(e) =>
+            setFiltros(f => ({ ...f, dataHoraInicio: e.target.value }))
+          }
+        />
+
+        <input
+          type="datetime-local"
+          onChange={(e) =>
+            setFiltros(f => ({ ...f, dataHoraFim: e.target.value }))
+          }
+        />
+
+      </Box>
 
       {/* KPIs */}
       <Grid container spacing={2}>
-        <Kpi title="💰 Total vendas" value={relatorio.totalVendas} money />
-        <Kpi title="🧾 Pedidos" value={relatorio.totalPedidos} />
-        <Kpi title="📦 Ticket médio" value={relatorio.ticketMedio} money />
-        <Kpi title="🚚 Entregas" value={relatorio.totalEntregas} />
-        <Kpi title="🏪 Retirada" value={relatorio.totalRetirada} />
+        <Kpi title="💰 Total" value={relatorio.totalVendas} money />
+        <Kpi title="🚚 Entrega" value={relatorio.valorEntrega} money />
+        <Kpi title="🏪 Retirada" value={relatorio.valorRetirada} money />
+        <Kpi title="📦 Taxa entrega" value={relatorio.taxaEntrega} money />
+        <Kpi title="💵 Dinheiro" value={relatorio.pagamentos.dinheiro} money />
+        <Kpi title="💳 Cartão" value={relatorio.pagamentos.cartao} money />
+        <Kpi title="🟣 Pix" value={relatorio.pagamentos.pix} money />
       </Grid>
 
       <Divider sx={{ my: 4 }} />

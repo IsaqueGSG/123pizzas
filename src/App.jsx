@@ -39,7 +39,6 @@ const App = () => {
           <AuthProvider>
             <CartProvider>
 
-
               <Routes>
 
                 <Route path="/" element={<Home />} />

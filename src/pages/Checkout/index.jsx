@@ -20,7 +20,6 @@ import { useLoja } from "../../contexts/LojaContext";
 import { useEntrega } from "../../contexts/EntregaContext";
 import { useCarrinho } from "../../contexts/CarrinhoContext";
 
-import Navbar from "../../components/Navbar";
 import CarrinhoDrawer from "../../components/CarrinhoDrawer";
 import MapaEntrega from "../../components/EnderecoEntega";
 
