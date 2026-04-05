@@ -39,11 +39,20 @@ export const AuthProvider = ({ children }) => {
 
   const login = async () => {
     try {
-      await loginWithGoogle();
-      return true;
+      const user = await loginWithGoogle();
+
+      const result = await getUserRole(idLoja, user.email);
+
+      if (!result.allowed) {
+        await logout(); // força sair
+        return { error: "sem-permissao" };
+      }
+
+      return { success: true };
+
     } catch (e) {
       console.error(e);
-      return false;
+      return { error: "erro-login" };
     }
   };
 

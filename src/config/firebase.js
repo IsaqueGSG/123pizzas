@@ -19,3 +19,8 @@ export const db = getFirestore(app);
 // Auth
 export const auth = getAuth(app);
 export const provider = new GoogleAuthProvider();
+
+//força escolher conta toda vez que for logar, mesmo que já tenha uma sessão ativa
+provider.setCustomParameters({
+  prompt: "select_account"
+});

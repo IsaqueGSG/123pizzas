@@ -113,14 +113,6 @@ export default function AdminPedidos() {
     try {
       await atualizarPedido(idLoja, pedido.id, { status: "finalizado" });
 
-      const texto = `Olá ${pedido.cliente.nome}, seu pedido foi finalizado ! \n Agradecemos pela preferência e esperamos vê-lo novamente em breve!`;
-
-      await enviarMensagemWhatsApp(
-        idLoja,
-        pedido.cliente.telefone,
-        texto
-      );
-
     } catch (error) {
       console.error("Erro ao finalizar pedido:", error);
       alert("Erro ao finalizar pedido");

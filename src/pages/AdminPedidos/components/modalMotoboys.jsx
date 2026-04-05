@@ -20,7 +20,7 @@ export default function MotoboyModal({ open, onClose, onSelect }) {
   const [dontAskAgain, setDontAskAgain] = useState(false);
   const [novoNome, setNovoNome] = useState("");
 
-  // Carregar ou gerar motoboys
+  // Carregar motoboys e configuração ao abrir
   useEffect(() => {
     if (!open) return;
 
@@ -39,17 +39,9 @@ export default function MotoboyModal({ open, onClose, onSelect }) {
         sessionStorage.removeItem("ultimoMotoboy");
         sessionStorage.setItem("dontAskAgain", "false");
       }
-    } else {
-      gerarMotoboys();
     }
   }, [open]);
 
-  // Gerar lista inicial
-  const gerarMotoboys = (qtd = 1) => {
-    const novos = Array.from({ length: qtd }, (_, i) => `Motoboy ${i + 1}`);
-    sessionStorage.setItem("motoboys", JSON.stringify(novos));
-    setMotoboys(novos);
-  };
 
   const excluirMotoboy = (nome) => {
     const atualizados = motoboys.filter((m) => m !== nome);
@@ -151,7 +143,7 @@ export default function MotoboyModal({ open, onClose, onSelect }) {
               onChange={toggleDontAskAgain}
             />
           }
-          label="Não perguntar novamente"
+          label="Salvar motoboy selecionado e não perguntar novamente"
         />
       </DialogContent>
 
