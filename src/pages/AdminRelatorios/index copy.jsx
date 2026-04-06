@@ -171,10 +171,6 @@ export default function RelatoriosPage() {
   const { pedidos, loading } = usePedidosRealtime();
   const { produtos, categorias } = useProducts();
 
-  console.log(pedidos[0]);
-  console.log(produtos);
-  console.log(categorias);
-
   const agora = new Date();
 
   const [filtros, setFiltros] = useState({

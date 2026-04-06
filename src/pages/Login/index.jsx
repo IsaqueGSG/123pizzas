@@ -24,7 +24,6 @@ const Login = () => {
   const [lojas, setLojas] = useState([]);
   const [loadingLojas, setLoadingLojas] = useState(true);
   
-
   useEffect(() => {
     async function carregarLojas() {
       const data = await getLojas();

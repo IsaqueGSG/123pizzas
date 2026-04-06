@@ -10,7 +10,9 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  CircularProgress
+  CircularProgress,
+  Checkbox,
+  FormControlLabel
 } from "@mui/material";
 
 import { usePedidosRealtime } from "../../contexts/PedidosRealtimeContext";
@@ -40,18 +42,17 @@ function getPagamento(p) {
 
 function filtrarPedidos(pedidos, filtros) {
   return pedidos.filter(p => {
-    if (p.status !== "finalizado") return false;
+    // status
+    if (!filtros.incluirCancelados && p.status !== "finalizado") return false;
 
     const data = toDate(p.createdAt);
 
     if (filtros.inicio && data < new Date(filtros.inicio)) return false;
     if (filtros.fim && data > new Date(filtros.fim)) return false;
 
-    // tipo
     if (filtros.tipo === "entrega" && p.retirarNaLoja) return false;
     if (filtros.tipo === "retirada" && !p.retirarNaLoja) return false;
 
-    // pagamento
     if (filtros.pagamento !== "todos") {
       const forma = getPagamento(p);
       if (!forma.includes(filtros.pagamento)) return false;
@@ -63,32 +64,48 @@ function filtrarPedidos(pedidos, filtros) {
 
 /* ---------------- relatório ---------------- */
 
-function gerarRelatorio(pedidos) {
+function gerarRelatorio(pedidos, filtros) {
   let total = 0;
+  let totalSemTaxa = 0;
   let pedidosQtd = 0;
+
   let entrega = 0;
   let retirada = 0;
+
   let taxaEntrega = 0;
+
+  let qtdPedidosEntrega = 0;
+  let qtdPedidosRetirada = 0;
 
   const pagamentos = {};
   const categorias = {};
 
   pedidos.forEach(p => {
-    pedidosQtd++;
-    total += p.total || 0;
+    const taxa = p.cliente?.endereco?.taxaEntrega || 0;
+    const valorPedido = (p.total || 0) - taxa;
 
-    if (p.retirarNaLoja) {
-      retirada += p.total;
-    } else {
+    pedidosQtd++;
+
+    total += filtros.incluirTaxaEntrega ? p.total : valorPedido;
+    totalSemTaxa += valorPedido;
+
+    if (!p.retirarNaLoja) {
       entrega += p.total;
-      taxaEntrega += p.cliente?.endereco?.taxaEntrega || 0;
+      qtdPedidosEntrega++;
+
+      if (filtros.incluirTaxaEntrega) {
+        taxaEntrega += taxa;
+      }
+    } else {
+      retirada += p.total;
+      qtdPedidosRetirada++;
     }
 
     // pagamento
     const forma = getPagamento(p);
     pagamentos[forma] = (pagamentos[forma] || 0) + p.total;
 
-    // itens
+    // produtos
     p.itens?.forEach(item => {
       const cat = getCategoria(item);
 
@@ -109,10 +126,13 @@ function gerarRelatorio(pedidos) {
 
   return {
     total,
+    totalSemTaxa,
     pedidosQtd,
     entrega,
     retirada,
     taxaEntrega,
+    qtdPedidosEntrega,
+    qtdPedidosRetirada,
     ticketMedio: pedidosQtd ? total / pedidosQtd : 0,
     pagamentos,
     categorias
@@ -132,7 +152,9 @@ export default function RelatoriosPage() {
       .slice(0, 16),
     fim: new Date().toISOString().slice(0, 16),
     tipo: "todos",
-    pagamento: "todos"
+    pagamento: "todos",
+    incluirCancelados: false,
+    incluirTaxaEntrega: true
   });
 
   const pedidosFiltrados = useMemo(
@@ -141,8 +163,8 @@ export default function RelatoriosPage() {
   );
 
   const r = useMemo(
-    () => gerarRelatorio(pedidosFiltrados),
-    [pedidosFiltrados]
+    () => gerarRelatorio(pedidosFiltrados, filtros),
+    [pedidosFiltrados, filtros]
   );
 
   if (loading) {
@@ -156,12 +178,9 @@ export default function RelatoriosPage() {
   return (
     <Box p={3} pb={10}>
 
-
-
-
       <Box display="flex" gap={2} flexWrap="wrap" mb={3}>
         <Typography variant="h4" gutterBottom>
-          📊 Relatório de Fechamento
+          Relatórios
         </Typography>
 
         {/* ---------------- FILTROS ---------------- */}
@@ -211,81 +230,155 @@ export default function RelatoriosPage() {
             <MenuItem value="cart">Cartão</MenuItem>
           </Select>
         </FormControl>
+
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={filtros.incluirCancelados}
+              onChange={e =>
+                setFiltros(f => ({ ...f, incluirCancelados: e.target.checked }))
+              }
+            />
+          }
+          label="Incluir Cancelados"
+        />
+
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={filtros.incluirTaxaEntrega}
+              onChange={e =>
+                setFiltros(f => ({ ...f, incluirTaxaEntrega: e.target.checked }))
+              }
+            />
+          }
+          label="Incluir Taxa de Entrega"
+        />
+
       </Box>
 
       {/* ---------------- KPIs ---------------- */}
+      <TotaisSection r={r} />
+      <Divider sx={{ my: 3 }} />
 
+      <MotoboySection r={r} />
+      <Divider sx={{ my: 3 }} />
+
+      <RetiradaSection r={r} />
+      <Divider sx={{ my: 3 }} />
+
+      <PagamentosSection pagamentos={r.pagamentos} />
+      <Divider sx={{ my: 3 }} />
+
+      <ProdutosSection categorias={r.categorias} />
+
+    </Box>
+  );
+}
+
+/* ---------------- KPI ---------------- */
+
+
+function Kpi({ title, value }) {
+  return (
+    <Grid item xs={6} md={3}>
+      <Card>
+        <CardContent>
+          <Typography variant="body2">{title}</Typography>
+          <Typography variant="h6">{value}</Typography>
+        </CardContent>
+      </Card>
+    </Grid>
+  );
+}
+
+
+function TotaisSection({ r }) {
+  return (
+    <>
+      <Typography variant="h5" gutterBottom>📊 Totais</Typography>
       <Grid container spacing={2}>
-        <Kpi title="Total" value={r.total} />
+        <Kpi title="Total" value={`R$ ${r.total.toFixed(2)}`} />
+        <Kpi title="Sem Taxa" value={`R$ ${r.totalSemTaxa.toFixed(2)}`} />
         <Kpi title="Pedidos" value={r.pedidosQtd} />
-        <Kpi title="Ticket Médio" value={r.ticketMedio} />
-        <Kpi title="Entrega" value={r.entrega} />
-        <Kpi title="Retirada" value={r.retirada} />
-        <Kpi title="Taxa Entrega" value={r.taxaEntrega} />
+        <Kpi title="Ticket Médio" value={`R$ ${r.ticketMedio.toFixed(2)}`} />
+      </Grid>
+    </>
+  );
+}
 
-        {/* Pagamentos */}
-        {Object.entries(r.pagamentos).map(([k, v]) => (
-          <Kpi title={k} value={v} />
+function MotoboySection({ r }) {
+  return (
+    <>
+      <Typography variant="h5" gutterBottom>🛵 Entregas</Typography>
+      <Grid container spacing={2}>
+        <Kpi title="Pedidos Entrega" value={r.qtdPedidosEntrega} />
+        <Kpi title="Valor Entregas" value={`R$ ${r.entrega.toFixed(2)}`} />
+        <Kpi title="Taxa Entrega" value={`R$ ${r.taxaEntrega.toFixed(2)}`} />
+      </Grid>
+    </>
+  );
+}
+
+function RetiradaSection({ r }) {
+  return (
+    <>
+      <Typography variant="h5" gutterBottom>🏪 Retirada</Typography>
+      <Grid container spacing={2}>
+        <Kpi title="Pedidos Retirada" value={r.qtdPedidosRetirada} />
+        <Kpi title="Valor Retirada" value={`R$ ${r.retirada.toFixed(2)}`} />
+      </Grid>
+    </>
+  );
+}
+
+function PagamentosSection({ pagamentos }) {
+  return (
+    <>
+      <Typography variant="h5" gutterBottom>💳 Pagamentos</Typography>
+      <Grid container spacing={2}>
+        {Object.entries(pagamentos).map(([k, v]) => (
+          <Kpi key={k} title={k} value={`R$ ${v.toFixed(2)}`} />
         ))}
       </Grid>
+    </>
+  );
+}
 
-      <Divider sx={{ my: 4 }} />
-
-      {/* ---------------- PRODUTOS ---------------- */}
+function ProdutosSection({ categorias }) {
+  return (
+    <>
+      <Typography variant="h5" gutterBottom>📦 Produtos</Typography>
 
       <Box
         sx={{
-          mt: 3,
+          mt: 2,
           display: "grid",
           gridTemplateColumns: {
             xs: "1fr",
-            sm: "repeat(3, 1fr)",
-            md: "repeat(4, 1fr)"
+            sm: "repeat(2, 1fr)",
+            md: "repeat(3, 1fr)"
           },
           gap: 2
         }}
       >
-        {Object.entries(r.categorias).map(([cat, produtos]) => {
+        {Object.entries(categorias).map(([cat, produtos]) => {
           const lista = Object.entries(produtos)
             .map(([nome, d]) => ({ nome, ...d }))
             .sort((a, b) => b.qtd - a.qtd);
 
-          const totalQtd = lista.reduce((acc, p) => acc + p.qtd, 0);
-          const totalValor = lista.reduce((acc, p) => acc + p.total, 0);
-
           return (
-            <Card
-              key={cat}
-              sx={{
-                borderRadius: 3,
-                boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
-                height: "100%"
-              }}
-            >
+            <Card key={cat}>
               <CardContent>
-                {/* Header */}
-                <Typography variant="h6" fontWeight={600}>
-                  {cat}
-                </Typography>
+                <Typography variant="h6">{cat}</Typography>
 
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ mb: 2 }}
-                >
-                  {totalQtd} itens • R$ {totalValor.toFixed(2)}
-                </Typography>
-
-                <Divider sx={{ mb: 1 }} />
-
-                {/* Lista */}
                 {lista.map((p, i) => (
-                  <Box key={p.nome} display="flex" justifyContent="space-between">
-                    <Typography key={p.nome}>
-                      {i + 1}º - {p.nome} ({p.qtd})
+                  <Box key={p.nome + i} display="flex" justifyContent="space-between">
+                    <Typography>
+                      {i + 1}. {p.nome} ({p.qtd})
                     </Typography>
-                    <Typography key={p.nome}>
-                      R$ {(p.total || 0).toFixed(2)}
+                    <Typography>
+                      R$ {p.total.toFixed(2)}
                     </Typography>
                   </Box>
                 ))}
@@ -294,23 +387,6 @@ export default function RelatoriosPage() {
           );
         })}
       </Box>
-    </Box>
-  );
-}
-
-/* ---------------- KPI ---------------- */
-
-function Kpi({ title, value }) {
-  return (
-    <Grid item xs={6} md={2}>
-      <Card>
-        <CardContent>
-          <Typography>{title}</Typography>
-          <Typography variant="h6">
-            R$ {value.toFixed(2)}
-          </Typography>
-        </CardContent>
-      </Card>
-    </Grid>
+    </>
   );
 }

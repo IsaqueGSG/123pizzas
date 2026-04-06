@@ -45,7 +45,7 @@ export const AuthProvider = ({ children }) => {
 
       if (!result.allowed) {
         await logout(); // força sair
-        return { error: "sem-permissao" };
+        return alert("Sua conta (" + user.email + ") não tem permissão para acessar esta loja. Contate o administrador.");
       }
 
       return { success: true };

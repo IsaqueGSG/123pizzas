@@ -5,8 +5,7 @@ import { CircularProgress, Box } from "@mui/material";
 
 export default function PrivateRoute({ children }) {
   const { user, role, loading } = useAuth();
-  const { ready, idLoja } = useLoja();
-  const { slug } = useParams(); // Se sua URL for /nome-da-loja/admin
+  const { ready } = useLoja();
 
   if (loading || !ready) {
     return (
@@ -18,14 +17,12 @@ export default function PrivateRoute({ children }) {
 
   // 1. Não está logado? Login.
   if (!user) {
-    alert("Faça login para acessar esta página.");
     return <Navigate to="/login" replace />;
   }
 
   // 2. Está tentando acessar o admin de uma loja mas não tem cargo de admin nela?
   // Se o role for null ou diferente de admin, bloqueia.
   if (role !== "admin") {
-    alert("Você não tem permissão para acessar esta página com a conta: " + user.email);
     return <Navigate to="/" replace />;
   }
 
