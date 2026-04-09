@@ -377,37 +377,31 @@ export default function AdminPedidos() {
                       <Box key={index} sx={{ mb: 1 }}>
 
                         <Typography fontWeight="bold">
-                          {item.quantidade}x {item.nome}
+                          {item.quantidade}x {item.nome} (R$ {item.valor.toFixed(2)})
                         </Typography>
 
-                        <Typography variant="body2">
-                          Valor unitário: R$ {item.valor.toFixed(2)}
-                        </Typography>
-
-                        {item.borda?.nome && (
-                          <Typography variant="body2">
-                            Borda: {item.borda.nome}
-                          </Typography>
-                        )}
-
-                        {Array.isArray(item.extras) && item.extras.length > 0 && (
-                          <Typography variant="body2">
-                            Extras:{" "}
-                            {item.extras
-                              .map((e) => `${e.nome} (+R$ ${e.valor.toFixed(2)})`)
-                              .join(", ")}
-                          </Typography>
+                        {item.selecoes && Object.keys(item.selecoes).length > 0 && (
+                          <Box sx={{ mt: 0.5 }}>
+                            {Object.entries(item.selecoes).map(([grupoId, grupo]) => (
+                              <Typography key={grupoId} variant="body2">
+                                <strong>• {grupo.nome}:</strong>{" "}
+                                {grupo.itens
+                                  .map(i =>
+                                    i.valor > 0
+                                      ? `${i.nome} (+R$ ${i.valor.toFixed(2)})`
+                                      : i.nome
+                                  )
+                                  .join(", ")}
+                              </Typography>
+                            ))}
+                          </Box>
                         )}
 
                         {item?.observacao && (
                           <Typography variant="body2">
-                            Obs: {item.observacao}
+                            <strong>• Obs:</strong> {item.observacao}
                           </Typography>
                         )}
-
-                        <Typography variant="body2" fontWeight="bold">
-                          Subtotal: R$ {(item.valor * (item.quantidade ?? 1)).toFixed(2)}
-                        </Typography>
 
                       </Box>
                     ))}

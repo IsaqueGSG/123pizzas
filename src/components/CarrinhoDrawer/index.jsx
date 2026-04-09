@@ -110,26 +110,14 @@ export default function CarrinhoDrawer() {
                 R$ {(item.valor ?? 0).toFixed(2)}
               </Typography>
 
-              {Array.isArray(item.extras) && item.extras.length > 0 && (
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                >
-                  Extras: {
-                    item.extras.map(extra => extra.nome).join(", ")
-                  }
-                </Typography>
-              )}
-
-              {item?.borda && (
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                >
-                  Borda: {
-                    item.borda.nome
-                  }
-                </Typography>
+              {item.selecoes && Object.keys(item.selecoes).length > 0 && (
+                <Box sx={{ mt: 0.5 }}>
+                  {Object.entries(item.selecoes).map(([grupoId, grupo]) => (
+                    <Typography key={grupoId} variant="body2" color="text.secondary">
+                      <strong>{grupo.nome}:</strong> {grupo.itens.map(i => i.nome).join(", ")}
+                    </Typography>
+                  ))}
+                </Box>
               )}
 
               {item?.observacao && (

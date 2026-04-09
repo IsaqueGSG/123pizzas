@@ -1,5 +1,5 @@
 import {
-  Card,
+  Card, 
   CardMedia,
   CardContent,
   Typography,
@@ -24,20 +24,7 @@ export default function CardProduto({ produto, onSelecionar, selecionado, modoMi
   const [expandir, setExpandir] = useState(false);
   const [imgError, setImgError] = useState(false);
 
-  const itemCarrinho = itens.find(i =>
-    i.id.startsWith(produto.id)
-  );
-
-  const temExtras = produto?.categoria?.gruposExtras?.length > 0;
-
-  const itensDoProduto = itens.filter(i =>
-    i.id.startsWith(produto.id)
-  );
-
-  const quantidadeTotal = itensDoProduto.reduce(
-    (acc, i) => acc + i.quantidade,
-    0
-  );
+  const itemCarrinho = itens.find(i => i.id === produto.id);
 
   return (
     <Card
@@ -156,8 +143,7 @@ export default function CardProduto({ produto, onSelecionar, selecionado, modoMi
         </Typography>
 
         {/* Botão ou Controle */}
-        {temExtras ? (
-          // 🔥 SEMPRE botão adicionar (abre modal)
+        {!itemCarrinho ? (
           <Button
             fullWidth
             variant="contained"
@@ -172,24 +158,7 @@ export default function CardProduto({ produto, onSelecionar, selecionado, modoMi
           >
             {modoMisto ? "Selecionar" : "Adicionar"}
           </Button>
-        ) : !itemCarrinho ? (
-          // 🔹 sem extras e ainda não adicionou
-          <Button
-            fullWidth
-            variant="contained"
-            size="small"
-            onClick={onSelecionar}
-            disabled={foraDeHorario}
-            sx={{
-              textTransform: "none",
-              fontWeight: "bold",
-              fontSize: 12,
-            }}
-          >
-            Adicionar
-          </Button>
         ) : (
-          // 🔹 sem extras → controle +/-
           <Box
             sx={{
               width: "100%",
@@ -210,7 +179,7 @@ export default function CardProduto({ produto, onSelecionar, selecionado, modoMi
             </IconButton>
 
             <Typography fontWeight="bold" fontSize={16}>
-              {quantidadeTotal}
+              {itemCarrinho.quantidade}
             </Typography>
 
             <IconButton

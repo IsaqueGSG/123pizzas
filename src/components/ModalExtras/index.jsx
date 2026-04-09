@@ -12,59 +12,110 @@ import {
   FormControl,
   InputLabel
 } from "@mui/material";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 export default function ModalExtras({
   open,
   onClose,
   produto,
-  extrasDisponiveis = [],
-  bordasDisponiveis = [],
   onConfirm
 }) {
 
-
-  const [extrasSelecionados, setExtrasSelecionados] = useState([]);
-  const [bordaSelecionada, setBordaSelecionada] = useState(null);
+  const [selecoes, setSelecoes] = useState({});
   const [observacao, setObservacao] = useState("");
-
-  const limiteExtras = produto?.categoria?.limiteExtras ?? Infinity;
-  const limiteAtingido = extrasSelecionados.length >= limiteExtras;
-
+  const [alertasAtivos, setAlertasAtivos] = useState({});
 
   useEffect(() => {
     if (!open) {
-      setExtrasSelecionados([]);
-      setBordaSelecionada(null);
+      setSelecoes({});
       setObservacao("");
     }
   }, [open]);
 
-  const toggleExtra = (extra) => {
-    setExtrasSelecionados(prev => {
-      const jaSelecionado = prev.some(e => e.id === extra.id);
+  const toggleItem = (grupoId, item) => {
+    const grupo = produto.categoria.gruposExtras.find(g => g.id === grupoId);
+    const itens = selecoes[grupoId] || [];
 
-      // sempre permitir remover
-      if (jaSelecionado) {
-        return prev.filter(e => e.id !== extra.id);
+    const jaSelecionado = itens.some(i => i.id === item.id);
+
+    // reset alerta ao interagir
+    setAlertasAtivos(prev => ({
+      ...prev,
+      [grupoId]: false
+    }));
+
+    // remover
+    if (jaSelecionado) {
+      setSelecoes(prev => ({
+        ...prev,
+        [grupoId]: itens.filter(i => i.id !== item.id)
+      }));
+      return;
+    }
+
+    // 🚨 BLOQUEIO DE LIMITE
+    if (itens.length >= grupo.limite) {
+      if (!alertasAtivos[grupoId]) {
+        alert(`Máximo de ${grupo.limite} em ${grupo.nome}`);
+
+        setAlertasAtivos(prev => ({
+          ...prev,
+          [grupoId]: true
+        }));
       }
+      return;
+    }
 
-      // bloquear se atingiu o limite
-      if (prev.length >= limiteExtras) {
-        alert(`Você pode escolher no máximo ${limiteExtras} extras`);
-        return prev;
+    // adicionar
+    setSelecoes(prev => ({
+      ...prev,
+      [grupoId]: [...itens, item]
+    }));
+  };
+
+  const validarMinimos = () => {
+    for (const grupo of produto.categoria.gruposExtras || []) {
+      const selecionados = selecoes[grupo.id] || [];
+
+      if (selecionados.length < grupo.minimo) {
+        alert(`Selecione pelo menos ${grupo.minimo} item(ns) em ${grupo.nome}`);
+        return false;
       }
+    }
+    return true;
+  };
 
-      return [...prev, extra];
-    });
+  const podeConfirmar = produto?.categoria?.gruposExtras?.every(grupo => {
+    const selecionados = selecoes[grupo.id] || [];
+    return selecionados.length >= grupo.minimo;
+  });
+
+  const selecionarUnico = (grupoId, itemId) => {
+    const grupo = produto?.categoria?.gruposExtras?.find(g => g.id === grupoId);
+    if (!grupo) return;
+
+    const item = grupo.itens.find(i => i.id === itemId);
+
+    setSelecoes(prev => ({
+      ...prev,
+      [grupoId]: item ? [item] : []
+    }));
   };
 
 
-  // Calcula preço final com extras + borda
-  const precoFinal =
-    (produto?.valor || 0) +
-    extrasSelecionados.reduce((t, e) => t + e.valor, 0) +
-    (bordaSelecionada?.valor || 0);
+  const precoExtras = Object.values(selecoes)
+    .flat()
+    .reduce((total, item) => total + (item.valor || 0), 0);
+
+  const precoFinal = (produto?.valor || 0) + precoExtras;
+
+  const gruposOrdenados = useMemo(() => {
+    return [...(produto?.categoria?.gruposExtras || [])].sort((a, b) => {
+      if (a.limite === 1 && b.limite !== 1) return -1;
+      if (a.limite !== 1 && b.limite === 1) return 1;
+      return (b.minimo || 0) - (a.minimo || 0);
+    });
+  }, [produto]);
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth>
@@ -72,59 +123,77 @@ export default function ModalExtras({
 
       <DialogContent>
         {/* Extras */}
-        {extrasDisponiveis.length > 0 && (
-          <>
-            {
-              limiteExtras !== Infinity && (
-                <Typography variant="caption">
-                  {extrasSelecionados.length}/{limiteExtras} extras
+
+        {gruposOrdenados.map(grupo => {
+          const selecionados = selecoes[grupo.id] || [];
+
+          // 🔥 CASO 1: limite === 1 → SELECT
+          if (grupo.limite === 1) {
+            return (
+              <FormControl fullWidth sx={{ mb: 2 }} key={grupo.id}>
+                <InputLabel>{grupo.nome}</InputLabel>
+                <Select
+                  renderValue={(selected) => {
+                    const item = grupo.itens.find(i => i.id === selected);
+
+                    if (!item) return "Selecionar";
+
+                    return `${item.nome} ${item.valor > 0 ? `(+R$ ${item.valor.toFixed(2)})` : ""
+                      }`;
+                  }}
+                  value={selecionados[0]?.id || ""}
+                  label={grupo.nome}
+                  onChange={(e) => selecionarUnico(grupo.id, e.target.value)}
+                >
+                  {/* opção vazia se mínimo = 0 */}
+                  {grupo.minimo === 0 && (
+                    <MenuItem value="">
+                      Nenhum
+                    </MenuItem>
+                  )}
+
+                  {grupo.itens.map(item => (
+                    <MenuItem key={item.id} value={item.id}>
+                      {item.nome}
+                      {item.valor > 0 && ` (+R$ ${item.valor.toFixed(2)})`}
+                    </MenuItem>
+                  ))}
+                </Select>
+
+                <Typography variant="caption" sx={{ mt: 0.5 }}>
+                  {grupo.minimo > 0 && `Selecione ${grupo.minimo}`}
                 </Typography>
-              )
-            }
+              </FormControl>
+            );
+          }
 
+          // 🔥 CASO 2: múltipla escolha (botões)
+          return (
+            <Box key={grupo.id} sx={{ mb: 2 }}>
+              <Typography fontWeight="bold">
+                {grupo.nome} ({selecionados.length}/{grupo.limite})
+                {grupo.minimo > 0 && ` • mínimo ${grupo.minimo}`}
+              </Typography>
 
-            <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 2 }}>
-              {extrasDisponiveis.map(extra => {
-                const ativo = extrasSelecionados.some(e => e.id === extra.id);
-                return (
-                  <Button
-                    key={extra.id}
-                    variant={ativo ? "contained" : "outlined"}
-                    onClick={() => toggleExtra(extra)}
-                    disabled={!ativo && limiteAtingido}
-                  >
-                    {extra.nome}
-                    {extra.valor > 0 && ` (+R$ ${extra.valor.toFixed(2)})`}
-                  </Button>
-                );
-              })}
+              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                {grupo.itens.map(item => {
+                  const ativo = selecionados.some(i => i.id === item.id);
+
+                  return (
+                    <Button
+                      key={item.id}
+                      variant={ativo ? "contained" : "outlined"}
+                      onClick={() => toggleItem(grupo.id, item)}
+                    >
+                      {item.nome}
+                      {item.valor > 0 && ` (+R$ ${item.valor})`}
+                    </Button>
+                  );
+                })}
+              </Box>
             </Box>
-          </>
-        )}
-
-        {/* Bordas */}
-        {bordasDisponiveis.length > 0 && (
-          <FormControl fullWidth sx={{ mb: 2 }}>
-            <InputLabel>Borda</InputLabel>
-            <Select
-              value={bordaSelecionada?.id || ""}
-              label="Borda"
-              onChange={(e) => {
-                const borda = bordasDisponiveis.find(b => b.id === e.target.value);
-                setBordaSelecionada(borda);
-              }}
-            >
-              <MenuItem value="">
-                Nenhuma
-              </MenuItem>
-              {bordasDisponiveis.map(borda => (
-                <MenuItem key={borda.id} value={borda.id}>
-                  {borda.nome} {borda.valor > 0 && `(+R$ ${borda.valor.toFixed(2)})`}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        )}
+          );
+        })}
 
         {/* Observações */}
         <TextField
@@ -145,14 +214,16 @@ export default function ModalExtras({
 
         <Button
           variant="contained"
-          onClick={() =>
+          disabled={!podeConfirmar}
+          onClick={() => {
+            if (!validarMinimos()) return;
+
             onConfirm({
-              extras: extrasSelecionados,
-              borda: bordaSelecionada,
+              selecoes,
               observacao,
               precoFinal
-            })
-          }
+            });
+          }}
         >
           Adicionar
         </Button>

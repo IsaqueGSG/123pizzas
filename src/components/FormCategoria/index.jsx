@@ -26,17 +26,134 @@ export default function CategoriaForm({
             nome: "",
             permiteMisto: false,
             status: true,
-            limiteExtras: 5,
-            extras: [],
-            bordas: [],
+            gruposExtras: [],
             createdAt: null,
             horarioFuncionamento: {
                 inicio: "00:00",
                 fim: "23:59"
             }
-
         }
     );
+
+    const [novoGrupo, setNovoGrupo] = useState({
+        nome: "",
+        limite: 1,
+        minimo: 0
+    });
+
+    const [novoItem, setNovoItem] = useState({
+        nome: "",
+        valor: 0
+    });
+
+    const [grupoSelecionado, setGrupoSelecionado] = useState(null);
+
+    const adicionarGrupo = () => {
+        if (!novoGrupo.nome.trim()) {
+            return alert("Nome inválido");
+        }
+
+        if (novoGrupo.minimo > novoGrupo.limite) {
+            return alert("Mínimo não pode ser maior que o limite");
+        }
+
+        const id = gerarSlug(novoGrupo.nome);
+
+        if (categoria.gruposExtras?.some(g => g.id === id)) {
+            return alert("Já existe um grupo com esse nome");
+        }
+
+        setCategoria(prev => ({
+            ...prev,
+            gruposExtras: [
+                ...(prev.gruposExtras || []),
+                {
+                    ...novoGrupo,
+                    id,
+                    status: true,
+                    itens: []
+                }
+            ]
+        }));
+
+        // reset inteligente
+        setNovoGrupo({
+            nome: "",
+            limite: 1,
+            minimo: 0
+        });
+    };
+
+    const removerGrupo = (grupoId) => {
+        setCategoria(prev => ({
+            ...prev,
+            gruposExtras: prev.gruposExtras.filter(g => g.id !== grupoId)
+        }));
+
+        // limpa seleção se estava editando esse grupo
+        if (grupoSelecionado === grupoId) {
+            setGrupoSelecionado(null);
+        }
+    };
+
+    const adicionarItem = () => {
+        if (!grupoSelecionado) return;
+
+        const nome = novoItem.nome.trim();
+
+        if (!nome) {
+            return alert("Nome do item inválido");
+        };
+
+        const id = gerarSlug(nome);
+
+        const grupo = categoria.gruposExtras?.find(g => g.id === grupoSelecionado);
+        if (!grupo) return;
+
+        if (grupo?.itens.some(i => i.id === id)) {
+            return alert("Item já existe");
+        }
+
+
+        setCategoria(prev => ({
+            ...prev,
+            gruposExtras: prev.gruposExtras.map(g =>
+                g.id === grupoSelecionado
+                    ? {
+                        ...g,
+                        itens: [
+                            ...g.itens,
+                            {
+                                ...novoItem,
+                                id,
+                                valor: Number(novoItem.valor) || 0,
+                                status: true
+                            }
+                        ]
+                    }
+                    : g
+            )
+        }));
+
+        setNovoItem({
+            nome: "",
+            valor: 0,
+        });
+    };
+
+    const removerItem = (grupoId, itemId) => {
+        setCategoria(prev => ({
+            ...prev,
+            gruposExtras: prev.gruposExtras.map(g =>
+                g.id === grupoId
+                    ? {
+                        ...g,
+                        itens: g.itens.filter(i => i.id !== itemId)
+                    }
+                    : g
+            )
+        }));
+    };
 
     const [original, setOriginal] = useState(categoriaInicial);
 
@@ -44,77 +161,22 @@ export default function CategoriaForm({
         mode === "edit" &&
         JSON.stringify(categoria) === JSON.stringify(original);
 
-    // estados temporários (inputs)
-    const [suportaExtra, setSuportaExtra] = useState(
-        (categoriaInicial?.extras?.length ?? 0) > 0
-    );
-
-    const [suportaBorda, setSuportaBorda] = useState(
-        (categoriaInicial?.bordas?.length ?? 0) > 0
-    );
-
-    const [novoExtraNome, setNovoExtraNome] = useState("");
-    const [novoExtraValor, setNovoExtraValor] = useState(0);
-    const [novaBordaNome, setNovaBordaNome] = useState("");
-    const [novaBordaValor, setNovaBordaValor] = useState("");
 
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        if (categoriaInicial) {
+        if (mode === "edit" && categoriaInicial) {
             setCategoria(categoriaInicial);
             setOriginal(categoriaInicial);
-            setSuportaExtra((categoriaInicial.extras?.length ?? 0) > 0);
-            setSuportaBorda((categoriaInicial.bordas?.length ?? 0) > 0);
         }
-    }, [categoriaInicial]);
+    }, [categoriaInicial, mode]);
 
-
-    const adicionarExtra = () => {
-        const nome = novoExtraNome.trim();
-        const valor = parseFloat(novoExtraValor);
-        if (!nome || isNaN(valor)) return alert("Extra inválido");
-
-        const id = gerarSlug(nome);
-
-        setCategoria(prev => ({
-            ...prev,
-            extras: [...prev.extras, { id, nome, valor, status: true }],
-        }));
-
-        setNovoExtraNome("");
-        setNovoExtraValor("");
-    };
-
-    const removerExtra = (id) => {
-        setCategoria(prev => ({
-            ...prev,
-            extras: prev.extras.filter(e => e.id !== id)
-        }));
-    };
-
-    const adicionarBorda = () => {
-        const nome = novaBordaNome.trim();
-        const valor = parseFloat(novaBordaValor);
-        if (!nome || isNaN(valor)) return alert("Borda inválida");
-
-        const id = gerarSlug(nome);
-
-        setCategoria(prev => ({
-            ...prev,
-            bordas: [...prev.bordas, { id, nome, valor, status: true }]
-        }));
-
-        setNovaBordaNome("");
-        setNovaBordaValor("");
-    };
-
-    const removerBorda = (id) => {
-        setCategoria(prev => ({
-            ...prev,
-            bordas: prev.bordas.filter(b => b.id !== id)
-        }));
-    };
+    useEffect(() => {
+        setNovoItem({
+            nome: "",
+            valor: 0
+        });
+    }, [grupoSelecionado]);
 
     const salvarCategoria = async () => {
         if (!categoria.nome.trim()) return;
@@ -124,8 +186,6 @@ export default function CategoriaForm({
         try {
             const payload = {
                 ...categoria,
-                extras: suportaExtra ? categoria.extras : [],
-                bordas: suportaBorda ? categoria.bordas : [],
                 updatedAt: new Date(),
                 ...(mode === "add" ? { createdAt: new Date() } : {})
             };
@@ -133,15 +193,11 @@ export default function CategoriaForm({
             await onSave(payload);
 
             if (mode == "add") {
-                setSuportaBorda(false);
-                setSuportaExtra(false);
                 setCategoria({
                     nome: "",
                     permiteMisto: false,
                     status: true,
-                    limiteExtras: 5,
-                    extras: [],
-                    bordas: [],
+                    gruposExtras: [],
                     createdAt: null,
                     horarioFuncionamento: {
                         inicio: "00:00",
@@ -162,7 +218,6 @@ export default function CategoriaForm({
             setLoading(false);
         }
     };
-
 
     return (
         <Paper sx={{ p: 3 }}>
@@ -232,124 +287,137 @@ export default function CategoriaForm({
                 label="Permitir produto (1/2) - indicado para pizzas e brotos"
             />
 
-            <Divider sx={{ my: 2 }} />
-
-            {/* Bordas */}
-            <FormControlLabel
-                control={
-                    <Switch
-                        checked={suportaBorda}
-                        onChange={e => setSuportaBorda(e.target.checked)}
-                    />
-                }
-                label="Adicionar bordas aos produtos desta categoria - indicado para pizzas e brotos"
-            />
-            {suportaBorda && (
-                <>
-                    <Box sx={{ display: 'flex', gap: 1, my: 1 }}>
-                        <TextField fullWidth label="Nome da borda" value={novaBordaNome} onChange={e => setNovaBordaNome(e.target.value)} />
-                        <TextField
-                            fullWidth
-                            label="Valor"
-                            type="number"
-                            value={novaBordaValor}
-                            onChange={(e) => {
-                                const value = Number(e.target.value);
-                                setNovaBordaValor(value < 0 ? 0 : value);
-                            }}
-                            helperText={novaBordaValor == 0 ? "Valor não pode ser zero" : ""}
-                            sx={{
-                                "& .MuiOutlinedInput-root": {
-                                    "& fieldset": {
-                                        borderColor: novaBordaValor == 0 ? "orange" : undefined,
-                                    },
-                                },
-                            }}
-                        />
-                        <Button
-                            disabled={!novaBordaNome && !novaBordaValor}
-                            fullWidth
-                            variant="contained"
-                            onClick={adicionarBorda}
-                        >
-                            Adicionar
-                        </Button>
-                    </Box>
-
-                    {categoria.bordas.map(borda => (
-                        <Box key={borda.id} sx={{ display: 'flex', justifyContent: 'space-between', my: 1, p: 1, border: '1px solid #ccc', borderRadius: 1 }}>
-                            <Typography>{borda.nome} - R$ {borda.valor.toFixed(2)}</Typography>
-                            <IconButton onClick={() => removerBorda(borda.id)}><DeleteIcon /></IconButton>
-                        </Box>
-                    ))}
-                </>
-            )}
-
-            <Divider sx={{ my: 2 }} />
 
             {/* Extras */}
-            <FormControlLabel
-                control={
-                    <Switch
-                        checked={suportaExtra}
-                        onChange={e => setSuportaExtra(e.target.checked)}
-                    />
-                }
-                label="Adicionar extras aos produtos desta categoria"
-            />
-            {suportaExtra && (
-                <>
+            <Divider sx={{ my: 2 }} />
 
-                    <Box sx={{ display: 'flex', gap: 1, my: 1 }}>
-                        <Typography>Ajuste o limite de extras para produtos nessa categoria</Typography>
-                        <TextField fullWidth label="limiteExtras" type="number" value={categoria.limiteExtras}
-                            onChange={(e) => {
-                                const value = e.target.value
-                                setCategoria(prev => ({
-                                    ...prev,
-                                    limiteExtras: value < 0 ? 0 : value,
-                                }));
-                            }}
-                        />
+            {/* Criar grupo */}
+            <Box sx={{ display: "flex", gap: 1, my: 2 }}>
+                <TextField
+                    label="Nome do grupo"
+                    value={novoGrupo.nome}
+                    onChange={(e) =>
+                        setNovoGrupo(prev => ({ ...prev, nome: e.target.value }))
+                    }
+                />
+
+                <TextField
+                    label="Mínimo"
+                    type="number"
+                    value={novoGrupo.minimo}
+                    onChange={(e) => {
+                        let value = Number(e.target.value) || 0;
+
+                        setNovoGrupo(prev => ({
+                            ...prev,
+                            minimo: Math.max(0, Math.min(value, prev.limite))
+                        }));
+                    }}
+                    error={novoGrupo.minimo > novoGrupo.limite}
+                    helperText={
+                        novoGrupo.minimo > novoGrupo.limite
+                            ? "Mínimo não pode ser maior que o limite"
+                            : ""
+                    }
+                />
+
+                <TextField
+                    label="Limite"
+                    type="number"
+                    value={novoGrupo.limite}
+                    onChange={(e) => {
+                        let value = Number(e.target.value);
+
+                        if (isNaN(value) || value <= 0) value = 1;
+
+                        setNovoGrupo(prev => ({
+                            ...prev,
+                            limite: value,
+                            minimo: Math.min(prev.minimo, value)
+                        }));
+                    }}
+                />
+                <Button variant="contained" onClick={adicionarGrupo}>
+                    Criar Grupo
+                </Button>
+            </Box>
+
+            {/* Lista de grupos */}
+            {categoria.gruposExtras?.map(grupo => (
+                <Box key={grupo.id} sx={{ border: "1px solid #ccc", p: 2, mb: 2 }}>
+                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+
+                            {/* Selecionar grupo pra adicionar item */}
+                            <Button
+                                variant={grupoSelecionado === grupo.id ? "contained" : "outlined"}
+                                onClick={() =>
+                                    setGrupoSelecionado(prev =>
+                                        prev === grupo.id ? null : grupo.id
+                                    )
+                                }
+                            >
+                                {grupoSelecionado === grupo.id ? "Fechar" : "Adicionar item"}
+                            </Button>
+
+                            <Typography fontWeight="bold">
+                                {grupo.nome} (máx: {grupo.limite})
+                            </Typography>
+                        </Box>
+
+                        <IconButton onClick={() => removerGrupo(grupo.id)}>
+                            <DeleteIcon />
+                        </IconButton>
+
+
                     </Box>
 
-                    <Box sx={{ display: 'flex', gap: 1, my: 1 }}>
-                        <TextField fullWidth label="Nome do extra" value={novoExtraNome} onChange={e => setNovoExtraNome(e.target.value)} />
-                        <TextField
-                            fullWidth
-                            label="Valor"
-                            type="number"
-                            value={novoExtraValor}
-                            onChange={(e) => {
-                                const value = Number(e.target.value);
-                                setNovoExtraValor(value < 0 ? 0 : value);
-                            }}
-                            helperText={novoExtraValor == 0 ? "Atenção:valor esta zero" : ""}
+
+
+                    {grupoSelecionado === grupo.id && (
+                        <Box sx={{ display: "flex", gap: 1, my: 1 }}>
+                            <TextField
+                                label="Nome"
+                                value={novoItem.nome}
+                                onChange={e => setNovoItem(prev => ({ ...prev, nome: e.target.value }))}
+                            />
+                            <TextField
+                                label="Valor"
+                                type="number"
+                                value={novoItem.valor}
+                                onChange={e => setNovoItem(prev => ({ ...prev, valor: Number(e.target.value) }))}
+                            />
+                            <Button onClick={adicionarItem}>
+                                Adicionar
+                            </Button>
+                        </Box>
+                    )}
+
+                    {grupo.itens.map(item => (
+                        <Box
+                            key={item.id}
                             sx={{
-                                "& .MuiOutlinedInput-root": {
-                                    "& fieldset": {
-                                        borderColor: novoExtraValor == 0 ? "orange" : undefined,
-                                    },
-                                },
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                border: "1px solid #ccc",
+                                borderRadius: 1,
+                                p: 1,
+                                my: 1
                             }}
-                        />
-                        <Button
-                            disabled={!novoExtraNome.trim() || novoExtraValor < 0}
-                            fullWidth variant="contained"
-                            onClick={adicionarExtra}
                         >
-                            Adicionar
-                        </Button>
-                    </Box>
+                            <Typography>
+                                {item.nome} (+R$ {item.valor.toFixed(2)})
+                            </Typography>
 
-                    {categoria.extras.map(extra => (
-                        <Box key={extra.id} sx={{ display: 'flex', justifyContent: 'space-between', my: 1, p: 1, border: '1px solid #ccc', borderRadius: 1 }}>
-                            <Typography>{extra.nome} - R$ {extra.valor.toFixed(2)}</Typography>
-                            <IconButton onClick={() => removerExtra(extra.id)}><DeleteIcon /></IconButton>
+                            <IconButton onClick={() => removerItem(grupo.id, item.id)}>
+                                <DeleteIcon />
+                            </IconButton>
                         </Box>
                     ))}
-                </>
-            )}
+                </Box>
+            ))}
 
             <Button
                 fullWidth
@@ -359,13 +427,19 @@ export default function CategoriaForm({
                     semAlteracoes ||
                     loading ||
                     !categoria.nome.trim() ||
-                    (suportaExtra && categoria.extras.length === 0) ||
-                    (suportaBorda && categoria.bordas.length === 0)
+
+                    // validação simples: se tem grupos de extras, cada grupo deve ter pelo menos 1 item
+                    categoria.gruposExtras?.some(g =>
+                        !g.nome ||
+                        !Array.isArray(g.itens) ||
+                        g.itens.length === 0 ||
+                        g.minimo > g.limite
+                    )
                 }
                 onClick={salvarCategoria}
             >
                 Salvar Categoria
             </Button>
-        </Paper>
+        </Paper >
     );
 }

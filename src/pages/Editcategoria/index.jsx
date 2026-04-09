@@ -34,7 +34,9 @@ export default function EditCategoria() {
       return;
     }
 
-    setCategoria(encontrada);
+    console.log("Categorias:", encontrada);
+
+    setCategoria(structuredClone(encontrada));
   }, [categoriaId, categorias, navigate]);
 
   async function handleSave(payload) {
@@ -46,9 +48,14 @@ export default function EditCategoria() {
       categoriaId
     );
 
-    await setDoc(ref, payload, { merge: true });
+    const updated = {
+      ...payload,
+      updatedAt: new Date()
+    };
 
-    updateCategoria(categoriaId, payload);
+    await setDoc(ref, updated, { merge: true });
+
+    updateCategoria(categoriaId, updated);
   }
 
   return (

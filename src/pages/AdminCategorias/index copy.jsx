@@ -31,7 +31,7 @@ export default function AdminCategorias() {
   useEffect(() => {
     if (!categorias) return;
 
-    console.log("Categorias:", categorias);
+    console.log("Categorias atualizadas:", categorias);
     const cloneCat = [...categorias]
       .map(c => ({ ...c }))
       .sort((a, b) =>
@@ -46,9 +46,8 @@ export default function AdminCategorias() {
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
   const [categoriaSelecionada, setCategoriaSelecionada] = useState(null);
 
-  const houveMudanca = categorias?.length && cloneCategorias.some(cat => {
-    const categoriasMap = new Map(categorias.map(c => [c.id, c]));
-    const original = categoriasMap.get(cat.id);
+  const houveMudanca = cloneCategorias.some(cat => {
+    const original = categorias.find(c => c.id === cat.id);
     return original && original.status !== cat.status;
   });
 
@@ -162,25 +161,27 @@ export default function AdminCategorias() {
                   />
                 </Box>
 
+
                 <Box sx={{ mt: 1 }}>
                   <Typography variant="subtitle2">Extras:</Typography>
-                  {categoria.gruposExtras?.length ? (
-                    categoria.gruposExtras.map((g) => (
-                      <Box key={g.id} sx={{ mb: 1 }}>
-                        <Typography sx={{ fontSize: 13, fontWeight: "bold" }}>
-                          {g.nome} (min: {g.minimo} / max: {g.limite})
-                        </Typography>
-
-                        {g.itens.map((item) => (
-                          <Typography key={item.id} sx={{ fontSize: 12, ml: 1 }}>
-                            • {item.nome} - R$ {item.valor.toFixed(2)}
-                          </Typography>
-                        ))}
-                      </Box>
+                  {categoria.extras?.length
+                    ? categoria.extras.map((e) => (
+                      <Typography key={e.id} sx={{ fontSize: 13 }}>
+                        {e.nome} - R$ {e.valor.toFixed(2)}
+                      </Typography>
                     ))
-                  ) : (
-                    "Nenhum Extra cadastrado"
-                  )}
+                    : "Nenhum extra"}
+                </Box>
+
+                <Box sx={{ mt: 1 }}>
+                  <Typography variant="subtitle2">Bordas:</Typography>
+                  {categoria.bordas?.length
+                    ? categoria.bordas.map((b) => (
+                      <Typography key={b.id} sx={{ fontSize: 13 }}>
+                        {b.nome} - R$ {b.valor.toFixed(2)}
+                      </Typography>
+                    ))
+                    : "Nenhuma borda"}
                 </Box>
 
                 <Box sx={{ mt: 1 }}>

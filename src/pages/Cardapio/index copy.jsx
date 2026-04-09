@@ -83,7 +83,7 @@ export default function Cardapio() {
 
   const abrirModalOuAdicionar = (produto) => {
     // se tiver extras ou bordas → abrir modal
-    if (produto.categoria?.gruposExtras?.length > 0) {
+    if (produto.categoria?.extras?.length || produto.categoria?.bordas?.length) {
       setProdutoSelecionado(produto);
       setOpenModal(true);
       return;
@@ -91,7 +91,7 @@ export default function Cardapio() {
 
     addItem({
       id: produto.id,
-      nome: produto.nome,
+      nome: produto.nome, 
       valor: produto.valor,
       img: produto.img,
       categoriaId: produto.categoriaId,
@@ -154,7 +154,6 @@ export default function Cardapio() {
       setCategoriaSelecionada(categoriasOrdenadas[0].id);
     }
   }, [categoriasOrdenadas]);
-
 
   return (
     <Box>
@@ -283,17 +282,16 @@ export default function Cardapio() {
               setOpenModal(false);
               setProdutoSelecionado(null);
               setSaboresSelecionados([]);
-              setModoMisto(false);
             }}
             produto={produtoSelecionado}
-            onConfirm={({ selecoes, observacao, precoFinal }) => {
+            extrasDisponiveis={produtoSelecionado.categoria.extras}
+            bordasDisponiveis={produtoSelecionado.categoria.bordas} // <--- bordas aqui
+            onConfirm={({ extras, borda, observacao, precoFinal }) => {
 
-              const selecoesIds = Object.entries(selecoes)
-                .map(([grupoId, itens]) =>
-                  `${grupoId}:${itens.map(i => i.id).sort().join(",")}`
-                )
+              const extrasIds = [...extras]
+                .map(e => e.id)
                 .sort()
-                .join("|");
+                .join("-");
 
               const obsId = observacao
                 ? observacao.trim().toLowerCase().replace(/\s+/g, "_")
@@ -301,20 +299,10 @@ export default function Cardapio() {
 
               const itemId = [
                 produtoSelecionado.id,
-                selecoesIds || "sem_extras",
+                extrasIds,
+                borda?.id || "sem_borda",
                 obsId
               ].join("|");
-
-              const selecoesComGrupo = {};
-
-              Object.entries(selecoes).forEach(([grupoId, itens]) => {
-                const grupo = produtoSelecionado.categoria.gruposExtras.find(g => g.id === grupoId);
-
-                selecoesComGrupo[grupoId] = {
-                  nome: grupo.nome,
-                  itens
-                };
-              });
 
               addItem({
                 id: itemId,
@@ -325,9 +313,9 @@ export default function Cardapio() {
                 categoriaId: produtoSelecionado.categoria?.id,
                 categoriaNome: produtoSelecionado.categoria?.nome,
 
-                selecoes: selecoesComGrupo,
+                extras,
+                borda,
                 observacao,
-
                 misto: produtoSelecionado.misto || false,
                 sabores: produtoSelecionado.sabores || []
               });

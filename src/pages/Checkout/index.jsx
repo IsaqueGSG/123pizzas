@@ -31,7 +31,7 @@ export default function Checkout() {
   const enderecoTexto = enderecoLoja
     ? `${enderecoLoja.rua}, ${enderecoLoja.numero} - ${enderecoLoja.bairro} / ${enderecoLoja.cidade} - ${enderecoLoja.uf}`
     : "";
-    
+
   const [checkTroco, setCheckTroco] = useState(false)
   const [checkRetirarLoja, setCheckRetirarLoja] = useState(false)
 
@@ -335,17 +335,20 @@ export default function Checkout() {
                         </Typography>
                       )}
 
-                      {/* EXTRAS / OBS */}
-                      {Array.isArray(item.extras) && item.extras.length > 0 && (
-                        <Typography variant="caption" color="text.secondary" display="block">
-                          Extras: {item.extras.map(e => e.nome).join(", ")}<br />
-                        </Typography>
-                      )}
-
-                      {item?.borda && (
-                        <Typography variant="caption" color="text.secondary" display="block">
-                          Borda: {item.borda.nome}
-                        </Typography>
+                      {/* EXTRAS (grupoExtras) */}
+                      {item.selecoes && Object.keys(item.selecoes).length > 0 && (
+                        <Box sx={{ mt: 0.5 }}>
+                          {Object.entries(item.selecoes).map(([grupoId, grupo]) => (
+                            <Typography
+                              key={grupoId}
+                              variant="caption"
+                              color="text.secondary"
+                              display="block"
+                            >
+                              <strong>{grupo.nome}:</strong> {grupo.itens.map(i => i.nome).join(", ")}
+                            </Typography>
+                          ))}
+                        </Box>
                       )}
 
                       {item?.observacao && (

@@ -24,7 +24,7 @@ export default function AddCategoria() {
   const [erro, setErro] = useState("");
 
   async function handleSave(payload) {
-    const id = gerarSlug(payload.nome);
+    const id = gerarSlug(payload.nome.trim().toLowerCase());
 
     const ref = doc(db, "clientes123pedidos", idLoja, "categorias", id);
     const snap = await getDoc(ref);
@@ -34,8 +34,10 @@ export default function AddCategoria() {
       throw new Error("Categoria já existe");
     }
 
-    await setDoc(ref, { ...payload, createdAt: new Date() });
-    addCategoria({ id, ...payload });
+    const data = { ...payload };
+
+    await setDoc(ref, data);
+    addCategoria({ id, ...data });
   }
 
   return (
@@ -54,7 +56,6 @@ export default function AddCategoria() {
       </Snackbar>
 
       <CategoriaForm mode="add" onSave={handleSave} />
-
 
     </Box>
   );
