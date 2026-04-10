@@ -9,7 +9,7 @@ import {
   Button,
   Typography
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import NotificationsOffIcon from "@mui/icons-material/NotificationsOff";
 import { usePedidosRealtime } from "../../contexts/PedidosRealtimeContext";
@@ -67,6 +67,24 @@ export default function BellPedidos() {
     toggleAudio();
   };
 
+  const tooltipText = useMemo(() => {
+    if (pendentes.total === 0) {
+      return "Nenhum pedido pendente";
+    }
+
+    const dias = Object.entries(pendentes.porDia)
+      .sort((a, b) => b[0].localeCompare(a[0])) // mais recente primeiro
+      .map(([dia, qtd]) => {
+        const dataFormatada = new Date(dia).toLocaleDateString("pt-BR");
+        return `${dataFormatada}: ${qtd}`;
+      });
+
+    return [
+      `Total: ${pendentes.total}`,
+      ...dias
+    ].join("\n");
+  }, [pendentes]);
+
   return (
     <>
       {/* 🔔 Dialog de primeira interação */}
@@ -98,9 +116,9 @@ export default function BellPedidos() {
       {/* 🔔 Botão flutuante */}
       <Tooltip
         title={
-          audioAtivo
-            ? "Som ativado (clique para desativar)"
-            : "Som desativado (clique para ativar)"
+          <span style={{ whiteSpace: "pre-line" }}>
+            {tooltipText}
+          </span>
         }
       >
         <Fab
@@ -113,7 +131,7 @@ export default function BellPedidos() {
             zIndex: 9999
           }}
         >
-          <Badge badgeContent={pendentes} color="error">
+          <Badge badgeContent={pendentes.total} color="error">
             {audioAtivo ? <NotificationsIcon /> : <NotificationsOffIcon />}
           </Badge>
         </Fab>

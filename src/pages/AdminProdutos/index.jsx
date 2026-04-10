@@ -119,15 +119,11 @@ export default function AdminProdutos() {
       <AdminDrawer />
 
       <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-        <Typography variant="h5" fontWeight="bold" gutterBottom>
-          Gestão de Produtos
-        </Typography>
-
         <Button
           variant="contained"
           onClick={() => navigate(`/${idLoja}/admin/addproduto`)}
         >
-          Adicionar Novo produto
+          +
         </Button>
       </Box>
 

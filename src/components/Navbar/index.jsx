@@ -83,6 +83,13 @@ export default function Navbar() {
         setOpenCarrinho(false);
     }, [location.pathname, setOpenAdminDrawer, setOpenCarrinho]);
 
+    const titulos = {
+        [`/${idLoja}`]: "Cardápio",
+        [`/${idLoja}/admin/pedidos`]: "Gestão de Pedidos",
+        [`/${idLoja}/admin/produtos`]: "Gestão de Produtos",
+        [`/${idLoja}/admin/categorias`]: "Gestão de Categorias",
+    };
+
     return (
         <AppBar position="fixed">
             <Toolbar>
@@ -121,7 +128,7 @@ export default function Navbar() {
                                 )
                     }
                 >
-                    123Pedidos
+                    {titulos[path] || "123 Pedidos"}
                 </Typography>
 
                 {(user && isPrivateRoute) ? (

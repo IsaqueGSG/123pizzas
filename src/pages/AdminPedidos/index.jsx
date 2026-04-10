@@ -208,10 +208,6 @@ export default function AdminPedidos() {
       <AdminDrawer />
 
       <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-        <Typography variant="h5" fontWeight="bold" gutterBottom>
-          Gestão de pedidos
-        </Typography>
-
         <input
           type="date"
           value={dataFiltro}
@@ -230,7 +226,7 @@ export default function AdminPedidos() {
               onChange={toggleAutoAceitar}
             />
           }
-          label="Aceitar e imprimir automaticamente"
+          label="Auto aceitar e imprimir"
         />
 
         <Button
@@ -247,7 +243,7 @@ export default function AdminPedidos() {
             }
           }}
         >
-          Criar Pedido
+          +
         </Button>
       </Box>
 
@@ -364,8 +360,6 @@ export default function AdminPedidos() {
                       variant="subtitle2"
                       fontWeight="bold"
                       sx={{
-                        mt: 1,
-                        mb: 0.5,
                         color: "text.secondary"
                       }}
                     >
@@ -374,14 +368,14 @@ export default function AdminPedidos() {
 
                     {/* ITENS DA CATEGORIA */}
                     {itens.map((item, index) => (
-                      <Box key={index} sx={{ mb: 1 }}>
+                      <Box key={index} >
 
                         <Typography fontWeight="bold">
-                          {item.quantidade}x {item.nome} (R$ {item.valor.toFixed(2)})
+                          {item.quantidade}x {item.nome}
                         </Typography>
 
                         {item.selecoes && Object.keys(item.selecoes).length > 0 && (
-                          <Box sx={{ mt: 0.5 }}>
+                          <Box >
                             {Object.entries(item.selecoes).map(([grupoId, grupo]) => (
                               <Typography key={grupoId} variant="body2">
                                 <strong>• {grupo.nome}:</strong>{" "}
@@ -412,14 +406,18 @@ export default function AdminPedidos() {
                 {/* AÇÕES */}
                 <Box sx={{ mt: "auto" }}>
                   <Divider sx={{ mb: 1 }} />
-
                   <Box sx={{ mt: 1 }}>
                     <Typography fontWeight="bold">
-                      Total: R$ {pedido.total.toFixed(2)}
+                      {pedido.cliente.formaPagamento.forma}: R$ {pedido.total.toFixed(2)}
+                      {pedido.cliente.endereco.taxaEntrega > 0 && ` (Entrega: R$ ${pedido.cliente.endereco.taxaEntrega.toFixed(2)})`}
                     </Typography>
-                    <Typography fontWeight="bold">
-                      Forma de pagamento: {pedido.cliente.formaPagamento.forma} {pedido.cliente.formaPagamento.obs ? `- ${pedido.cliente.formaPagamento.obs}` : ""}
-                    </Typography>
+                    {
+                      pedido.cliente.formaPagamento.obsPagamento && (
+                        <Typography variant="body2">
+                          <strong>Recebe:</strong> R$ {Number(pedido.cliente.formaPagamento.obsPagamento).toFixed(2)} e <strong>Devolve:</strong> R$ {(pedido.cliente.formaPagamento.obsPagamento - pedido.total).toFixed(2)}
+                        </Typography>
+                      )
+                    }
                   </Box>
 
                   <Box sx={{ display: "flex", gap: 1, mt: 1 }}>

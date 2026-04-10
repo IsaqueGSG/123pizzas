@@ -31,7 +31,6 @@ export default function AdminCategorias() {
   useEffect(() => {
     if (!categorias) return;
 
-    console.log("Categorias:", categorias);
     const cloneCat = [...categorias]
       .map(c => ({ ...c }))
       .sort((a, b) =>
@@ -110,9 +109,6 @@ export default function AdminCategorias() {
       <AdminDrawer />
 
       <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-        <Typography variant="h5" fontWeight="bold" gutterBottom>
-          Gestão de Categorias
-        </Typography>
 
         <Button
           variant="outlined"

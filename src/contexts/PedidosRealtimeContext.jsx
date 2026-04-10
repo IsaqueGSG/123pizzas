@@ -89,9 +89,36 @@ export function PedidosRealtimeProvider({ children }) {
     }, [idLoja, isAdminRoute]);
 
     const pendentes = useMemo(() => {
-        return pedidos.filter(p => p.status === "pendente").length;
-    }, [pedidos]);
+        const resultado = {
+            total: 0,
+            porDia: {}
+        };
 
+        pedidos.forEach(p => {
+            if (p.status !== "pendente") return;
+
+            resultado.total++;
+
+            // 🔥 define o dia (ajusta conforme seu campo de data)
+            if (!p.criadoEm) return;
+
+            const data = p.criadoEm?.toDate
+                ? p.criadoEm.toDate()
+                : new Date(p.criadoEm);
+
+            if (isNaN(data)) return;
+
+            const dia = data.toLocaleDateString("sv-SE"); // formato YYYY-MM-DD
+
+            if (!resultado.porDia[dia]) {
+                resultado.porDia[dia] = 0;
+            }
+
+            resultado.porDia[dia]++;
+        });
+
+        return resultado;
+    }, [pedidos]);
 
     const toggleAudio = () => {
         const novo = !audioAtivo;
