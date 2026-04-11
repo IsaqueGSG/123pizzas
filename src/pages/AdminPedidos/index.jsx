@@ -46,6 +46,60 @@ export default function AdminPedidos() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pedidoSelecionado, setPedidoSelecionado] = useState(null);
 
+  const pedidosPorData = useMemo(() => {
+
+    if (!dataFiltro) return pedidos;
+
+    // 🔥 cria data LOCAL corretamente
+    const [ano, mes, dia] = dataFiltro.split("-").map(Number);
+    const inicio = new Date(ano, mes - 1, dia, 0, 0, 0, 0);
+    const fim = new Date(ano, mes - 1, dia, 23, 59, 59, 999);
+
+    return pedidos.filter(p => {
+      if (!p.createdAt?.seconds) return false;
+
+      const d = new Date(p.createdAt.seconds * 1000);
+
+      return d >= inicio && d <= fim;
+    });
+
+  }, [pedidos, dataFiltro]);
+
+  const pedidosFiltrados = useMemo(() => {
+
+    return pedidosPorData
+      .filter(p => p.status === statusTabs[abaAtiva])
+      .sort((a, b) => b.createdAt.seconds - a.createdAt.seconds);
+
+  }, [pedidosPorData, abaAtiva]);
+
+  const contadoresStatus = useMemo(() => {
+    const contadores = {
+      pendente: 0,
+      preparando: 0,
+      despachando: 0,
+      finalizado: 0,
+      cancelado: 0
+    };
+
+    pedidosPorData.forEach(p => {
+      if (contadores[p.status] !== undefined) {
+        contadores[p.status]++;
+      }
+    });
+
+    return contadores;
+  }, [pedidosPorData]);
+
+  const pedidosOrdenados = useMemo(() => {
+    return [...pedidosPorData]
+      .sort((a, b) => a.createdAt.seconds - b.createdAt.seconds);
+  }, [pedidosPorData]);
+
+  function getNumeroComanda(pedido) {
+    return pedidosOrdenados.findIndex(p => p.id === pedido.id) + 1;
+  }
+
   const handlePreparar = async (pedido) => {
     if (pedido.impresso) return;
     try {
@@ -60,16 +114,17 @@ export default function AdminPedidos() {
       );
 
       const largura = preferencias?.impressao?.largura || "80mm";
+      const numComanda = getNumeroComanda(pedido);
 
       if (!window.electronAPI) {
-        const html = geraComandaHTML(pedido, largura);
+        const html = geraComandaHTML(pedido, largura, numComanda);
         imprimir(html);
       } else {
         try {
-          await window.electronAPI.imprimirPedido(pedido, largura);
+          await window.electronAPI.imprimirPedido(pedido, largura, numComanda);
         } catch (error) {
           alert("Erro ao imprimir no Electron:", error);
-          const html = geraComandaHTML(pedido, largura);
+          const html = geraComandaHTML(pedido, largura, numComanda);
           imprimir(html);
         }
       }
@@ -156,51 +211,6 @@ export default function AdminPedidos() {
 
     return "Itens";
   }
-
-  const pedidosPorData = useMemo(() => {
-
-    if (!dataFiltro) return pedidos;
-
-    // 🔥 cria data LOCAL corretamente
-    const [ano, mes, dia] = dataFiltro.split("-").map(Number);
-    const inicio = new Date(ano, mes - 1, dia, 0, 0, 0, 0);
-    const fim = new Date(ano, mes - 1, dia, 23, 59, 59, 999);
-
-    return pedidos.filter(p => {
-      if (!p.createdAt?.seconds) return false;
-
-      const d = new Date(p.createdAt.seconds * 1000);
-
-      return d >= inicio && d <= fim;
-    });
-
-  }, [pedidos, dataFiltro]);
-
-  const pedidosFiltrados = useMemo(() => {
-
-    return pedidosPorData
-      .filter(p => p.status === statusTabs[abaAtiva])
-      .sort((a, b) => b.createdAt.seconds - a.createdAt.seconds);
-
-  }, [pedidosPorData, abaAtiva]);
-
-  const contadoresStatus = useMemo(() => {
-    const contadores = {
-      pendente: 0,
-      preparando: 0,
-      despachando: 0,
-      finalizado: 0,
-      cancelado: 0
-    };
-
-    pedidosPorData.forEach(p => {
-      if (contadores[p.status] !== undefined) {
-        contadores[p.status]++;
-      }
-    });
-
-    return contadores;
-  }, [pedidosPorData]);
 
   return (
     <Box sx={{ p: 2 }}>
@@ -317,12 +327,14 @@ export default function AdminPedidos() {
                     <IconButton
                       color="primary"
                       onClick={async () => {
+                        console.log("Imprimindo pedido", pedido);
                         const larguraImpressao = preferencias?.impressao?.largura || "80mm";
+                        const numComanda = getNumeroComanda(pedido);
                         if (!window.electronAPI) {
-                          const html = geraComandaHTML(pedido, larguraImpressao);
+                          const html = geraComandaHTML(pedido, larguraImpressao, numComanda);
                           imprimir(html);
                         } else {
-                          await window.electronAPI.imprimirPedido(pedido, larguraImpressao);
+                          await window.electronAPI.imprimirPedido(pedido, larguraImpressao, numComanda);
                         }
                       }}
                       sx={{ border: '1px solid', borderColor: 'divider' }}

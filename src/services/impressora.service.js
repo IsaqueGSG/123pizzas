@@ -50,7 +50,7 @@ export function imprimir(html) {
 }
 
 
-export function geraComandaHTML(pedido, largura = "80mm") {
+export function geraComandaHTML(pedido, largura = "80mm", numComanda) {
   const is58 = largura === "58mm";
 
   const widthPx = is58 ? 220 : 302;
@@ -122,24 +122,29 @@ export function geraComandaHTML(pedido, largura = "80mm") {
   }
 </style>
 
-<div class="center">
-  <div class="bold" style="font-size:${fontProduto + 2}px">
-    ${pedido.cliente?.nome || ""}
+<div style="width:100%; display:flex; justify-content:space-between; align-items:center">
+  <div>
+    <div class="bold" style="font-size:${fontProduto + 2}px">
+      ${pedido.cliente?.nome || ""}
+    </div>
+    <div>${pedido.cliente?.telefone || ""}</div>
+    <div style="font-size:${fontBase - 1}px">${data}</div>
   </div>
-  <div>${pedido.cliente?.telefone || ""}</div>
-  <div style="font-size:${fontBase - 1}px">${data}</div>
+
+  ${numComanda ? `<div class="bold" style="font-size:30px">#${numComanda}</div>` : ""}
 </div>
 
 <div class="divider"></div>
 
-<div class="bold">Entrega:</div>
+<div><b>Entrega:</b>
 ${pedido.retirarNaLoja
-      ? `<div>Retirar na loja</div>`
-      : `<div>
+      ? `Retirar na loja`
+      : `
         ${endereco.rua || ""}, ${endereco.numero || ""}<br/>
-        ${endereco.bairro || ""} - ${endereco.cidade || ""}/${endereco.uf || ""}
-      </div>`
+        ${endereco.bairro || ""}, ${endereco.cidade || ""}
+      `
     }
+</div>
 
 ${endereco.observacao
       ? `<div class="sub"><b>Obs:</b> ${endereco.observacao}</div>`
@@ -159,18 +164,16 @@ ${Object.entries(itensPorCategoria).map(([tipo, itens]) => `
         ${item.quantidade}x ${item.nome}
       </div>
 
-      ${item.borda?.nome
-        ? `<div class="sub"><b>BORDA:</b> ${item.borda.nome}</div>`
-        : ""
-      }
-
-      ${item.extras?.length
-        ? `<div class="sub">
-            <b>EXTRAS:</b><br/>
-         ${item.extras
-          .map(e => `   ↳ ${e.nome} (+${e.valor.toFixed(2)})`)
-          .join("<br/>")}
-          </div>`
+      ${item.selecoes && Object.keys(item.selecoes).length > 0
+        ? Object.entries(item.selecoes).map(([grupoId, grupo]) => `
+          <div class="sub">
+            <b>• ${grupo.nome}:</b><br/>
+            ${grupo.itens
+            .map(e => `-> ${e.nome} (+${e.valor.toFixed(2)})`)
+            .join("<br/>")
+          }
+          </div>
+        `).join("")
         : ""
       }
 
@@ -184,28 +187,27 @@ ${Object.entries(itensPorCategoria).map(([tipo, itens]) => `
 
 <div class="divider"></div>
 
-<div class="bold">Pagamento:</div>
-<div>${pagamento.forma || ""}</div>
-
-${pagamento.forma === "DINHEIRO" && pagamento.obsPagamento
-      ? `
-      <div class="sub">Troco para: R$ ${pagamento.obsPagamento}</div>
-      <div class="sub">Troco: R$ ${(pagamento.obsPagamento - pedido.total).toFixed(2)}</div>
-      `
-      : ""
-    }
-
-<div class="divider"></div>
-
 <div class="bold">Valores:</div>
 <div> Total dos itens: ${subTotalItens.toFixed(2) || ""}</div>
 <div> Taxa de entrega: ${(endereco.taxaEntrega ?? 0).toFixed(2)}</div>
 
-
 <div class="divider"></div>
 
 <div class="total">
-  TOTAL: R$ ${pedido.total.toFixed(2)}
+  ${pedido?.cliente?.formaPagamento?.forma}: R$ ${Number(pedido?.total || 0).toFixed(2)}
 </div>
+
+${pedido?.cliente?.formaPagamento?.obsPagamento
+      ? `
+    <div class="subTotal">
+      <b>Recebe:</b> R$ ${Number(pedido.cliente.formaPagamento.obsPagamento).toFixed(2)} e 
+      <b>Devolve:</b> R$ ${(
+        Number(pedido.cliente.formaPagamento.obsPagamento) - Number(pedido.total || 0)
+      ).toFixed(2)}
+    </div>
+    `
+      : ""
+    }
+
 `;
 }
