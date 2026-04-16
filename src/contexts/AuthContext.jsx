@@ -25,9 +25,11 @@ export const AuthProvider = ({ children }) => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
 
-      if (firebaseUser && idLoja) {
+      const isRegistro = sessionStorage.getItem("modoRegistro");
+
+      if (firebaseUser && idLoja && !isRegistro) {
         const result = await getUserRole(idLoja, firebaseUser.email);
-        setRole(result.role); // Seta admin, viewer ou null
+        setRole(result.role);
       } else {
         setRole(null);
       }
@@ -41,11 +43,17 @@ export const AuthProvider = ({ children }) => {
     try {
       const user = await loginWithGoogle();
 
-      const result = await getUserRole(idLoja, user.email);
+      const isRegistro = sessionStorage.getItem("modoRegistro");
 
-      if (!result.allowed) {
-        await logout(); // força sair
-        return alert("Sua conta (" + user.email + ") não tem permissão para acessar esta loja. Contate o administrador.");
+      if (!isRegistro) {
+        const result = await getUserRole(idLoja, user.email);
+
+        if (!result.allowed) {
+          await logout();
+          return alert(
+            "Sua conta (" + user.email + ") não tem permissão para acessar esta loja."
+          );
+        }
       }
 
       return { success: true };

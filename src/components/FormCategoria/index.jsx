@@ -12,8 +12,11 @@ import {
     Divider
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
+import RemoveIcon from "@mui/icons-material/Remove";
+import AddIcon from "@mui/icons-material/Add";
 
 import { gerarSlug } from "../../services/categorias.service";
+import { center } from "@turf/turf";
 
 export default function CategoriaForm({
     mode = "add", // "add" | "edit"
@@ -219,6 +222,45 @@ export default function CategoriaForm({
         }
     };
 
+    function ControlImputNumber({ nomeCampo, value, setValue }) {
+
+        const incrementar = () => setValue(value + 1);
+        const decrementar = () => setValue(Math.max(0, value - 1));
+
+        return (
+            <Box>
+                <Typography variant="caption" color="text.secondary">
+                    {nomeCampo}
+                </Typography>
+
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        border: "1px solid #e0e0e0",
+                        borderRadius: 2,
+                        px: 1,
+                        py: 0.2,
+                        minWidth: 100
+                    }}
+                >
+                    <IconButton size="small" onClick={decrementar}>
+                        <RemoveIcon fontSize="small" />
+                    </IconButton>
+
+                    <Typography fontWeight="bold" fontSize={14}>
+                        {value}
+                    </Typography>
+
+                    <IconButton size="small" onClick={incrementar}>
+                        <AddIcon fontSize="small" />
+                    </IconButton>
+                </Box>
+            </Box>
+        );
+    }
+
     return (
         <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
@@ -292,8 +334,20 @@ export default function CategoriaForm({
             <Divider sx={{ my: 2 }} />
 
             {/* Criar grupo */}
-            <Box sx={{ display: "flex", gap: 1, my: 2 }}>
+            <Box
+                sx={{
+                    display: "grid",
+                    gridTemplateColumns: {
+                        xs: "1fr",
+                        sm: "2fr 1fr 1fr auto"
+                    },
+                    gap: 2,
+                    my: 2,
+                    alignItems: "center"
+                }}
+            >
                 <TextField
+                    size="large"
                     label="Nome do grupo"
                     value={novoGrupo.nome}
                     onChange={(e) =>
@@ -301,53 +355,44 @@ export default function CategoriaForm({
                     }
                 />
 
-                <TextField
-                    label="Mínimo"
-                    type="number"
+                <ControlImputNumber
+                    nomeCampo="Mínimo"
                     value={novoGrupo.minimo}
-                    onChange={(e) => {
-                        let value = Number(e.target.value) || 0;
-
+                    setValue={(val) =>
                         setNovoGrupo(prev => ({
                             ...prev,
-                            minimo: Math.max(0, Math.min(value, prev.limite))
-                        }));
-                    }}
-                    error={novoGrupo.minimo > novoGrupo.limite}
-                    helperText={
-                        novoGrupo.minimo > novoGrupo.limite
-                            ? "Mínimo não pode ser maior que o limite"
-                            : ""
+                            minimo: Math.max(0, Math.min(val, prev.limite))
+                        }))
                     }
                 />
 
-                <TextField
-                    label="Limite"
-                    type="number"
+                <ControlImputNumber
+                    nomeCampo="Limite"
                     value={novoGrupo.limite}
-                    onChange={(e) => {
-                        let value = Number(e.target.value);
+                    setValue={(val) =>
+                        setNovoGrupo(prev => {
+                            const limite = val <= 0 ? 1 : val;
 
-                        if (isNaN(value) || value <= 0) value = 1;
-
-                        setNovoGrupo(prev => ({
-                            ...prev,
-                            limite: value,
-                            minimo: Math.min(prev.minimo, value)
-                        }));
-                    }}
+                            return {
+                                ...prev,
+                                limite,
+                                minimo: Math.min(prev.minimo, limite)
+                            };
+                        })
+                    }
                 />
-                <Button variant="contained" onClick={adicionarGrupo}>
+                <Button variant="contained" size="large" onClick={adicionarGrupo}>
                     Criar Grupo
                 </Button>
             </Box>
 
             {/* Lista de grupos */}
             {categoria.gruposExtras?.map(grupo => (
-                <Box key={grupo.id} sx={{ border: "1px solid #ccc", p: 2, mb: 2 }}>
-                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <Box key={grupo.id} sx={{ border: "1px solid #ccc", p: 2, mb: 2, width: "100%" }}>
 
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1, width: "100%" }}>
 
                             {/* Selecionar grupo pra adicionar item */}
                             <Button
@@ -362,7 +407,7 @@ export default function CategoriaForm({
                             </Button>
 
                             <Typography fontWeight="bold">
-                                {grupo.nome} (máx: {grupo.limite})
+                                {grupo.nome} (Mín: {grupo.minimo} | Máx: {grupo.limite})
                             </Typography>
                         </Box>
 
@@ -372,8 +417,6 @@ export default function CategoriaForm({
 
 
                     </Box>
-
-
 
                     {grupoSelecionado === grupo.id && (
                         <Box sx={{ display: "flex", gap: 1, my: 1 }}>

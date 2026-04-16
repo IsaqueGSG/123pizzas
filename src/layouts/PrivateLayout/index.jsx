@@ -5,7 +5,6 @@ import { WhatsProvider } from "../../contexts/Whatsapp.Context";
 import { PedidosRealtimeProvider } from "../../contexts/PedidosRealtimeContext";
 
 import BellPedidos from "./BellPedidos"
-import PrinterAlert from "./PrinterAlert";
 
 export default function PrivateLayout() {
   return (

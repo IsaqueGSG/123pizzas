@@ -113,7 +113,8 @@ export default function ConfirmarCriacao() {
                 telefone: loja.telefone,
                 cobranca,
                 assinatura: {
-                    status: "criando",
+                    status: "pendente",
+                    requiresAction: true,
                     etapa: "firestore_ok",
                     plano: plano,
                     trialEndsAt: Timestamp.fromDate(

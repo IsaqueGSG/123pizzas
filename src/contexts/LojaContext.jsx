@@ -1,11 +1,14 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { getLoja } from "../services/lojas.service";
+import { useNavigate } from "react-router-dom";
+
 
 const LojaContext = createContext(null);
 
 export function LojaProvider({ children }) {
   const location = useLocation();
+  const navigate = useNavigate();
 
   const [loja, setLoja] = useState(null);
   const [idLoja, setIdLojaState] = useState(null);
@@ -26,6 +29,17 @@ export function LojaProvider({ children }) {
     }
   };
 
+  function isBlocked(assinatura) {
+    return (
+      assinatura?.statusPagamento === "atrasado" ||
+      assinatura?.statusPagamento === "cancelado"
+    );
+  }
+
+  function needsAction(assinatura) {
+    return assinatura?.requiresAction === true;
+  }
+
   // ⭐ resolver loja por prioridade
   useEffect(() => {
     async function resolverLoja() {
@@ -42,10 +56,16 @@ export function LojaProvider({ children }) {
           const data = await getLoja(saved);
 
           if (data) {
+            const assinatura = data.assinatura || {};
+
+            if (needsAction(assinatura)) {
+              navigate("/registro-cobranca");
+              setReady(true);
+              return;
+            }
+
             setLoja(data);
             setIdLojaState(data.idLoja);
-          } else {
-            localStorage.removeItem("idLoja");
           }
         }
 
@@ -55,8 +75,29 @@ export function LojaProvider({ children }) {
 
       // 🌐 URL define loja (modo web)
       const data = await getLoja(firstSegment);
-
       if (!data) {
+        setReady(true);
+        return;
+      }
+
+      const assinatura = data?.assinatura || {};
+      const isAdminRoute = location.pathname.startsWith(`/${firstSegment}/admin`);
+      const isCobrancaRoute = location.pathname.includes("registro-cobranca");
+      const blocked = isBlocked(assinatura);
+      const needsPaymentAction = needsAction(assinatura);
+
+      // 🔥 REDIRECIONA APENAS QUEM PRECISA FINALIZAR COBRANÇA
+      if (
+        needsAction(assinatura) &&
+        isAdminRoute &&
+        !isCobrancaRoute
+      ) {
+        alert("Finalize sua cobrança para continuar");
+
+        localStorage.setItem("idLoja", data.idLoja);
+
+        navigate("/registro-cobranca");
+
         setReady(true);
         return;
       }
@@ -71,7 +112,7 @@ export function LojaProvider({ children }) {
     resolverLoja();
   }, [location.pathname]);
 
-  if (!ready) return null;
+  if (!ready) return <div>Carregando...</div>;
 
   return (
     <LojaContext.Provider
@@ -79,7 +120,7 @@ export function LojaProvider({ children }) {
         loja,
         idLoja,
         setIdLoja,
-        ready
+        ready,
       }}
     >
       {children}

@@ -70,7 +70,7 @@ export default function RegistroCobranca() {
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState("");
 
-  const modoRetry = !!localStorage.getItem("idLoja");
+  const modoRetry = !!localStorage.getItem("idLoja") && !sessionStorage.getItem("registroLoja");
 
   const emailFinal = usarEmailGoogle ? user?.email : emailCobranca;
 
@@ -159,6 +159,16 @@ export default function RegistroCobranca() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!user) return;
+
+    const idLoja = localStorage.getItem("idLoja");
+
+    if (!idLoja) return;
+
+    // já está no modo retry automaticamente
+  }, [user]);
 
   return (
     <Box
