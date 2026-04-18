@@ -14,6 +14,9 @@ export function LojaProvider({ children }) {
   const [idLoja, setIdLojaState] = useState(null);
   const [ready, setReady] = useState(false);
 
+  const [blocked, setBlocked] = useState(false);
+  const [needsPaymentAction, setNeedsPaymentAction] = useState(false);
+
   const setIdLoja = async (lojaId) => {
     if (lojaId) {
       localStorage.setItem("idLoja", lojaId);
@@ -58,6 +61,9 @@ export function LojaProvider({ children }) {
           if (data) {
             const assinatura = data.assinatura || {};
 
+            setBlocked(isBlocked(assinatura));
+            setNeedsPaymentAction(needsAction(assinatura));
+
             if (needsAction(assinatura)) {
               navigate("/registro-cobranca");
               setReady(true);
@@ -83,8 +89,9 @@ export function LojaProvider({ children }) {
       const assinatura = data?.assinatura || {};
       const isAdminRoute = location.pathname.startsWith(`/${firstSegment}/admin`);
       const isCobrancaRoute = location.pathname.includes("registro-cobranca");
-      const blocked = isBlocked(assinatura);
-      const needsPaymentAction = needsAction(assinatura);
+
+      setBlocked(isBlocked(assinatura));
+      setNeedsPaymentAction(needsAction(assinatura));
 
       // 🔥 REDIRECIONA APENAS QUEM PRECISA FINALIZAR COBRANÇA
       if (

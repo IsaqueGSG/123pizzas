@@ -49,15 +49,6 @@ export default function RegistroCobranca() {
   const { login, user } = useAuth();
   const navigate = useNavigate();
 
-  //se nao tem registroLoja, volta pro passo 1
-  useEffect(() => {
-    const registroLoja = sessionStorage.getItem("registroLoja");
-    if (!registroLoja) {
-      navigate("/registro-saas");
-    }
-  }, [navigate]);
-
-
   const APIURL = import.meta.env.VITE_API_RENDER_ASAAS;
 
   const [nomeCobranca, setNomeCobranca] = useState("");
@@ -110,11 +101,17 @@ export default function RegistroCobranca() {
     try {
       setLoading(true);
 
+      if (!user) {
+        setErro("Usuário não autenticado");
+        return;
+      }
+
       const token = await user.getIdToken();
+      const idLoja = localStorage.getItem("idLoja")
 
       await axios.post(
         APIURL + "/retry-subscription",
-        { cobranca, idLoja: localStorage.getItem("idLoja") },
+        { cobranca, idLoja },
         {
           headers: {
             Authorization: `Bearer ${token}`
@@ -122,7 +119,7 @@ export default function RegistroCobranca() {
         }
       );
 
-      navigate("/"); // ou dashboard
+      navigate(`/${idLoja}/admin/pedidos`);
     } catch (err) {
       setErro("Erro ao reconfigurar cobrança");
     } finally {
@@ -170,6 +167,48 @@ export default function RegistroCobranca() {
     // já está no modo retry automaticamente
   }, [user]);
 
+  useEffect(() => { // carrega dados no retry
+    const saved = sessionStorage.getItem("registroCobranca");
+
+    if (saved) {
+      const data = JSON.parse(saved);
+      setNomeCobranca(data.nomeCobranca || "");
+      setCpfCnpj(data.cpfCnpj || "");
+      setEmailCobranca(data.emailCobranca || "");
+      setTelefoneCobranca(data.telefoneCobranca || "");
+    }
+  }, []);
+
+  const [checked, setChecked] = useState(false);
+  useEffect(() => {
+    const isNovoFluxo = !!sessionStorage.getItem("registroLoja");
+    const isRetry = !!localStorage.getItem("idLoja");
+
+    if (!isNovoFluxo && !isRetry) {
+      navigate("/registro-saas");
+      return; // 👈 evita qualquer coisa depois
+    } else {
+      setChecked(true);
+    }
+
+    setChecked(true);
+  }, [navigate]);
+
+  if (!checked) {
+    return (
+      <Box
+        sx={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center"
+        }}
+      >
+        <CircularProgress></CircularProgress>
+      </Box>
+    )
+  }
+
   return (
     <Box
       sx={{
@@ -214,18 +253,22 @@ export default function RegistroCobranca() {
           margin="normal"
         />
 
-        <FormControlLabel
-          label="Usar email do Google"
-          control={
-            <Checkbox
-              checked={usarEmailGoogle}
-              onChange={(e) => {
-                setUsarEmailGoogle(e.target.checked);
-                if (e.target.checked) setEmailCobranca("");
-              }}
+        {
+          user?.email && (
+            <FormControlLabel
+              label={`Usar email: ${user.email || ""} `}
+              control={
+                <Checkbox
+                  checked={usarEmailGoogle}
+                  onChange={(e) => {
+                    setUsarEmailGoogle(e.target.checked);
+                    if (e.target.checked) setEmailCobranca("");
+                  }}
+                />
+              }
             />
-          }
-        />
+          )
+        }
 
         <TextField
           fullWidth
@@ -244,6 +287,10 @@ export default function RegistroCobranca() {
             {erro}
           </Typography>
         )}
+
+        <Typography mt={2} fontSize={14}>
+          🎁 Você receberá 15 dias grátis
+        </Typography>
 
         <Button
           fullWidth

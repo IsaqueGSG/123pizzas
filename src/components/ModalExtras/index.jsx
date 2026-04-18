@@ -87,8 +87,34 @@ export default function ModalExtras({
 
   const podeConfirmar = produto?.categoria?.gruposExtras?.every(grupo => {
     const selecionados = selecoes[grupo.id] || [];
-    return selecionados.length >= grupo.minimo;
+    return (selecionados.length >= grupo.minimo);
   });
+
+  const callback_confirmarFlagsAntigas = (
+        // exemplo de categoria antiga:
+    // {
+    //   "id": "q6U9IHkhyiQgCo4EHwrw",
+    //     "status": true,
+    //       "horarioFuncionamento": {
+    //     "fim": "01:00",
+    //       "inicio": "18:00"
+    //   },
+    //   "extras": [],
+    //     "createdAt": 1771708150304,
+    //       "limiteExtras": 5,
+    //         "permiteMisto": true,
+    //           "posicao": 4,
+    //             "nome": "Broto - 4 pedaços",
+    //               "updatedAt": {
+    //     "type": "firestore/timestamp/1.0",
+    //       "seconds": 1775879445,
+    //         "nanoseconds": 198000000
+    //   },
+    //   "bordas": []
+    // }
+
+    produto?.categoria?.extras !== null ||  produto?.categoria?.bordas !== null 
+  ) 
 
   const selecionarUnico = (grupoId, itemId) => {
     const grupo = produto?.categoria?.gruposExtras?.find(g => g.id === grupoId);
@@ -214,7 +240,7 @@ export default function ModalExtras({
 
         <Button
           variant="contained"
-          disabled={!podeConfirmar}
+          disabled={!podeConfirmar || callback_confirmarFlagsAntigas}
           onClick={() => {
             if (!validarMinimos()) return;
 

@@ -31,6 +31,8 @@ export default function AdminCategorias() {
   useEffect(() => {
     if (!categorias) return;
 
+    console.log(categorias)
+
     const cloneCat = [...categorias]
       .map(c => ({ ...c }))
       .sort((a, b) =>
