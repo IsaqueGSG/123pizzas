@@ -19,6 +19,7 @@ import RoomServiceIcon from '@mui/icons-material/RoomService';
 import CategoryIcon from '@mui/icons-material/Category';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import AssessmentIcon from "@mui/icons-material/Assessment";
+import CreditCardIcon from "@mui/icons-material/CreditCard";
 
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
@@ -103,6 +104,13 @@ export default function AdminDrawer() {
           <ListItemButton onClick={() => navigate(`/${idLoja}/admin/relatorios`)}>
             <AssessmentIcon sx={{ mr: 2 }} />
             <ListItemText primary="Relatorios" />
+          </ListItemButton>
+        </ListItem>
+
+        <ListItem disablePadding>
+          <ListItemButton onClick={() => navigate(`/${idLoja}/admin/assinatura`)}>
+            <CreditCardIcon sx={{ mr: 2 }} />
+            <ListItemText primary="Assinatura" />
           </ListItemButton>
         </ListItem>
 

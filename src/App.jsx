@@ -14,6 +14,7 @@ import Cardapio from "./pages/Cardapio";
 import Checkout from "./pages/Checkout";
 import Login from "./pages/Login";
 import AdminProdutos from "./pages/AdminProdutos";
+import AdminAssinatura from "./pages/AdminAssinatura";
 import AdminCategorias from "./pages/AdminCategorias";
 import AddProduto from "./pages/AddProduto";
 import AddCategoria from "./pages/AddCategoria";
@@ -63,6 +64,10 @@ const App = () => {
 
                   {/* contexto Privados*/}
                   <Route path="admin" element={<PrivateLayout />}>
+                    <Route
+                      path="assinatura"
+                      element={<PrivateRoute><AdminAssinatura /></PrivateRoute>}
+                    />
                     <Route
                       path="produtos"
                       element={<PrivateRoute><AdminProdutos /></PrivateRoute>}
