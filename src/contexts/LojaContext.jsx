@@ -64,7 +64,7 @@ export function LojaProvider({ children }) {
             setBlocked(isBlocked(assinatura));
             setNeedsPaymentAction(needsAction(assinatura));
 
-            if (needsAction(assinatura)) {
+            if (needsAction(assinatura) && location.pathname.includes("/admin")) {
               navigate("/registro-cobranca");
               setReady(true);
               return;

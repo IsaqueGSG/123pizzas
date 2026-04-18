@@ -99,7 +99,6 @@ export default function Cardapio() {
     });
   };
 
-
   const selecionarProduto = (produto) => {
     // PRODUTO INTEIRO
     if (!modoMisto) {
@@ -235,7 +234,7 @@ export default function Cardapio() {
                 setSaboresSelecionados([]);
               }}
             >
-              Inteira
+              Inteira (1 Sabor)
             </Button>
 
             <Button
@@ -247,7 +246,7 @@ export default function Cardapio() {
                 setSaboresSelecionados([]);
               }}
             >
-              1/2
+              1/2 (2 sabores)
             </Button>
           </Box>
         )}
