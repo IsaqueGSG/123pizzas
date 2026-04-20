@@ -61,28 +61,28 @@ export function gerarMensagemConfirmacao(pedido) {
     mensagem += `Obs: ${endereco.observacao}\n`;
   }
 
-  Object.entries(itensPorCategoria).forEach(([categoria, itens]) => {
-    mensagem += `🍽️ *${categoria.toUpperCase()}*\n`;
+  pedido.itens.forEach(item => {
+    mensagem += `🍽️ *${item.categoriaNome.toUpperCase()}*\n`;
 
-    itens.forEach(item => {
-      mensagem += `• ${item.quantidade}x ${item.nome}\n`;
+    mensagem += `• ${item.quantidade}x ${item.nome}\n`;
 
-      if (item.borda?.nome) {
-        mensagem += `   Borda: ${item.borda.nome}\n`;
-      }
+    if (item.selecoes) {
+      Object.values(item.selecoes).forEach(grupo => {
+        const selecionados = grupo.itens.filter(i => i.status);
 
-      if (item.extras?.length) {
-        mensagem += `   Extras:\n`;
+        if (selecionados.length) {
+          mensagem += `   ${grupo.nome}:\n`;
 
-        item.extras.forEach(e => {
-          mensagem += `    ↳ ${e.nome} (+${e.valor.toFixed(2)})\n`;
-        });
-      }
+          selecionados.forEach(i => {
+            mensagem += `    ↳ ${i.nome.trim()}${i.valor ? ` (+${i.valor.toFixed(2)})` : ""}\n`;
+          });
+        }
+      });
+    }
 
-      if (item.observacao) {
-        mensagem += `\n   Obs: ${item.observacao}`;
-      }
-    });
+    if (item.observacao) {
+      mensagem += `   Obs: ${item.observacao}\n`;
+    }
 
     mensagem += `\n`;
   });

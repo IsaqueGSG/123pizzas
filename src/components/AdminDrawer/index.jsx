@@ -28,7 +28,7 @@ import { useLoja } from "../../contexts/LojaContext";
 const drawerWidth = 320;
 
 export default function AdminDrawer() {
-  const { idLoja } = useLoja();
+  const { idLoja, loja } = useLoja();
 
   const theme = useTheme();
   const navigate = useNavigate();
@@ -63,7 +63,7 @@ export default function AdminDrawer() {
           <ChevronRightIcon />
         </IconButton>
         <Typography sx={{ ml: 1 }} fontWeight="bold">
-          Administração
+          {loja.nome}
         </Typography>
       </Box>
 

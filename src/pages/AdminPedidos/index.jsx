@@ -331,6 +331,7 @@ export default function AdminPedidos() {
                         const larguraImpressao = preferencias?.impressao?.largura || "80mm";
                         const numComanda = getNumeroComanda(pedido);
                         if (!window.electronAPI) {
+                          console.log(pedido)
                           const html = geraComandaHTML(pedido, larguraImpressao, numComanda);
                           imprimir(html);
                         } else {
