@@ -242,7 +242,7 @@ export default function Checkout() {
     document.body.appendChild(script);
   }, []);
 
-  const formasPagamento = ["PIX", "DINHEIRO", "CARTÃO"]
+  const formasPagamento = ["PIX", "DINHEIRO", "CARTÃO", "VALE REFEIÇÃO - VALE ALIMENTAÇÃO"];
 
   useEffect(() => {
     if (!checkTroco) {
@@ -564,9 +564,9 @@ export default function Checkout() {
                 </Typography>
               )}
 
-              {cliente.formaPagamento.forma === "CARTÃO" && (
+              {cliente.formaPagamento.forma === "VALE REFEIÇÃO - VALE ALIMENTAÇÃO" && (
                 <Typography sx={{ mt: 1 }} color="text.secondary">
-                  Levar maquininha de cartão
+                  Informe por favor o nome do VR/VA, ex: sodexo, alelo, etc... no campo de observação.
                 </Typography>
               )}
 

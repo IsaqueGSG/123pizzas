@@ -72,6 +72,8 @@ export default function AdminPedidos() {
       .sort((a, b) => b.createdAt.seconds - a.createdAt.seconds);
 
   }, [pedidosPorData, abaAtiva]);
+  console.log(pedidosFiltrados)
+
 
   const contadoresStatus = useMemo(() => {
     const contadores = {

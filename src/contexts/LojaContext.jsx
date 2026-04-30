@@ -119,8 +119,6 @@ export function LojaProvider({ children }) {
     resolverLoja();
   }, [location.pathname]);
 
-  if (!ready) return <div>Carregando...</div>;
-
   return (
     <LojaContext.Provider
       value={{

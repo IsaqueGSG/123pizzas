@@ -37,8 +37,6 @@ export default function BellPedidos() {
   }, [audioAtivo, isAdminRoute]);
 
 
-  if (!isAdminRoute) return null;
-
   const handleEnableAudio = () => {
     // 🔊 Desbloqueia autoplay (ESSENCIAL)
     unlockAudio();
@@ -84,6 +82,8 @@ export default function BellPedidos() {
       ...dias
     ].join("\n");
   }, [pendentes]);
+
+  if (!isAdminRoute) return null;
 
   return (
     <>

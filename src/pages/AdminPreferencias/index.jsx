@@ -176,7 +176,12 @@ export default function AdminPreferencias() {
   }, [prefs, preferencias, selecionada, printerSalva]);
 
 
-  if (loading) {
+  
+  if (
+    loading || 
+    cepLoja === "" ||
+    window.electronAPI && printers.length === 0 
+  ) {
     return (
       <Box sx={{ p: 4, display: "flex", justifyContent: "center" }}>
         <CircularProgress />
