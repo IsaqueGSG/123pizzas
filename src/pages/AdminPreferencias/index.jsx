@@ -35,7 +35,7 @@ const DIAS_SEMANA = [
 
 export default function AdminPreferencias() {
   const { preferencias, atualizarPreferencias, loading } = usePreferencias();
-
+  console.log("preferencias do contexto: ", preferencias);
   const [prefs, setPrefs] = useState(preferencias);
 
   const [cepLoja, setCepLoja] = useState("");
@@ -176,11 +176,11 @@ export default function AdminPreferencias() {
   }, [prefs, preferencias, selecionada, printerSalva]);
 
 
-  
+
   if (
-    loading || 
+    loading ||
     cepLoja === "" ||
-    window.electronAPI && printers.length === 0 
+    window.electronAPI && printers.length === 0
   ) {
     return (
       <Box sx={{ p: 4, display: "flex", justifyContent: "center" }}>
@@ -199,49 +199,62 @@ export default function AdminPreferencias() {
       </Typography>
 
       {/* HORÁRIOS */}
+      {/* HORÁRIOS */}
       <Card sx={{ p: 2, mb: 3 }}>
         <Typography fontWeight="bold" gutterBottom>
           🕒 Horário de funcionamento
         </Typography>
 
-        {DIAS_SEMANA.map(dia => (
-          <Card key={dia} variant="outlined" sx={{ mb: 1.5, p: 1.5 }}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={prefs.horarios?.[dia]?.ativo || false}
-                  onChange={e =>
-                    atualizarHorario(dia, "ativo", e.target.checked)
-                  }
-                />
-              }
-              label={dia.charAt(0).toUpperCase() + dia.slice(1)}
-            />
+        {DIAS_SEMANA.map(dia => {
+          // 1. Criamos uma referência segura para os dados do dia
+          const config = prefs?.horarios?.[dia] || { ativo: false, inicio: "00:00", fim: "00:00" };
 
-            {prefs.horarios[dia].ativo && (
-              <Box sx={{ display: "flex", gap: 2, mt: 1 }}>
-                <TextField
-                  label="Início"
-                  type="time"
-                  size="small"
-                  value={prefs.horarios[dia].inicio || ""}
-                  onChange={e =>
-                    atualizarHorario(dia, "inicio", e.target.value)
+          return (
+            <Card key={dia} variant="outlined" sx={{ mb: 1.5, p: 1.5, bgcolor: config.ativo ? 'inherit' : '#f5f5f5' }}>
+              <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 2 }}>
+                <FormControlLabel
+                  sx={{ minWidth: 140 }}
+                  control={
+                    <Switch
+                      checked={config.ativo}
+                      onChange={e => atualizarHorario(dia, "ativo", e.target.checked)}
+                    />
                   }
+                  label={dia.charAt(0).toUpperCase() + dia.slice(1)}
                 />
-                <TextField
-                  label="Fim"
-                  type="time"
-                  size="small"
-                  value={prefs.horarios[dia].fim || ""}
-                  onChange={e =>
-                    atualizarHorario(dia, "fim", e.target.value)
-                  }
-                />
+
+                {config.ativo && (
+                  <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+                    <TextField
+                      label="Início"
+                      type="time"
+                      size="small"
+                      InputLabelProps={{ shrink: true }} // Garante que o label não suba no ícone
+                      value={config.inicio || "00:00"}
+                      onChange={e => atualizarHorario(dia, "inicio", e.target.value)}
+                    />
+                    <Typography variant="body2">até</Typography>
+                    <TextField
+                      label="Fim"
+                      type="time"
+                      size="small"
+                      InputLabelProps={{ shrink: true }}
+                      value={config.fim || "00:00"}
+                      onChange={e => atualizarHorario(dia, "fim", e.target.value)}
+                    />
+
+                    {/* 2. Lógica visual para horários que viram a noite */}
+                    {config.fim < config.inicio && config.fim !== "00:00" && (
+                      <Typography variant="caption" color="primary" sx={{ fontWeight: 'bold' }}>
+                        +1 dia
+                      </Typography>
+                    )}
+                  </Box>
+                )}
               </Box>
-            )}
-          </Card>
-        ))}
+            </Card>
+          );
+        })}
       </Card>
 
       {/* ENDEREÇO */}
