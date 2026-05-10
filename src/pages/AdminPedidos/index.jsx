@@ -102,6 +102,50 @@ export default function AdminPedidos() {
     return pedidosOrdenados.findIndex(p => p.id === pedido.id) + 1;
   }
 
+  async function imprimirPedidoSeguro(pedido) {
+    const largura = preferencias?.impressao?.largura || "80mm";
+    const numComanda = getNumeroComanda(pedido);
+
+    try {
+      // navegador normal
+      if (!window.electronAPI) {
+        const html = geraComandaHTML(pedido, largura, numComanda);
+        imprimir(html);
+        return true;
+      }
+
+      const impressora = await window.electronAPI.getPrinter();
+
+      if (!impressora) {
+        alert("⚠️ Nenhuma impressora configurada.");
+        return false;
+      }
+
+      const result = await window.electronAPI.imprimirPedido(
+        pedido,
+        largura,
+        numComanda
+      );
+
+      if (!result?.success) {
+        alert(
+          "❌ Falha ao imprimir.\n\n" +
+          (result?.error || "Erro desconhecido.")
+        );
+        return false;
+      }
+
+      return true;
+
+    } catch (error) {
+      alert(
+        "❌ Erro ao imprimir.\n\n" +
+        (error.message || error)
+      );
+      return false;
+    }
+  }
+
   const handlePreparar = async (pedido) => {
     if (pedido.impresso) return;
     try {
@@ -115,20 +159,10 @@ export default function AdminPedidos() {
         texto
       );
 
-      const largura = preferencias?.impressao?.largura || "80mm";
-      const numComanda = getNumeroComanda(pedido);
+      const imprimiu = await imprimirPedidoSeguro(pedido);
 
-      if (!window.electronAPI) {
-        const html = geraComandaHTML(pedido, largura, numComanda);
-        imprimir(html);
-      } else {
-        try {
-          await window.electronAPI.imprimirPedido(pedido, largura, numComanda);
-        } catch (error) {
-          alert("Erro ao imprimir no Electron:", error);
-          const html = geraComandaHTML(pedido, largura, numComanda);
-          imprimir(html);
-        }
+      if (!imprimiu) {
+        return;
       }
 
       await atualizarPedido(idLoja, pedido.id, {
@@ -337,7 +371,7 @@ export default function AdminPedidos() {
                           const html = geraComandaHTML(pedido, larguraImpressao, numComanda);
                           imprimir(html);
                         } else {
-                          await window.electronAPI.imprimirPedido(pedido, larguraImpressao, numComanda);
+                          await imprimirPedidoSeguro(pedido);
                         }
                       }}
                       sx={{ border: '1px solid', borderColor: 'divider' }}

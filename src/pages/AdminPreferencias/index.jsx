@@ -119,8 +119,8 @@ export default function AdminPreferencias() {
   };
 
   const [printers, setPrinters] = useState([]);
-  const [selecionada, setSelecionada] = useState("");
-  const [printerSalva, setPrinterSalva] = useState("");
+  const [selecionada, setSelecionada] = useState(null);
+  const [printerSalva, setPrinterSalva] = useState(null);
 
   useEffect(() => {
     async function load() {
@@ -130,6 +130,7 @@ export default function AdminPreferencias() {
       setPrinters(lista);
 
       const salva = await window.electronAPI.getPrinter();
+
       if (salva) {
         setSelecionada(salva);
         setPrinterSalva(salva);
@@ -152,6 +153,12 @@ export default function AdminPreferencias() {
 
   async function salvar() {
     if (!window.electronAPI) return;
+
+    if (!selecionada?.shared || !selecionada?.shareName) {
+      alert("⚠️ Essa impressora não está compartilhada no Windows.");
+      return;
+    }
+
     await window.electronAPI.setPrinter(selecionada);
     setPrinterSalva(selecionada);
   }
@@ -160,7 +167,10 @@ export default function AdminPreferencias() {
     await atualizarPreferencias(prefs);
     console.log("preferencias salvas: ", prefs);
 
-    if (window.electronAPI && selecionada !== printerSalva) {
+    if (
+      window.electronAPI &&
+      JSON.stringify(selecionada) !== JSON.stringify(printerSalva)
+    ) {
       await salvar();
       console.log("impressora salva: ", selecionada);
     }
@@ -171,7 +181,7 @@ export default function AdminPreferencias() {
   const houveMudanca = useMemo(() => {
     return (
       JSON.stringify(prefs) !== JSON.stringify(preferencias) ||
-      (window.electronAPI && selecionada !== printerSalva)
+      (window.electronAPI && JSON.stringify(selecionada) !== JSON.stringify(printerSalva))
     );
   }, [prefs, preferencias, selecionada, printerSalva]);
 
@@ -384,73 +394,100 @@ export default function AdminPreferencias() {
             variant="contained"
             endIcon={<PrintIcon />}
             onClick={async () => {
+              try {
+                const now = Date.now();
+                const seconds = Math.floor(now / 1000);
+                const nanoseconds = (now % 1000) * 1e6;
 
-              const now = Date.now();
-              const seconds = Math.floor(now / 1000);
-              const nanoseconds = (now % 1000) * 1e6;
-
-              const pedido = {
-                "id": "zYmtWFJiscslxVfsNtDZ",
-                "impresso": true,
-                "cliente": {
-                  "nome": "teste",
-                  "endereco": {
-                    "lat": -23.4624581,
-                    "observacao": "",
-                    "taxaEntrega": 216.28,
-                    "bairro": "Jardim Monte Alegre",
-                    "lng": -46.4174645,
-                    "loading": false,
-                    "cep": "07273270",
-                    "erro": "",
-                    "rua": "Rua Jopiata",
-                    "distanciaKm": 30.897,
-                    "cidade": "Guarulhos",
-                    "numero": "0",
-                    "uf": "SP"
+                const pedido = {
+                  id: "zYmtWFJiscslxVfsNtDZ",
+                  impresso: true,
+                  cliente: {
+                    nome: "teste",
+                    endereco: {
+                      lat: -23.4624581,
+                      observacao: "",
+                      taxaEntrega: 216.28,
+                      bairro: "Jardim Monte Alegre",
+                      lng: -46.4174645,
+                      loading: false,
+                      cep: "07273270",
+                      erro: "",
+                      rua: "Rua Jopiata",
+                      distanciaKm: 30.897,
+                      cidade: "Guarulhos",
+                      numero: "0",
+                      uf: "SP"
+                    },
+                    telefone: "11111111111",
+                    formaPagamento: {
+                      obsPagamento: "",
+                      forma: "PIX"
+                    }
                   },
-                  "telefone": "11111111111",
-                  "formaPagamento": {
-                    "obsPagamento": "",
-                    "forma": "PIX"
-                  }
-                },
-                "itens": [
-                  {
-                    "valor": 20,
-                    "sabores": [],
-                    "observacao": "",
-                    "borda": null,
-                    "quantidade": 1,
-                    "extras": [],
-                    "img": "https://receitasabordochef.com.br/wp-content/uploads/2023/07/Como-Fazer-Acai.jpg",
-                    "misto": false,
-                    "id": "uoP0aTAt20BFqspuixdx||sem_borda|sem_obs",
-                    "nome": "Acai 700ml"
-                  }
-                ],
-                "status": "preparando",
-                "createdAt": {
-                  "type": "firestore/timestamp/1.0",
-                  "seconds": seconds,
-                  "nanoseconds": nanoseconds
-                },
-                "total": 236.28
-              }
-              const larguraImpressao =
-                window.electronAPI
-                  ? await window.electronAPI.getLargura()
-                  : "80mm";
-              if (!window.electronAPI) {
-                const html = geraComandaHTML(pedido, larguraImpressao);
-                imprimir(html);
-              } else {
-                console.log("impressao electron")
-                const result = await window.electronAPI.imprimirPedido(pedido, larguraImpressao);
-                console.log("RESULTADO IMPRESSÃO:", result);
-              }
+                  itens: [
+                    {
+                      valor: 20,
+                      sabores: [],
+                      observacao: "",
+                      borda: null,
+                      quantidade: 1,
+                      extras: [],
+                      nome: "Acai 700ml"
+                    }
+                  ],
+                  createdAt: {
+                    type: "firestore/timestamp/1.0",
+                    seconds,
+                    nanoseconds
+                  },
+                  total: 236.28
+                };
 
-            }}>
+                const larguraImpressao =
+                  window.electronAPI
+                    ? await window.electronAPI.getLargura()
+                    : "80mm";
+
+                if (!window.electronAPI) {
+                  const html = geraComandaHTML(pedido, larguraImpressao);
+                  imprimir(html);
+                  return;
+                }
+
+                if (!selecionada) {
+                  alert("⚠️ Nenhuma impressora configurada.");
+                  return;
+                }
+
+                if (!selecionada?.shareName) {
+                  alert("⚠️ Impressora inválida ou não compartilhada.");
+                  return;
+                }
+
+                const result = await window.electronAPI.imprimirPedido(
+                  pedido,
+                  larguraImpressao
+                );
+
+                if (!result?.success) {
+                  alert(
+                    "❌ Falha ao imprimir.\n\n" +
+                    (result?.error || "Erro desconhecido.")
+                  );
+                  return;
+                }
+
+                alert("✅ Comanda enviada para impressora com sucesso.");
+
+              } catch (error) {
+                alert(
+                  "❌ Erro ao tentar imprimir.\n\n" +
+                  (error.message || error)
+                );
+              }
+            }}
+          >
             Testar impressão
           </Button>
         </Box>
@@ -520,14 +557,17 @@ export default function AdminPreferencias() {
             fullWidth
             size="small"
             disabled={!window.electronAPI}
-            value={selecionada || ""}
-            onChange={(e) => setSelecionada(e.target.value)}
+            value={selecionada ? JSON.stringify(selecionada) : ""}
+            onChange={(e) => {
+              const printer = JSON.parse(e.target.value);
+              setSelecionada(printer);
+            }}
           >
             {window.electronAPI ? (
               printers.map(p => (
-                <MenuItem key={p.name} value={p.name}>
+                <MenuItem key={p.name} value={JSON.stringify(p)}>
                   {p.displayName || p.name}
-                  {p.isDefault && " • padrão do sistema"}
+                  {!p.shared && " ⚠️ não compartilhada"}
                 </MenuItem>
               ))
             ) : (

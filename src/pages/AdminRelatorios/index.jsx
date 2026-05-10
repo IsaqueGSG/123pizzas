@@ -75,14 +75,19 @@ const useRelatorioData = (pedidos, filtros) => {
         stats.retirada.valor += totalPedido;
       } else {
         stats.entrega.qtd++;
-        stats.entrega.valor += valorProdutos;
+        stats.entrega.valor += valorProdutos; // Valor sem a taxa
 
         const mb = p.motoboy || "Não atribuído";
-        if (!stats.motoboys[mb]) stats.motoboys[mb] = { pedidos: 0, total: 0 };
-        stats.motoboys[mb].pedidos++;
-        stats.motoboys[mb].total += totalPedido;
-      }
+        const taxaEntrega = Number(p?.cliente?.endereco?.taxaEntrega || 0);
 
+        if (!stats.motoboys[mb]) {
+          stats.motoboys[mb] = { pedidos: 0, totalProdutos: 0, totalTaxas: 0 };
+        }
+
+        stats.motoboys[mb].pedidos++;
+        stats.motoboys[mb].totalProdutos += valorProdutos;
+        stats.motoboys[mb].totalTaxas += taxaEntrega; // Armazenando a taxa separadamente
+      }
       const forma = getPagamento(p);
       stats.pagamentos[forma] = (stats.pagamentos[forma] || 0) + totalPedido;
 
@@ -216,6 +221,14 @@ export default function RelatoriosPage() {
         <Grid item xs={12} sm={6} md={3}>
           <StatCard title="Distância Média" value={`${(r.distanciaTotal / (r.entrega.qtd || 1)).toFixed(1)} km`} icon={LocationOn} color="#0288d1" />
         </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard
+            title="Taxas de Entrega"
+            value={money(r.totalTaxas)}
+            icon={DeliveryDining}
+            color="#ed6c02"
+          />
+        </Grid>
       </Grid>
 
       <Grid container spacing={4}>
@@ -263,75 +276,56 @@ export default function RelatoriosPage() {
 
         {/* RANKING MOTOBOYS DETALHADO */}
         <Grid item xs={12} lg={4}>
-          <Stack spacing={4}>
-            <Paper sx={{ p: 3, borderRadius: 3 }}>
-              <Typography variant="h6" fontWeight="bold" gutterBottom display="flex" alignItems="center" gap={1}>
-                <Moped color="action" /> Ranking de Entregadores
-              </Typography>
-              <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
-                Eficiência baseada em volume e faturamento
-              </Typography>
-              <Divider />
-              <Box sx={{ height: '300px', overflowY: 'auto' }}>
-                <Stack spacing={2} mt={2}>
-
-                  {Object.entries(r.motoboys).sort((a, b) => b[1].total - a[1].total).map(([nome, dados]) => (
-                    <Box key={nome} sx={{
-                      p: 2, borderRadius: 2, border: '1px solid #eee',
-                      transition: '0.3s', '&:hover': { bgcolor: '#f1f8fe', borderColor: '#2196f3' }
-                    }}>
+          <Paper sx={{ p: 3, borderRadius: 3 }}>
+            <Typography variant="h6" fontWeight="bold" gutterBottom display="flex" alignItems="center" gap={1}>
+              <Moped color="action" /> Ranking de Entregadores
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
+              Desempenho por volume e taxas coletadas
+            </Typography>
+            <Divider />
+            <Box sx={{ height: '350px', overflowY: 'auto', pr: 1 }}>
+              <Stack spacing={2} mt={2}>
+                {Object.entries(r.motoboys)
+                  .sort((a, b) => b[1].pedidos - a[1].pedidos) // Ordenar por quem mais entregou
+                  .map(([nome, dados]) => (
+                    <Box
+                      key={nome}
+                      sx={{
+                        p: 2,
+                        borderRadius: 2,
+                        border: '1px solid #eee',
+                        bgcolor: '#fff',
+                        '&:hover': { bgcolor: '#fcfcfc' }
+                      }}
+                    >
                       <Stack direction="row" justifyContent="space-between" alignItems="center">
-                        <Stack direction="row" spacing={2} alignItems="center">
-                          <Avatar sx={{ width: 32, height: 32, fontSize: 14, bgcolor: 'primary.main' }}>{nome[0]}</Avatar>
+                        <Stack direction="row" spacing={1.5} alignItems="center">
+                          <Avatar sx={{ width: 36, height: 36, bgcolor: 'primary.light' }}>
+                            {nome[0]}
+                          </Avatar>
                           <Box>
                             <Typography variant="body2" fontWeight="bold">{nome}</Typography>
-                            <Typography variant="caption" color="text.secondary">{dados.pedidos} entregas</Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {dados.pedidos} entregas realizadas
+                            </Typography>
                           </Box>
                         </Stack>
+
                         <Box textAlign="right">
-                          <Typography variant="body2" fontWeight="bold" color="primary.dark">{money(dados.total)}</Typography>
-                          <Typography variant="caption" sx={{ display: 'block', fontSize: 10 }}>
-                            Média: {money(dados.total / dados.pedidos)}/ped
+                          <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary' }}>
+                            Total em Taxas
+                          </Typography>
+                          <Typography variant="body2" fontWeight="800" color="success.main">
+                            {money(dados.totalTaxas)}
                           </Typography>
                         </Box>
                       </Stack>
                     </Box>
                   ))}
-
-                </Stack>
-              </Box>
-            </Paper>
-
-            {/* HEATMAP DE HORÁRIOS (SIMPLIFICADO) - removido pq ficou feio */} 
-            {/* <Paper sx={{ p: 3, borderRadius: 3 }}>
-              <Typography variant="h6" fontWeight="bold" gutterBottom display="flex" alignItems="center" gap={1}>
-                <AccessTime color="action" /> Picos de Demanda
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'flex-end', height: 60, mt: 2, height: '300px', overflowY: 'auto' }}>
-                {Array.from({ length: 24 }).map((_, i) => {
-                  const valor = r.horarios[i] || 0;
-                  const max = Math.max(...Object.values(r.horarios), 1);
-                  return (
-                    <Tooltip title={`${i}h: ${valor} pedidos`} key={i}>
-                      <Box sx={{
-                        flex: 1,
-                        height: `${(valor / max) * 100}%`,
-                        bgcolor: valor === max ? 'error.main' : 'primary.light',
-                        borderRadius: '2px 2px 0 0'
-                      }} />
-                    </Tooltip>
-                  );
-                })}
-              </Box>
-              <Stack direction="row" justifyContent="space-between" mt={1}>
-                <Typography variant="caption">00h</Typography>
-                <Typography variant="caption">Pico: {Object.entries(r.horarios).sort((a, b) => b[1] - a[1])[0]?.[0]}h</Typography>
-                <Typography variant="caption">23h</Typography>
               </Stack>
-            </Paper> */}
-
-          </Stack>
-
+            </Box>
+          </Paper>
         </Grid>
 
       </Grid>
