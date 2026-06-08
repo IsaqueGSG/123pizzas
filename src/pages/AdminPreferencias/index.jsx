@@ -11,7 +11,8 @@ import {
   Toolbar,
   Select,
   MenuItem,
-  IconButton
+  IconButton,
+  Alert
 } from "@mui/material";
 import PrintIcon from '@mui/icons-material/Print';
 
@@ -456,7 +457,7 @@ export default function AdminPreferencias() {
                 }
 
                 if (!selecionada) {
-                  alert("⚠️ Nenhuma impressora configurada.");
+                  alert("⚠️ Nenhuma impressora selecionada.");
                   return;
                 }
 
@@ -465,10 +466,13 @@ export default function AdminPreferencias() {
                   return;
                 }
 
-                const result = await window.electronAPI.imprimirPedido(
-                  pedido,
-                  larguraImpressao
-                );
+                const result =
+                  await window.electronAPI.imprimirPedido(
+                    pedido,
+                    larguraImpressao,
+                    null, // numero da comanda, não necessário para teste
+                    selecionada
+                  );
 
                 if (!result?.success) {
                   alert(
@@ -567,7 +571,6 @@ export default function AdminPreferencias() {
               printers.map(p => (
                 <MenuItem key={p.name} value={JSON.stringify(p)}>
                   {p.displayName || p.name}
-                  {!p.shared && " ⚠️ não compartilhada"}
                 </MenuItem>
               ))
             ) : (
@@ -586,6 +589,50 @@ export default function AdminPreferencias() {
               ⚠️ Seleção de impressora só funciona na versão desktop
             </Typography>
           )}
+
+          {selecionada && !selecionada.shared && (
+            <Alert
+              severity="warning"
+              sx={{
+                mt: 2,
+                "& .MuiAlert-message": {
+                  width: "100%"
+                }
+              }}
+            >
+              <Typography fontWeight="bold">
+                Impressora não compartilhada
+              </Typography>
+
+              <Typography variant="body2" sx={{ mt: 0.5, mb: 1.5 }}>
+                Para que a impressão automática funcione, compartilhe esta impressora no Windows.
+              </Typography>
+
+              <Typography variant="body2">
+                1. Clique em <b>Configurar compartilhamento</b>
+                <br />
+                2. Abra a aba <b>Compartilhamento</b>
+                <br />
+                3. Marque <b>Compartilhar esta impressora</b>
+                <br />
+                4. Clique em <b>Aplicar</b> e <b>OK</b>
+              </Typography>
+
+              <Button
+                sx={{ mt: 1.5 }}
+                variant="contained"
+                color="warning"
+                onClick={() =>
+                  window.electronAPI.openPrinterProperties(
+                    selecionada.name
+                  )
+                }
+              >
+                Configurar compartilhamento
+              </Button>
+            </Alert>
+          )}
+
         </Box>
       </Card >
 

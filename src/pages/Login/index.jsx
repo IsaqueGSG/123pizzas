@@ -23,7 +23,7 @@ const Login = () => {
 
   const [lojas, setLojas] = useState([]);
   const [loadingLojas, setLoadingLojas] = useState(true);
-  
+
   useEffect(() => {
     async function carregarLojas() {
       const data = await getLojas();
@@ -59,7 +59,9 @@ const Login = () => {
       <FormControl fullWidth>
         <InputLabel>Selecione a loja</InputLabel>
         {loadingLojas ? (
-          <CircularProgress />
+          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center"}}>
+            <CircularProgress size={"small"} />
+          </Box>
         ) : (
           <Select
             value={idLoja || ""}
@@ -82,7 +84,7 @@ const Login = () => {
         disabled={loading || !idLoja}
         fullWidth
       >
-        {loading ? <CircularProgress size={24} /> : "Entrar com Google"}
+        {loading ? "Carregando..." : "Entrar com Google"}
       </Button>
     </Box>
   );
