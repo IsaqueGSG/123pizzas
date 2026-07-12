@@ -259,53 +259,57 @@ export default function AdminPedidos() {
 
       <AdminDrawer />
 
-      <Paper sx={{ p: 1, display: 'flex', alignItems: 'center', gap: 3, borderRadius: 2 }}>
+      <Paper sx={{ p: 1, display: 'flex', alignItems: 'center', gap: 1.5, borderRadius: 2 }}>
 
-        {/* Filtro de Data Estilizado */}
+        {/* Filtro de Data - Reduzido */}
         <TextField
           type="date"
-          label="Data"
           size="small"
-          InputLabelProps={{ shrink: true }}
+          InputLabelProps={{ shrink: true, style: { fontSize: '0.8rem' } }}
+          inputProps={{ style: { fontSize: '0.8rem', padding: '8px' } }}
           value={dataFiltro}
           onChange={(e) => setDataFiltro(e.target.value)}
-          sx={{ width: 150 }}
+          sx={{ width: 130 }}
         />
 
-        <Divider orientation="vertical" flexItem />
+        <Divider orientation="vertical" flexItem sx={{ height: 24, my: 'auto' }} />
 
-        {/* Switch com visual mais limpo */}
+        {/* Switch - Adicionado size="small" */}
         <FormControlLabel
-          control={<Switch checked={autoAceitarPedidos} onChange={toggleAutoAceitar} />}
-          label={<Typography variant="body2">Auto Aceitar</Typography>}
+          sx={{ ml: 0, mr: 0 }}
+          control={<Switch size="small" checked={autoAceitarPedidos} onChange={toggleAutoAceitar} />}
+          label={<Typography variant="caption" sx={{ fontSize: '0.75rem', fontWeight: 500 }}>Auto Aceitar</Typography>}
         />
 
-        <Divider orientation="vertical" flexItem />
+        <Divider orientation="vertical" flexItem sx={{ height: 24, my: 'auto' }} />
 
-        {/* Status com Indicador Visual */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Box sx={{
-            width: 10, height: 10, borderRadius: '50%',
-            bgcolor: aberto ? 'success.main' : 'error.main'
-          }} />
-          <Typography variant="subtitle2" fontWeight="bold">
-            {aberto ? "Loja Aberta" : "Loja Fechada"}
+        {/* Status - Indicador Visual */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, px: 0.5 }}>
+          <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: aberto ? 'success.main' : 'error.main' }} />
+          <Typography
+            variant="caption"
+            fontWeight="bold"
+            sx={{ display: { xs: 'none', md: 'block' }, fontSize: '0.75rem' }}
+          >
+            Loja {aberto ? "Aberta" : "Fechada"}
           </Typography>
         </Box>
 
         <Box sx={{ flexGrow: 1 }} />
 
-        {/* Botão de Ação */}
-        <Tooltip title="Abrir Link da Loja">
+        {/* Botão de Ação - Reduzido para ícone ou tamanho small */}
+        <Tooltip title="Abrir Loja">
           <Button
             variant="outlined"
-            startIcon={<OpenInNewIcon />}
+            size="small"
+            startIcon={<OpenInNewIcon sx={{ fontSize: '1rem' }} />}
+            sx={{ fontSize: '0.75rem', py: 0.5 }}
             onClick={() => {
               const url = `${window.location.origin}/${idLoja}`;
               window.electronAPI ? window.electronAPI.openExternal(url) : window.open(url, '_blank', 'noreferrer');
             }}
           >
-            Ver Loja
+            Loja
           </Button>
         </Tooltip>
       </Paper>
