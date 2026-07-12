@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import {
   getPreferencias,
-  salvarPreferencias
+  salvarPreferencias,
+  abertoAgora
 } from "../services/preferencias.service";
 
 import { useLoja } from "../contexts/LojaContext"
@@ -77,7 +78,8 @@ export function PreferenciasProvider({ children }) {
       value={{
         preferencias,
         atualizarPreferencias,
-        loading
+        loading,
+        abertoAgora: abertoAgora(preferencias?.horarios, new Date())
       }}
     >
       {children}

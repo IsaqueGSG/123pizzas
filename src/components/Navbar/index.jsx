@@ -22,7 +22,7 @@ const AppBar = styled(MuiAppBar)({});
 export default function Navbar() {
     const navigate = useNavigate();
     const location = useLocation();
-    const { idLoja } = useLoja();
+    const { idLoja, loja } = useLoja();
 
     const { user, setOpenAdminDrawer } = useAuth();
     const { quantidadeTotal, setOpenCarrinho } = useCarrinho();
@@ -83,11 +83,14 @@ export default function Navbar() {
         setOpenCarrinho(false);
     }, [location.pathname, setOpenAdminDrawer, setOpenCarrinho]);
 
-    const titulos = {
-        [`/${idLoja}`]: "Cardápio",
-        [`/${idLoja}/admin/pedidos`]: "Gestão de Pedidos",
-        [`/${idLoja}/admin/produtos`]: "Gestão de Produtos",
-        [`/${idLoja}/admin/categorias`]: "Gestão de Categorias",
+    const getTitulo = () => {
+        if (path.includes("/admin")) {
+            if (path.includes("/pedidos")) return `Pedidos | ${loja?.nome || ""}`;
+            if (path.includes("/produtos")) return `Produtos | ${loja?.nome || ""}`;
+            if (path.includes("/categorias")) return `Categorias | ${loja?.nome || ""}`;
+            return `Admin | ${loja?.nome || ""}`;
+        }
+        return loja?.nome || "Cardápio";
     };
 
     return (
@@ -128,7 +131,7 @@ export default function Navbar() {
                                 )
                     }
                 >
-                    {titulos[path] || "123 Pedidos"}
+                    {getTitulo()}
                 </Typography>
 
                 {(user && isPrivateRoute) ? (

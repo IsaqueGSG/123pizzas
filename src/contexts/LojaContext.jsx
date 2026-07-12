@@ -117,6 +117,7 @@ export function LojaProvider({ children }) {
     }
 
     resolverLoja();
+
   }, [location.pathname]);
 
   return (

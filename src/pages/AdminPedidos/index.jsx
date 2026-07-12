@@ -10,9 +10,13 @@ import {
   Tab,
   FormControlLabel,
   Switch,
+  Paper,
+  TextField,
+  Tooltip
 } from "@mui/material";
 import PrintIcon from '@mui/icons-material/Print';
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
 import { deletarPedido, atualizarPedido } from "../../services/pedidos.service";
 import { imprimir, geraComandaHTML } from "../../services/impressora.service";
@@ -28,7 +32,7 @@ import MotoboyModal from "./components/modalMotoboys";
 
 export default function AdminPedidos() {
   const { idLoja } = useLoja()
-  const { preferencias } = usePreferencias();
+  const { preferencias, abertoAgora } = usePreferencias();
   const { pedidos, loading, autoAceitarPedidos, toggleAutoAceitar } = usePedidosRealtime();
 
   const statusTabs = ["pendente", "preparando", "despachando", "finalizado", "cancelado"];
@@ -248,50 +252,63 @@ export default function AdminPedidos() {
     return "Itens";
   }
 
+  const aberto = !loading && abertoAgora
+
   return (
     <Box sx={{ p: 2 }}>
 
       <AdminDrawer />
 
-      <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-        <input
+      <Paper sx={{ p: 1, display: 'flex', alignItems: 'center', gap: 3, borderRadius: 2 }}>
+
+        {/* Filtro de Data Estilizado */}
+        <TextField
           type="date"
+          label="Data"
+          size="small"
+          InputLabelProps={{ shrink: true }}
           value={dataFiltro}
           onChange={(e) => setDataFiltro(e.target.value)}
-          style={{
-            padding: "6px",
-            borderRadius: "4px",
-            border: "1px solid #ccc"
-          }}
+          sx={{ width: 150 }}
         />
 
+        <Divider orientation="vertical" flexItem />
+
+        {/* Switch com visual mais limpo */}
         <FormControlLabel
-          control={
-            <Switch
-              checked={autoAceitarPedidos}
-              onChange={toggleAutoAceitar}
-            />
-          }
-          label="Auto aceitar e imprimir"
+          control={<Switch checked={autoAceitarPedidos} onChange={toggleAutoAceitar} />}
+          label={<Typography variant="body2">Auto Aceitar</Typography>}
         />
 
-        <Button
-          variant="contained"
-          onClick={() => {
-            const url = `${window.location.origin}/${idLoja}`;
+        <Divider orientation="vertical" flexItem />
 
-            if (window.electronAPI) {
-              // No Electron: Abre no navegador padrão do sistema
-              window.electronAPI.openExternal(url);
-            } else {
-              // No Navegador: Abre em uma nova aba
-              window.open(url, '_blank', 'noreferrer');
-            }
-          }}
-        >
-          +
-        </Button>
-      </Box>
+        {/* Status com Indicador Visual */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{
+            width: 10, height: 10, borderRadius: '50%',
+            bgcolor: aberto ? 'success.main' : 'error.main'
+          }} />
+          <Typography variant="subtitle2" fontWeight="bold">
+            {aberto ? "Loja Aberta" : "Loja Fechada"}
+          </Typography>
+        </Box>
+
+        <Box sx={{ flexGrow: 1 }} />
+
+        {/* Botão de Ação */}
+        <Tooltip title="Abrir Link da Loja">
+          <Button
+            variant="outlined"
+            startIcon={<OpenInNewIcon />}
+            onClick={() => {
+              const url = `${window.location.origin}/${idLoja}`;
+              window.electronAPI ? window.electronAPI.openExternal(url) : window.open(url, '_blank', 'noreferrer');
+            }}
+          >
+            Ver Loja
+          </Button>
+        </Tooltip>
+      </Paper>
 
       <Divider sx={{ mt: 2 }} />
 

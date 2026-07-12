@@ -165,28 +165,57 @@ export default function Cardapio() {
       )}
 
       {!loading && (categoriasAtivas.length > 0 && categoriaSelecionada) ? (
-        <Tabs
-          sx={{ mb: 2 }}
-          variant="scrollable"
-          scrollButtons
-          allowScrollButtonsMobile
-          aria-label="scrollable auto tabs example"
-          value={categoriaSelecionada}
-          onChange={(e, newValue) => setCategoriaSelecionada(newValue)}
+        <Box
+          sx={{
+            position: "sticky",
+            top: 64, // Ajuste conforme a altura do seu topo (ex: se tiver uma AppBar, use top: 64)
+            zIndex: 10,
+            backgroundColor: "background.default", // Importante: fundo sólido para não ver os produtos passando atrás
+          }}
         >
-          {categoriasOrdenadas.map(cat => (
-            <Tab
-              key={cat.id}
-              value={cat.id}
-              label={cat.nome}
-            />
-          ))}
-        </Tabs>
+          {/* Abas de Categorias */}
+          <Tabs
+            sx={{ mb: 1 }}
+            variant="scrollable"
+            scrollButtons
+            allowScrollButtonsMobile
+            value={categoriaSelecionada}
+            onChange={(e, newValue) => setCategoriaSelecionada(newValue)}
+          >
+            {categoriasOrdenadas.map(cat => (
+              <Tab key={cat.id} value={cat.id} label={cat.nome} />
+            ))}
+          </Tabs>
+
+          {/* Botões de Modo Misto (Inteira / Meia) */}
+          {categoriaAtual?.permiteMisto && (
+            <Box sx={{ display: "flex", gap: 1, px: 2, pb: 1 }}>
+              <Button
+                size="small"
+                fullWidth
+                variant={!modoMisto ? "contained" : "outlined"}
+                disabled={categoriaAtual && !categoriaAberta}
+                onClick={() => { setModoMisto(false); setSaboresSelecionados([]); }}
+              >
+                Inteira
+              </Button>
+              <Button
+                size="small"
+                fullWidth
+                variant={modoMisto ? "contained" : "outlined"}
+                disabled={categoriaAtual && !categoriaAberta}
+                onClick={() => { setModoMisto(true); setSaboresSelecionados([]); }}
+              >
+                1/2 (2 Sabores)
+              </Button>
+            </Box>
+          )}
+        </Box>
       ) : (
         <h1>Ainda nao há produtos nessa Loja</h1>
       )}
 
-      <Box sx={{ p: 2, pt: 0, position: "relative" }}>
+      <Box sx={{ p: 2, position: "relative" }}>
 
         {categoriaAtual && !categoriaAberta && (
           <Card
@@ -221,34 +250,6 @@ export default function Cardapio() {
               </Typography>
             </CardContent>
           </Card>
-        )}
-
-        {categoriaAtual?.permiteMisto && (
-          <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
-            <Button
-              fullWidth
-              variant={!modoMisto ? "contained" : "outlined"}
-              disabled={categoriaAtual && !categoriaAberta}
-              onClick={() => {
-                setModoMisto(false);
-                setSaboresSelecionados([]);
-              }}
-            >
-              Inteira (1 Sabor)
-            </Button>
-
-            <Button
-              fullWidth
-              variant={modoMisto ? "contained" : "outlined"}
-              disabled={categoriaAtual && !categoriaAberta}
-              onClick={() => {
-                setModoMisto(true);
-                setSaboresSelecionados([]);
-              }}
-            >
-              1/2 (2 sabores)
-            </Button>
-          </Box>
         )}
 
         <Box
