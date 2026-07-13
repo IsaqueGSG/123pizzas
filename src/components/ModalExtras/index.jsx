@@ -1,3 +1,4 @@
+import { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -10,9 +11,10 @@ import {
   MenuItem,
   Select,
   FormControl,
-  InputLabel
+  InputLabel,
+  IconButton
 } from "@mui/material";
-import { useState, useEffect, useMemo } from "react";
+import CloseIcon from "@mui/icons-material/Close";
 
 export default function ModalExtras({
   open,
@@ -118,7 +120,19 @@ export default function ModalExtras({
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth>
-      <DialogTitle>{produto.nome}</DialogTitle>
+      <DialogTitle sx={{ m: 0, p: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Typography variant="h6">{produto.nome}</Typography>
+
+        <IconButton
+          aria-label="fechar"
+          onClick={onClose}
+          sx={{
+            color: (theme) => theme.palette.grey[500],
+          }}
+        >
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
 
       <DialogContent>
         {/* Extras */}
@@ -129,7 +143,7 @@ export default function ModalExtras({
           // 🔥 CASO 1: limite === 1 → SELECT
           if (grupo.limite === 1) {
             return (
-              <FormControl fullWidth sx={{ mb: 2 }} key={grupo.id}>
+              <FormControl fullWidth sx={{ my: 2 }} key={grupo.id}>
                 <InputLabel>{grupo.nome}</InputLabel>
                 <Select
                   renderValue={(selected) => {

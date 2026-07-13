@@ -179,6 +179,9 @@ export default function Cardapio() {
             top: appBarHeight, // se tela grande 64, se tela pequena 56 (altura do AppBar)
             zIndex: 10,
             backgroundColor: "background.default", // Importante: fundo sólido para não ver os produtos passando atrás
+            boxShadow: 1, // sombra para destacar
+            borderBottom: 1,
+            borderColor: "divider"
           }}
         >
           {/* Abas de Categorias */}
