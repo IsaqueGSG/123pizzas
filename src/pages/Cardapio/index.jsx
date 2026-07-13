@@ -1,4 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
+import { useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 
 import { useProducts } from "../../contexts/ProdutosContext";
 import { useCarrinho } from "../../contexts/CarrinhoContext";
@@ -18,6 +20,12 @@ import Typography from "@mui/material/Typography";
 import LockClockIcon from "@mui/icons-material/LockClock";
 
 export default function Cardapio() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm')); // Verifica se a tela é menor que 'sm' (600px)
+
+  // O MUI usa 56px para AppBar em dispositivos móveis e 64px em desktop
+  const appBarHeight = isMobile ? 56 : 64;
+
   const { produtos, categorias, loading } = useProducts();
   const { addItem } = useCarrinho();
 
@@ -168,7 +176,7 @@ export default function Cardapio() {
         <Box
           sx={{
             position: "sticky",
-            top: 64, // Ajuste conforme a altura do seu topo (ex: se tiver uma AppBar, use top: 64)
+            top: appBarHeight, // se tela grande 64, se tela pequena 56 (altura do AppBar)
             zIndex: 10,
             backgroundColor: "background.default", // Importante: fundo sólido para não ver os produtos passando atrás
           }}
