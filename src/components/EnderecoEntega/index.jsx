@@ -113,6 +113,7 @@ export default function MapaEntrega() {
 
                     sessionTokenRef.current =
                         new window.google.maps.places.AutocompleteSessionToken();
+
                 });
 
                 setLoaded(true);
@@ -121,6 +122,13 @@ export default function MapaEntrega() {
 
         return () => clearInterval(interval);
     }, []);
+
+    useEffect(() => {
+        // Só calcula se tiver lat/lng E se o usuário já digitou algo no campo número
+        if (endereco.lat && endereco.lng && endereco.numero && endereco.numero.length > 0) {
+            calcularEntrega();
+        }
+    }, [endereco.numero, endereco.lat, endereco.lng]);
 
     const polyline = useMemo(
         () => Array.isArray(rota) ? rota.map(p => [p.lat, p.lng]) : [],
@@ -172,16 +180,6 @@ export default function MapaEntrega() {
                     onChange={e => atualizarCampo("observacao", e.target.value)}
                 />
             </Box>
-
-            <Button
-                sx={{ mt: 1 }}
-                variant="contained"
-                fullWidth
-                onClick={calcularEntrega}
-                disabled={endereco.loading || !endereco.lat}
-            >
-                Calcular taxa
-            </Button>
 
             {endereco.loading && (
                 <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>

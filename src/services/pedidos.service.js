@@ -8,7 +8,11 @@ import {
   updateDoc,
   deleteDoc,
   onSnapshot,
+  where, 
+  limit, 
+  getDocs 
 } from "firebase/firestore";
+
 import { db } from "../config/firebase";
 
 import { imprimir, geraComandaHTML } from "./impressora.service";
@@ -104,3 +108,21 @@ export async function processarPedido({
   });
 }
 
+export async function buscarUltimoEnderecoPorTelefone(idLoja, telefone) {
+  const pedidosRef = collection(db, "clientes123pedidos", idLoja, "pedidos");
+  
+  // Criamos uma query buscando pelo telefone do cliente, ordenando pelo mais recente
+  const q = query(
+    pedidosRef,
+    where("cliente.telefone", "==", telefone),
+    orderBy("createdAt", "desc"),
+    limit(1)
+  );
+
+  const querySnapshot = await getDocs(q);
+  
+  if (querySnapshot.empty) return null;
+
+  // Retorna apenas o endereço do primeiro (mais recente) documento encontrado
+  return querySnapshot.docs[0].data().cliente.endereco;
+}
