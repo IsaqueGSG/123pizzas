@@ -8,7 +8,7 @@ import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Avatar from "@mui/material/Avatar";
 import { FormControlLabel } from "@mui/material";
-import { Tab, Tabs, MenuItem, CircularProgress, Checkbox } from "@mui/material";
+import { Tab, Tabs, MenuItem, CircularProgress, Checkbox, FormHelperText } from "@mui/material";
 
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
@@ -27,16 +27,22 @@ import { criarPedido, buscarUltimoEnderecoPorTelefone } from "../../services/ped
 
 export default function Checkout() {
   const { idLoja } = useLoja();
-  const { enderecoLoja, endereco, clearEndereco, setEndereco } = useEntrega(); // certifique-se que setEndereco vem do seu context
-
-  const enderecoTexto = enderecoLoja
-    ? `${enderecoLoja.rua}, ${enderecoLoja.numero} - ${enderecoLoja.bairro} / ${enderecoLoja.cidade} - ${enderecoLoja.uf}`
-    : "";
+  const {
+    enderecoLoja,
+    endereco,
+    clearEndereco,
+    setEndereco,
+    calcularEntrega
+  } = useEntrega();
 
   const [checkTroco, setCheckTroco] = useState(false);
   const [checkRetirarLoja, setCheckRetirarLoja] = useState(false);
   const [aba, setAba] = useState(0);
   const [carregandoEnvio, setCarregandoEnvio] = useState(false);
+  const [carregandoEndereco, setCarregandoEndereco] = useState(false); // 🟢 UX: Loading de endereço
+
+  // Estado para erros visuais no formulário (substituindo alerts)
+  const [errosForm, setErrosForm] = useState({});
 
   const navigate = useNavigate();
   const pedidoFinalizadoRef = useRef(false);
@@ -49,12 +55,10 @@ export default function Checkout() {
   } = useCarrinho();
 
   const valorTotalCarrinho = itens.reduce(
-    (total, item) =>
-      total + Number(item.valor ?? 0) * Number(item.quantidade ?? 1),
+    (total, item) => total + Number(item.valor ?? 0) * Number(item.quantidade ?? 1),
     0
   );
 
-  // CORREÇÃO: Se for retirada, ignora a taxa de entrega no cálculo visual
   const taxaEntregaEfetiva = checkRetirarLoja ? 0 : (endereco?.taxaEntrega ?? 0);
   const valorTotalPedido = valorTotalCarrinho + taxaEntregaEfetiva;
 
@@ -87,71 +91,59 @@ export default function Checkout() {
 
   const telefoneValido = /^\d{10,11}$/.test(telefoneLimpo);
 
-  // AJUSTE: Validações isoladas por etapa/aba para melhor experiência de usuário
+  // 🟢 UX: Validação refinada sem travar a tela com Alerts
   const validarAbaItens = () => {
     if (itens.length === 0) {
-      alert("Seu carrinho está vazio.");
+      setErrosForm(prev => ({ ...prev, carrinho: "Seu carrinho está vazio." }));
       return false;
     }
+    setErrosForm(prev => ({ ...prev, carrinho: null }));
     return true;
   };
 
   const validarAbaCliente = () => {
-    if (!cliente.nome.trim()) {
-      alert("Informe o nome do cliente.");
-      return false;
-    }
+    const novosErros = {};
+    if (!cliente.nome.trim()) novosErros.nome = "Informe o nome do cliente.";
     if (!cliente.telefone) {
-      alert("Informe o telefone.");
-      return false;
+      novosErros.telefone = "Informe o telefone.";
+    } else if (!telefoneValido) {
+      novosErros.telefone = "Telefone inválido. Inclua o DDD (ex: 11999999999).";
     }
-    if (!telefoneValido) {
-      alert("Telefone inválido. Certifique-se de incluir o DDD.");
-      return false;
-    }
-    if (!cliente.formaPagamento.forma) {
-      alert("Selecione a forma de pagamento.");
-      return false;
-    }
+    if (!cliente.formaPagamento.forma) novosErros.formaPagamento = "Selecione a forma de pagamento.";
 
-    // Validação do troco
     if (cliente.formaPagamento.forma === "DINHEIRO" && checkTroco) {
       if (!cliente.formaPagamento.obsPagamento) {
-        alert("Informe o valor em dinheiro que vai pagar para calcularmos o troco.");
-        return false;
-      }
-      const troco = Number(cliente.formaPagamento.obsPagamento);
-      if (troco < valorTotalPedido) {
-        alert(
-          `O valor para troco não pode ser menor que o valor total do pedido.\nTotal do pedido: R$ ${valorTotalPedido.toFixed(2)}`
-        );
-        return false;
+        novosErros.obsPagamento = "Informe o valor para o troco.";
+      } else {
+        const troco = Number(cliente.formaPagamento.obsPagamento);
+        if (troco < valorTotalPedido) {
+          novosErros.obsPagamento = `Menor que o total (R$ ${valorTotalPedido.toFixed(2)})`;
+        }
       }
     }
-    return true;
+
+    setErrosForm(prev => ({ ...prev, ...novosErros }));
+    return Object.keys(novosErros).length === 0;
   };
 
   const validarAbaEntrega = () => {
     if (!checkRetirarLoja) {
-      if (!endereco?.placeId) {
-        alert("Selecione um endereço válido na busca por mapa.");
+      if (!endereco?.placeId || !endereco?.numero) {
+        setErrosForm(prev => ({ ...prev, entrega: "Por favor, defina um endereço e número válidos." }));
         return false;
       }
-      if (!endereco?.numero) {
-        alert("Informe o número do endereço.");
-        return false;
-      }
-      // Validação caso a taxa retorne nula ou menor que zero por falha na API
       if (endereco.taxaEntrega === undefined || endereco.taxaEntrega === null || endereco.loading) {
-        alert("Aguarde o cálculo da taxa de entrega ou tente selecionar o endereço novamente.");
+        setErrosForm(prev => ({ ...prev, entrega: "Aguarde a taxa de entrega ser calculada." }));
         return false;
       }
     }
+    setErrosForm(prev => ({ ...prev, entrega: null }));
     return true;
   };
 
-  // Centralizador de fluxo do botão principal
   const lidarComAvanco = () => {
+    // Reseta erros locais da aba atual antes de testar
+    setErrosForm({});
     if (aba === 0) {
       if (validarAbaItens()) setAba(1);
     } else if (aba === 1) {
@@ -162,7 +154,7 @@ export default function Checkout() {
   };
 
   async function finalizarPedido() {
-    if (carregandoEnvio) return; // Impede cliques múltiplos assíncronos
+    if (carregandoEnvio) return;
 
     setCarregandoEnvio(true);
     pedidoFinalizadoRef.current = true;
@@ -172,7 +164,6 @@ export default function Checkout() {
         cliente: {
           ...cliente,
           telefone: telefoneLimpo,
-          // Se for retirada na loja, podemos enviar o endereço zerado/nulo para o banco de dados
           endereco: checkRetirarLoja ? null : endereco
         },
         retirarNaLoja: checkRetirarLoja,
@@ -185,30 +176,63 @@ export default function Checkout() {
       };
 
       await criarPedido(idLoja, pedido);
-      console.log("Pedido criado com sucesso:", pedido);
-
       limparCarrinho();
       clearEndereco();
-      alert("Pedido realizado com sucesso!!");
       navigate(`/${idLoja}`);
     } catch (error) {
       console.error("Erro ao criar pedido:", error);
-      alert("Houve um erro ao processar o seu pedido. Tente novamente.");
       pedidoFinalizadoRef.current = false;
     } finally {
       setCarregandoEnvio(false);
     }
   }
 
+  // 🟢 CORREÇÃO: Disparar busca e cálculo automático independente do método de entrada (Input manual ou Autofill)
+  useEffect(() => {
+    let ativo = true;
+
+    const carregarHistoricoEndereco = async () => {
+      if (telefoneLimpo.length === 11) {
+        setCarregandoEndereco(true);
+        try {
+          const enderecoEncontrado = await buscarUltimoEnderecoPorTelefone(idLoja, telefoneLimpo);
+          if (enderecoEncontrado && ativo) {
+            // Define o endereço no context de forma síncrona
+            setEndereco({
+              ...enderecoEncontrado,
+              loading: false,
+              erro: ""
+            });
+
+            // 🔥 UX: Força o cálculo imediato da rota em segundo plano para agilizar
+            setTimeout(() => {
+              calcularEntrega();
+            }, 100);
+          }
+        } catch (error) {
+          console.error("Erro ao buscar histórico de endereço:", error);
+        } finally {
+          if (ativo) setCarregandoEndereco(false);
+        }
+      }
+    };
+
+    carregarHistoricoEndereco();
+
+    return () => {
+      ativo = false;
+    };
+  }, [telefoneLimpo, idLoja, setEndereco]);
+
   useEffect(() => {
     if (itens.length === 0 && !pedidoFinalizadoRef.current) {
-      alert("Seu carrinho foi esvaziado. Você será redirecionado para a loja.");
       navigate(`/${idLoja}`);
     }
   }, [itens, navigate, idLoja]);
 
   const getTextoBotao = () => {
     if (carregandoEnvio) return "Processando pedido...";
+    if (carregandoEndereco) return "Buscando seu endereço...";
     if (aba === 0) return "Continuar para dados do cliente";
     if (aba === 1) return "Continuar para entrega";
     return "Finalizar pedido";
@@ -229,10 +253,7 @@ export default function Checkout() {
     }
 
     const apiKey = import.meta.env.VITE_GOOGLE_GEO_API_KEY;
-    if (!apiKey) {
-      console.error("Google Maps API Key não encontrada no .env");
-      return;
-    }
+    if (!apiKey) return;
 
     const script = document.createElement("script");
     script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&region=BR&language=pt-BR`;
@@ -244,21 +265,6 @@ export default function Checkout() {
 
   const formasPagamento = ["PIX", "DINHEIRO", "CARTÃO", "VALE REFEIÇÃO - VALE ALIMENTAÇÃO"];
 
-  const handleBuscarEndereco = async (telefone) => {
-    const telLimpo = limparTelefone(telefone);
-    if (telLimpo.length === 11) {
-      try {
-        const enderecoEncontrado = await buscarUltimoEnderecoPorTelefone(idLoja, telLimpo);
-        if (enderecoEncontrado) {
-          setEndereco(enderecoEncontrado);
-          alert("Endereço do seu último pedido carregado!");
-        }
-      } catch (error) {
-        console.error("Erro ao buscar histórico:", error);
-      }
-    }
-  };
-
   useEffect(() => {
     if (!checkTroco) {
       setCliente(prev => ({
@@ -268,12 +274,15 @@ export default function Checkout() {
     }
   }, [checkTroco]);
 
-  // Se mudar o valor da aba manualmente pelos cliques nas abas, bloqueia avanços inválidos
   const lidarComTrocaAba = (novaAba) => {
     if (novaAba === 1 && !validarAbaItens()) return;
     if (novaAba === 2 && (!validarAbaItens() || !validarAbaCliente())) return;
     setAba(novaAba);
   };
+
+  const enderecoTexto = enderecoLoja
+    ? `${enderecoLoja.rua}, ${enderecoLoja.numero} - ${enderecoLoja.bairro} / ${enderecoLoja.cidade} - ${enderecoLoja.uf}`
+    : "";
 
   const ready = mapsLoaded && enderecoLoja;
 
@@ -293,23 +302,24 @@ export default function Checkout() {
         value={aba}
         onChange={(_, v) => lidarComTrocaAba(v)}
         variant="fullWidth"
+        sx={{ borderBottom: 1, borderColor: "divider", mb: 1 }}
       >
-        <Tab label="Itens do carrinho" />
-        <Tab label="Dados do cliente" />
-        <Tab label="Dados para entrega" />
+        <Tab label="Itens" />
+        <Tab label="Cliente" />
+        <Tab label="Entrega" />
       </Tabs>
 
       {/* ABA 0: LISTA DE ITENS */}
       {aba === 0 && (
-        <Card sx={{ my: 2 }}>
+        <Card sx={{ my: 2, borderRadius: 3 }}>
           <CardContent>
             {itens.length === 0 && (
               <Typography color="text.secondary">Seu carrinho está vazio</Typography>
             )}
 
             {itens.map((item) => (
-              <Card key={item.id} sx={{ mb: 1.5, p: 1.5, borderRadius: 2 }}>
-                <Box sx={{ display: "flex", gap: 1 }}>
+              <Card key={item.id} sx={{ mb: 1.5, p: 1.5, borderRadius: 2 }} variant="outlined">
+                <Box sx={{ display: "flex", gap: 2 }}>
                   <Avatar src={item.img} variant="rounded" sx={{ width: 64, height: 64 }} />
                   <Box sx={{ flexGrow: 1 }}>
                     <Typography fontWeight="bold">{item.nome}</Typography>
@@ -326,18 +336,18 @@ export default function Checkout() {
                       </Box>
                     )}
                     {item?.observacao && (
-                      <Typography variant="caption" color="text.secondary" display="block">
-                        Observação: {item.observacao}
+                      <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5, fontStyle: "italic" }}>
+                        Obs: {item.observacao}
                       </Typography>
                     )}
                   </Box>
 
                   <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-end", justifyContent: "space-between" }}>
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
+                    <Box sx={{ display: "flex", alignItems: "center", bgcolor: "action.hover", borderRadius: 10, px: 0.5 }}>
                       <IconButton size="small" onClick={() => decrementar(item.id)}>
                         <RemoveIcon fontSize="small" />
                       </IconButton>
-                      <Typography fontWeight="bold">{item.quantidade ?? 1}</Typography>
+                      <Typography fontWeight="bold" sx={{ mx: 1 }}>{item.quantidade ?? 1}</Typography>
                       <IconButton size="small" onClick={() => incrementar(item.id)}>
                         <AddIcon fontSize="small" />
                       </IconButton>
@@ -350,25 +360,41 @@ export default function Checkout() {
               </Card>
             ))}
 
-            <Divider sx={{ my: 1 }} />
+            <Divider sx={{ my: 2 }} />
             <Box sx={{ display: "flex", justifyContent: "space-between" }}>
               <Typography fontWeight="bold">Total do carrinho</Typography>
               <Typography fontWeight="bold">R$ {valorTotalCarrinho.toFixed(2)}</Typography>
             </Box>
+            {errosForm.carrinho && (
+              <FormHelperText error sx={{ mt: 1, textAlign: "center" }}>{errosForm.carrinho}</FormHelperText>
+            )}
           </CardContent>
         </Card>
       )}
 
       {/* ABA 1: DADOS DO CLIENTE */}
       {aba === 1 && (
-        <Card sx={{ my: 2 }}>
+        <Card sx={{ my: 2, borderRadius: 3, position: "relative" }}>
           <CardContent>
+            {carregandoEndereco && (
+              <Box sx={{
+                position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+                bgcolor: "rgba(255,255,255,0.7)", zIndex: 10,
+                display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: 1
+              }}>
+                <CircularProgress size={32} />
+                <Typography variant="body2" color="text.secondary">Recuperando endereço do histórico...</Typography>
+              </Box>
+            )}
+
             <TextField
               label="Nome"
               fullWidth
               size="small"
-              sx={{ mb: 1 }}
+              sx={{ mb: 2 }}
               value={cliente.nome}
+              error={!!errosForm.nome}
+              helperText={errosForm.nome}
               onChange={(e) => setCliente({ ...cliente, nome: e.target.value })}
             />
 
@@ -377,11 +403,10 @@ export default function Checkout() {
               type="tel"
               fullWidth
               size="small"
-              sx={{ mb: 1 }}
+              sx={{ mb: 2 }}
               value={cliente.telefone}
-              error={cliente.telefone && !telefoneValido}
-              helperText={cliente.telefone && !telefoneValido ? "Telefone inválido" : ""}
-              onBlur={(e) => handleBuscarEndereco(e.target.value)}
+              error={!!errosForm.telefone}
+              helperText={errosForm.telefone}
               onChange={(e) => {
                 const formatado = formatarTelefone(e.target.value);
                 setCliente({ ...cliente, telefone: formatado });
@@ -393,8 +418,10 @@ export default function Checkout() {
               select
               fullWidth
               size="small"
-              sx={{ mb: 1 }}
+              sx={{ mb: 2 }}
               value={cliente.formaPagamento.forma}
+              error={!!errosForm.formaPagamento}
+              helperText={errosForm.formaPagamento}
               onChange={(e) =>
                 setCliente({
                   ...cliente,
@@ -410,7 +437,6 @@ export default function Checkout() {
             {cliente.formaPagamento.forma === "DINHEIRO" && (
               <>
                 <FormControlLabel
-                  sx={{ mt: 1 }}
                   control={
                     <Checkbox checked={checkTroco} onChange={(e) => setCheckTroco(e.target.checked)} />
                   }
@@ -422,7 +448,10 @@ export default function Checkout() {
                     fullWidth
                     type="number"
                     size="small"
+                    sx={{ mt: 1 }}
                     value={cliente.formaPagamento.obsPagamento}
+                    error={!!errosForm.obsPagamento}
+                    helperText={errosForm.obsPagamento}
                     onChange={(e) =>
                       setCliente({
                         ...cliente,
@@ -435,14 +464,14 @@ export default function Checkout() {
             )}
 
             {cliente.formaPagamento.forma === "PIX" && (
-              <Typography sx={{ mt: 1 }} color="text.secondary">
-                PIX será enviado após confirmação do pedido
+              <Typography variant="body2" sx={{ mt: 1 }} color="success.main">
+                ✓ O código Copia e Cola do PIX será fornecido na finalização.
               </Typography>
             )}
 
             {cliente.formaPagamento.forma === "VALE REFEIÇÃO - VALE ALIMENTAÇÃO" && (
-              <Typography sx={{ mt: 1 }} color="text.secondary">
-                Informe por favor o nome do VR/VA, ex: sodexo, alelo, etc... no campo de observação.
+              <Typography variant="body2" sx={{ mt: 1 }} color="text.secondary">
+                Por favor, informe a bandeira (ex: Sodexo, Alelo) nas observações de entrega.
               </Typography>
             )}
           </CardContent>
@@ -451,27 +480,35 @@ export default function Checkout() {
 
       {/* ABA 2: DADOS DA ENTREGA */}
       {aba === 2 && (
-        <Card sx={{ my: 2 }}>
+        <Card sx={{ my: 2, borderRadius: 3 }}>
           <CardContent>
             <FormControlLabel
-              sx={{ mt: 1 }}
               control={
                 <Checkbox checked={checkRetirarLoja} onChange={(e) => setCheckRetirarLoja(e.target.checked)} />
               }
-              label="Quero retirar na Loja."
+              label="Quero retirar pessoalmente na Loja."
             />
 
-            <Card variant="outlined" sx={{ gridColumn: "1 / -1", my: 2, p: 2, bgcolor: "#f9f9f9" }}>
-              <Typography fontWeight="bold">Endereço da Loja:</Typography>
-              <Typography variant="body2" sx={{ mt: 1 }}>{enderecoTexto}</Typography>
+            <Card variant="outlined" sx={{ my: 2, p: 2, bgcolor: "action.hover", borderRadius: 2 }}>
+              <Typography fontWeight="bold" variant="body2">Endereço da Loja:</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>{enderecoTexto}</Typography>
             </Card>
 
-            {!checkRetirarLoja && <MapaEntrega />}
+            {!checkRetirarLoja && (
+              <Box sx={{ mt: 1 }}>
+                <MapaEntrega />
+                {errosForm.entrega && (
+                  <FormHelperText error sx={{ mt: 1, fontSize: "0.85rem", textAlign: "center" }}>
+                    {errosForm.entrega}
+                  </FormHelperText>
+                )}
+              </Box>
+            )}
           </CardContent>
         </Card>
       )}
 
-      {/* FOOTER FIXO */}
+      {/* FOOTER FIXO SUPER COMPACTO */}
       <Box
         sx={{
           position: "fixed",
@@ -479,33 +516,57 @@ export default function Checkout() {
           left: 0,
           width: "100%",
           bgcolor: "background.paper",
-          boxShadow: "0 -2px 10px rgba(0,0,0,0.5)",
-          p: 1,
-          zIndex: 1200
+          boxShadow: "0 -3px 12px rgba(0,0,0,0.12)",
+          p: 1.5, // 🟢 Reduzido de 2 para 1.5 para salvar espaço
+          zIndex: 1200,
+          borderTopLeftRadius: 12,
+          borderTopRightRadius: 12,
         }}
       >
-        <Card sx={{ mb: 1 }}>
-          <CardContent sx={{ p: "8px 16px !important" }}>
-            <Typography variant="body2" color="text.secondary">
-              Valor do Carrinho: R$ {valorTotalCarrinho.toFixed(2)}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Taxa de entrega: R$ {taxaEntregaEfetiva.toFixed(2)}
-            </Typography>
-            <Typography variant="subtitle1" fontWeight="bold" color="primary">
-              Total do pedido: R$ {valorTotalPedido.toFixed(2)}
-            </Typography>
+        <Card sx={{ mb: 1, boxShadow: "none", bgcolor: "grey.50", border: "1px solid", borderColor: "grey.200" }}>
+          <CardContent sx={{ p: "8px 12px !important" }}>
+            <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.2 }}>
+              <Typography variant="subtitle1" color="text.secondary" fontWeight="bold">
+                Subtotal:
+              </Typography>
+              <Typography variant="subtitle1" color="text.secondary" fontWeight="bold">
+                R$ {valorTotalCarrinho.toFixed(2)}
+              </Typography>
+            </Box>
+            <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.2 }}>
+              <Typography variant="subtitle1" color="text.secondary" fontWeight="bold">
+                Taxa de entrega:
+              </Typography>
+              <Typography variant="subtitle1" color="text.secondary" fontWeight="bold">
+                {checkRetirarLoja ? "Grátis (Retirada)" : `R$ ${taxaEntregaEfetiva.toFixed(2)}`}
+              </Typography>
+            </Box>
+            <Divider sx={{ my: 0.5 }} />
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <Typography variant="subtitle1" fontWeight="bold">Total a Pagar:</Typography> 
+              <Typography variant="subtitle1" fontWeight="bold" color="primary"> 
+                R$ {valorTotalPedido.toFixed(2)}
+              </Typography>
+            </Box>
           </CardContent>
         </Card>
 
         <Button
           variant="contained"
-          size="large"
+          size="medium" // 🟢 De "large" para "medium"
           fullWidth
-          disabled={carregandoEnvio || itens.length === 0}
+          disabled={carregandoEnvio || carregandoEndereco || itens.length === 0}
           onClick={lidarComAvanco}
+          sx={{ py: 1, borderRadius: 2, fontWeight: "bold", textTransform: "none" }} // 🟢 py reduzido de 1.5 para 1
         >
-          {getTextoBotao()}
+          {carregandoEndereco ? (
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <CircularProgress size={16} color="inherit" />
+              <span>Buscando histórico...</span>
+            </Box>
+          ) : (
+            getTextoBotao()
+          )}
         </Button>
       </Box>
     </Box>

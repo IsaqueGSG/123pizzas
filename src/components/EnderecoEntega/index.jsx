@@ -130,10 +130,20 @@ export default function MapaEntrega() {
         }
     }, [endereco.numero, endereco.lat, endereco.lng]);
 
+    // Sincroniza o input físico com o endereço do contexto (útil para preenchimento automático pelo telefone)
+    useEffect(() => {
+        if (inputRef.current && endereco?.enderecoFormatado) {
+            inputRef.current.value = endereco.enderecoFormatado;
+        } else if (inputRef.current && !endereco?.placeId) {
+            inputRef.current.value = ""; // Limpa se o endereço for resetado
+        }
+    }, [endereco?.enderecoFormatado, endereco?.placeId]);
+
     const polyline = useMemo(
         () => Array.isArray(rota) ? rota.map(p => [p.lat, p.lng]) : [],
         [rota]
     );
+
 
     return (
         <>

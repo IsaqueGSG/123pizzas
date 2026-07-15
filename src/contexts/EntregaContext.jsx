@@ -292,7 +292,9 @@ export function EntregaProvider({ children }) {
       value={{
         enderecoLoja,
         endereco,
+        setEndereco, 
         rota,
+        setRota,     
         clearEndereco,
         atualizarCampo,
         calcularEntrega,
