@@ -479,7 +479,7 @@ export default function AdminPedidos() {
                   <Box sx={{ mt: 1 }}>
                     <Typography fontWeight="bold">
                       {pedido.cliente.formaPagamento.forma}: R$ {pedido.total.toFixed(2)}
-                      {pedido.cliente.endereco.taxaEntrega > 0 && ` (Entrega: R$ ${pedido.cliente.endereco.taxaEntrega.toFixed(2)})`}
+                      {pedido.cliente.endereco?.taxaEntrega > 0 && ` (Entrega: R$ ${pedido.cliente.endereco?.taxaEntrega.toFixed(2)})`}
                     </Typography>
                     {
                       pedido.cliente.formaPagamento.obsPagamento && (
