@@ -20,6 +20,9 @@ import CategoryIcon from '@mui/icons-material/Category';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
+import PrintIcon from "@mui/icons-material/Print";
+import LocalShippingIcon from "@mui/icons-material/LocalShipping";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
 
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
@@ -111,6 +114,27 @@ export default function AdminDrawer() {
           <ListItemButton onClick={() => navigate(`/${idLoja}/admin/assinatura`)}>
             <CreditCardIcon sx={{ mr: 2 }} />
             <ListItemText primary="Assinatura" />
+          </ListItemButton>
+        </ListItem>
+
+        <ListItem disablePadding>
+          <ListItemButton onClick={() => navigate(`/${idLoja}/admin/impressora`)}>
+            <PrintIcon sx={{ mr: 2 }} />
+            <ListItemText primary="Ajustar Impressora" />
+          </ListItemButton>
+        </ListItem>
+
+        <ListItem disablePadding>
+          <ListItemButton onClick={() => navigate(`/${idLoja}/admin/entrega`)}>
+            <LocalShippingIcon sx={{ mr: 2 }} />
+            <ListItemText primary="Ajustar Entrega" />
+          </ListItemButton>
+        </ListItem>
+
+        <ListItem disablePadding>
+          <ListItemButton onClick={() => navigate(`/${idLoja}/admin/horarios`)}>
+            <AccessTimeIcon sx={{ mr: 2 }} />
+            <ListItemText primary="Ajustar Horários" />
           </ListItemButton>
         </ListItem>
 

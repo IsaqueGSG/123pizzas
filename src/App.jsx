@@ -27,7 +27,9 @@ import AdminRelatorios from "./pages/AdminRelatorios";
 import RegistroLoja from "./pages/RegistroLoja";
 import RegistroCobranca from "./pages/RegistroCobranca";
 import ConfirmarCriacao from "./pages/ConfirmarCriacao";
-
+import AdminImpressora from "./pages/AdminImpressora";
+import AdminEntrega from "./pages/AdminEntrega";
+import AdminHorarios from "./pages/AdminHorarios";
 
 import PrivateRoute from "./components/PrivateRoute";
 
@@ -107,6 +109,26 @@ const App = () => {
                     <Route
                       path="relatorios"
                       element={<PrivateRoute><AdminRelatorios /></PrivateRoute>}
+                    />
+                    <Route
+                      path="impressora"
+                      element={<PrivateRoute><AdminImpressora /></PrivateRoute>}
+                    />
+                    <Route
+                      path="impressora"
+                      element={<PrivateRoute><AdminImpressora /></PrivateRoute>}
+                    />
+                    <Route
+                      path="impressora"
+                      element={<PrivateRoute><AdminHorarios /></PrivateRoute>}
+                    />
+                    <Route
+                      path="entrega"
+                      element={<PrivateRoute><AdminEntrega /></PrivateRoute>}
+                    />
+                    <Route
+                      path="horarios"
+                      element={<PrivateRoute><AdminHorarios /></PrivateRoute>}
                     />
                   </Route>
 

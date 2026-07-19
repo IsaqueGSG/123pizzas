@@ -2,12 +2,10 @@ import {
   Box,
   Typography,
   Card,
-  Toolbar,
   CircularProgress,
   Button
 } from "@mui/material";
 
-import Navbar from "../../components/Navbar";
 import AdminDrawer from "../../components/AdminDrawer";
 import { useWhats } from "../../contexts/Whatsapp.Context";
 
@@ -17,11 +15,9 @@ export default function WhatsQR() {
   const formatarNumero = (num) => {
     if (!num) return "Carregando...";
     const n = num.replace(/^55/, "");
-
     if (n.length >= 11) {
       return `+55 ${n.slice(0, 2)} ${n.slice(2, 7)}-${n.slice(7)}`;
     }
-
     return `+${num}`;
   };
 
@@ -30,22 +26,19 @@ export default function WhatsQR() {
       return <Typography>WhatsApp disponível apenas no desktop</Typography>;
     }
 
-    // ready
+    // Status: READY
     if (status === "ready") {
       return (
         <>
-          <Typography fontWeight="bold" fontSize={18}>
+          <Typography fontWeight="bold" fontSize={18} color="success.main">
             ✅ WhatsApp conectado
           </Typography>
-
           <Typography sx={{ mt: 1 }} color="text.secondary">
             Número conectado:
           </Typography>
-
           <Typography fontWeight="bold" sx={{ mb: 3 }}>
             {formatarNumero(numero)}
           </Typography>
-
           <Button
             variant="contained"
             color="error"
@@ -57,41 +50,25 @@ export default function WhatsQR() {
       );
     }
 
-    // error
-    if (status === "error") {
+    // Status: ERROR ou Desconectado sem QR
+    if (status === "error" || (!qr && status !== "ready")) {
       return (
         <>
-          <Typography color="error">
-            Erro ao iniciar WhatsApp
+          <Typography fontWeight="bold" sx={{ mb: 2 }}>
+            {status === "error" ? "Erro ao iniciar conexão" : "Preparando conexão..."}
           </Typography>
-
-          <Button sx={{ mt: 2 }} onClick={restartWhats}>
-            Tentar novamente
-          </Button>
+          
+          <CircularProgress sx={{ mb: 2 }} />
         </>
       );
     }
 
-    // 🔥 Se está desconectado mas ainda não tem QR
-    if (!qr) {
-      return (
-        <>
-          <Typography fontWeight="bold">
-            Preparando conexão...
-          </Typography>
-
-          <CircularProgress sx={{ mt: 2 }} />
-        </>
-      );
-    }
-
-    // 🔥 Se tem QR
+    // Status: TEM QR (Escaneamento)
     return (
       <>
         <Typography fontWeight="bold">
           Escaneie o QR no WhatsApp
         </Typography>
-
         <Box
           component="img"
           src={qr}
@@ -99,18 +76,17 @@ export default function WhatsQR() {
             width: 280,
             mt: 2,
             borderRadius: 2,
-            boxShadow: 2
+            boxShadow: 2,
+            border: "1px solid #eee"
           }}
         />
       </>
     );
-
   };
 
   return (
     <Box sx={{ p: 2 }}>
       <AdminDrawer />
-
       <Card
         sx={{
           p: 4,
@@ -122,25 +98,20 @@ export default function WhatsQR() {
       >
         {renderContent()}
 
-        {/* 🔽 Ações extras somente quando desconectado */}
+        {/* 🔽 Botão de Reset (Sempre visível se não estiver 'ready' para emergências) */}
         {isDesktop && status !== "ready" && (
-          <>
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{ mt: 3, display: "block" }}
-            >
-              QR não carregou? Gere um novo código abaixo.
+          <Box sx={{ mt: 4, pt: 2, borderTop: "1px dashed #ccc" }}>
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
+              O QR não aparece ou a conexão está travada?
             </Typography>
-
             <Button
-              sx={{ mt: 2 }}
               variant="outlined"
+              color="warning"
               onClick={restartWhats}
             >
-              Gerar novo QR
+              Forçar reinicialização total
             </Button>
-          </>
+          </Box>
         )}
       </Card>
     </Box>

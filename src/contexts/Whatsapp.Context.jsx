@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { useLoja } from "./LojaContext";
 
 const WhatsContext = createContext();
@@ -17,13 +17,13 @@ export function WhatsProvider({ children }) {
   const [qr, setQr] = useState(null);
   const [numero, setNumero] = useState(null);
 
-  // iniciar sempre que abrir
+  // Inicialização única
   useEffect(() => {
     if (!isDesktop || !idLoja) return;
-
     window.electronAPI.initWhats(idLoja);
   }, [idLoja, isDesktop]);
 
+  // Listeners de eventos
   useEffect(() => {
     if (!isDesktop || !idLoja) return;
 
@@ -35,15 +35,12 @@ export function WhatsProvider({ children }) {
 
     const offStatus = window.electronAPI.onWhatsStatus((d) => {
       if (d.idLoja !== idLoja) return;
-
       setStatus(d.status);
 
       if (d.status === STATUS.READY) {
         setQr(null);
-        setNumero(d.numero || null); // 👈 novo
-      }
-
-      if (d.status !== STATUS.READY) {
+        setNumero(d.numero || null);
+      } else {
         setNumero(null);
       }
     });
@@ -54,27 +51,27 @@ export function WhatsProvider({ children }) {
     };
   }, [idLoja, isDesktop]);
 
-  const restartWhats = async () => {
+  // Função de reset radical (Limpa tudo e reinicia)
+  const resetWhats = async () => {
     if (!isDesktop || !idLoja) return;
 
+    // 1. Estados visuais imediatos
     setQr(null);
-    setNumero(null);
-    setStatus(STATUS.DISCONNECTED);
+    setStatus("reconnecting"); // Opcional: crie um status para mostrar que está processando
 
-    // ⭐ força reset completo
-    await window.electronAPI.logoutWhats(idLoja);
-
-    // pequena pausa para garantir limpeza
-    await new Promise(r => setTimeout(r, 500));
-
-    await window.electronAPI.initWhats(idLoja);
+    // 2. Chama a função de reset no backend (que deleta a pasta e mata o socket)
+    // Nota: Certifique-se de expor 'whats-reset' no seu preload/main
+    try {
+      await window.electronAPI.resetWhats(idLoja);
+    } catch (error) {
+      console.error("Erro ao resetar WhatsApp:", error);
+      setStatus(STATUS.ERROR);
+    }
   };
 
   const logoutWhats = async () => {
     if (!isDesktop || !idLoja) return;
-
     await window.electronAPI.logoutWhats(idLoja);
-
     setNumero(null);
     setQr(null);
     setStatus(STATUS.DISCONNECTED);
@@ -86,9 +83,9 @@ export function WhatsProvider({ children }) {
         status,
         qr,
         isDesktop,
-        restartWhats,
-        numero,
+        restartWhats: resetWhats, // Redirecionando para a função de reset real
         logoutWhats,
+        numero,
       }}
     >
       {children}
