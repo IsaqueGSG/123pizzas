@@ -320,7 +320,9 @@ export default function AdminPedidos() {
         value={abaAtiva}
         onChange={(e, newValue) => setAbaAtiva(newValue)}
         sx={{ mb: 3 }}
-        variant="fullWidth"
+        variant="scrollable"
+        scrollButtons
+        allowScrollButtonsMobile
       >
         {statusTabs.map((status) => (
           <Tab

@@ -22,22 +22,46 @@ export const AuthProvider = ({ children }) => {
   const [openAdminDrawer, setOpenAdminDrawer] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
 
-      const isRegistro = sessionStorage.getItem("modoRegistro");
-
-      if (firebaseUser && idLoja && !isRegistro) {
-        const result = await getUserRole(idLoja, firebaseUser.email);
-        setRole(result.role);
-      } else {
+      if (!firebaseUser) {
         setRole(null);
+        setLoading(false);
+      }
+    });
+
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
+    async function carregarRole() {
+      if (!user) {
+        setRole(null);
+        setLoading(false);
+        return;
       }
 
-      setLoading(false);
-    });
-    return () => unsubscribe();
-  }, [idLoja]);
+      if (!idLoja) {
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+
+      try {
+        const result = await getUserRole(idLoja, user.email);
+        setRole(result.role);
+      } catch (e) {
+        console.error(e);
+        setRole(null);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    carregarRole();
+  }, [user, idLoja]);
 
   const login = async () => {
     try {
@@ -74,6 +98,7 @@ export const AuthProvider = ({ children }) => {
 
     window.location.href = "/login";
   };
+
 
   return (
     <AuthContext.Provider

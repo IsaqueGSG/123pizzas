@@ -15,34 +15,15 @@ import {
 
 import { useAuth } from "../../contexts/AuthContext";
 
-function validarCPF(cpf) {
-  cpf = cpf.replace(/\D/g, "");
-
-  if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
-
-  let soma = 0;
-  for (let i = 0; i < 9; i++) {
-    soma += parseInt(cpf[i]) * (10 - i);
-  }
-
-  let resto = (soma * 10) % 11;
-  if (resto === 10) resto = 0;
-  if (resto !== parseInt(cpf[9])) return false;
-
-  soma = 0;
-  for (let i = 0; i < 10; i++) {
-    soma += parseInt(cpf[i]) * (11 - i);
-  }
-
-  resto = (soma * 10) % 11;
-  if (resto === 10) resto = 0;
-
-  return resto === parseInt(cpf[10]);
+// Validação mínima de email
+function validarEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+// Validação mínima de telefone (10 a 11 dígitos)
 function validarTelefone(tel) {
-  tel = tel.replace(/\D/g, "");
-  return tel.length >= 10 && tel.length <= 11;
+  const apenasNumeros = tel.replace(/\D/g, "");
+  return apenasNumeros.length >= 10 && apenasNumeros.length <= 11;
 }
 
 export default function RegistroCobranca() {
@@ -63,29 +44,35 @@ export default function RegistroCobranca() {
 
   const modoRetry = !!localStorage.getItem("idLoja") && !sessionStorage.getItem("registroLoja");
 
-  const emailFinal = usarEmailGoogle ? user?.email : emailCobranca;
+  const emailFinal = usarEmailGoogle ? (user?.email || "") : emailCobranca;
 
-  const cpfValido = cpfCnpj.length === 11 && validarCPF(cpfCnpj);
-  const telefoneValido =
-    !telefoneCobranca || validarTelefone(telefoneCobranca);
+  // Regras de validação individuais para cada campo
+  const cpfCnpjLimpo = cpfCnpj.replace(/\D/g, "");
+  const cpfCnpjValido = cpfCnpjLimpo.length >= 11; // Aceita CPF (11) ou CNPJ (14)
+  const nomeValido = nomeCobranca.trim().length >= 3;
+  const emailValido = validarEmail(emailFinal);
+  const telefoneValido = !telefoneCobranca || validarTelefone(telefoneCobranca);
 
+  // Formulário só é válido se todos passarem pelas regras
   const formValido =
-    nomeCobranca.length >= 3 &&
-    cpfValido &&
-    telefoneValido &&
-    (usarEmailGoogle ? !!user?.email : !!emailCobranca);
+    nomeValido &&
+    cpfCnpjValido &&
+    emailValido &&
+    telefoneValido;
 
   const continuar = async () => {
     if (!formValido) {
-      setErro("Preencha corretamente");
+      setErro("Preencha todos os campos corretamente.");
       return;
     }
 
+    setErro(""); // Limpa erro anterior se houver
+
     const cobranca = {
-      nomeCobranca,
-      cpfCnpj,
+      nomeCobranca: nomeCobranca.trim(),
+      cpfCnpj: cpfCnpjLimpo,
       emailCobranca: emailFinal,
-      telefoneCobranca
+      telefoneCobranca: telefoneCobranca.replace(/\D/g, "")
     };
 
     sessionStorage.setItem("registroCobranca", JSON.stringify(cobranca));
@@ -107,7 +94,7 @@ export default function RegistroCobranca() {
       }
 
       const token = await user.getIdToken();
-      const idLoja = localStorage.getItem("idLoja")
+      const idLoja = localStorage.getItem("idLoja");
 
       await axios.post(
         APIURL + "/retry-subscription",
@@ -158,16 +145,6 @@ export default function RegistroCobranca() {
   };
 
   useEffect(() => {
-    if (!user) return;
-
-    const idLoja = localStorage.getItem("idLoja");
-
-    if (!idLoja) return;
-
-    // já está no modo retry automaticamente
-  }, [user]);
-
-  useEffect(() => { // carrega dados no retry
     const saved = sessionStorage.getItem("registroCobranca");
 
     if (saved) {
@@ -186,9 +163,7 @@ export default function RegistroCobranca() {
 
     if (!isNovoFluxo && !isRetry) {
       navigate("/registro-saas");
-      return; // 👈 evita qualquer coisa depois
-    } else {
-      setChecked(true);
+      return;
     }
 
     setChecked(true);
@@ -204,9 +179,9 @@ export default function RegistroCobranca() {
           justifyContent: "center"
         }}
       >
-        <CircularProgress></CircularProgress>
+        <CircularProgress />
       </Box>
-    )
+    );
   }
 
   return (
@@ -229,19 +204,19 @@ export default function RegistroCobranca() {
           value={nomeCobranca}
           onChange={(e) => setNomeCobranca(e.target.value)}
           margin="normal"
+          error={nomeCobranca.length > 0 && !nomeValido}
+          helperText={nomeCobranca.length > 0 && !nomeValido ? "Mínimo de 3 caracteres" : ""}
         />
 
         <TextField
           fullWidth
-          label="CPF"
-          value={cpfCnpj.replace(
-            /(\d{3})(\d{3})(\d{3})(\d{2})/,
-            "$1.$2.$3-$4"
-          )}
-          onChange={(e) =>
-            setCpfCnpj(e.target.value.replace(/\D/g, ""))
-          }
+          label="CPF ou CNPJ"
+          value={cpfCnpj}
+          onChange={(e) => setCpfCnpj(e.target.value)}
+          inputProps={{ maxLength: 18 }}
           margin="normal"
+          error={cpfCnpj.length > 0 && !cpfCnpjValido}
+          helperText={cpfCnpj.length > 0 && !cpfCnpjValido ? "Informe um CPF ou CNPJ válido" : ""}
         />
 
         <TextField
@@ -251,28 +226,13 @@ export default function RegistroCobranca() {
           value={usarEmailGoogle ? (user?.email || "") : emailCobranca}
           onChange={(e) => setEmailCobranca(e.target.value)}
           margin="normal"
+          error={emailFinal.length > 0 && !emailValido}
+          helperText={emailFinal.length > 0 && !emailValido ? "E-mail inválido" : ""}
         />
-
-        {
-          user?.email && (
-            <FormControlLabel
-              label={`Usar email: ${user.email || ""} `}
-              control={
-                <Checkbox
-                  checked={usarEmailGoogle}
-                  onChange={(e) => {
-                    setUsarEmailGoogle(e.target.checked);
-                    if (e.target.checked) setEmailCobranca("");
-                  }}
-                />
-              }
-            />
-          )
-        }
 
         <TextField
           fullWidth
-          label="Telefone"
+          label="Telefone (Opcional)"
           value={telefoneCobranca}
           onChange={(e) =>
             setTelefoneCobranca(
@@ -280,6 +240,8 @@ export default function RegistroCobranca() {
             )
           }
           margin="normal"
+          error={telefoneCobranca.length > 0 && !telefoneValido}
+          helperText={telefoneCobranca.length > 0 && !telefoneValido ? "Telefone incompleto (DDD + número)" : ""}
         />
 
         {erro && (
@@ -301,12 +263,6 @@ export default function RegistroCobranca() {
         >
           {loading ? <CircularProgress size={24} /> : "Continuar"}
         </Button>
-
-        {!modoRetry && (
-          <Typography mt={2} fontSize={14}>
-            🎁 Teste grátis por 15 dias
-          </Typography>
-        )}
       </Paper>
     </Box>
   );

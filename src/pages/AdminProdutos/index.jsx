@@ -141,7 +141,9 @@ export default function AdminProdutos() {
         value={abaAtiva}
         onChange={(e, newValue) => setAbaAtiva(newValue)}
         sx={{ mb: 2 }}
-        variant="fullWidth"
+        variant="scrollable"
+        scrollButtons
+        allowScrollButtonsMobile
       >
         {categoriasOrdenadas.map((cat, i) => (
           <Tab key={cat.id} label={cat.nome} />

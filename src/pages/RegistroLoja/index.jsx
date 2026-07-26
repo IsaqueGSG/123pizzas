@@ -7,7 +7,8 @@ import {
   Button,
   Typography,
   Paper,
-  Divider
+  Divider,
+  InputAdornment
 } from "@mui/material";
 
 function gerarSlug(texto) {
@@ -86,11 +87,19 @@ export default function RegistroLoja() {
 
         <TextField
           fullWidth
-          label="Link da loja"
+          label="Ajuste o link da loja"
           value={slug}
-          disabled
-          helperText={`Seu link será: /${slug}`}
+          onChange={(e) => setSlug(e.target.value)}
           margin="normal"
+          variant="standard"
+          placeholder="sua-loja"
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start" sx={{ color: "text.secondary" }}>
+                https://123pedidos.web.app/
+              </InputAdornment>
+            ),
+          }}
         />
 
         <TextField

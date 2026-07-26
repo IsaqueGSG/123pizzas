@@ -16,9 +16,6 @@ import RestaurantMenuIcon from "@mui/icons-material/RestaurantMenu";
 import { useState } from "react";
 import { useCarrinho } from "../../contexts/CarrinhoContext";
 
-const IMG_FALLBACK =
-  "https://cdn-icons-png.flaticon.com/512/1046/1046784.png"; // talheres/comida
-
 export default function CardProduto({ produto, onSelecionar, selecionado, modoMisto, foraDeHorario }) {
   const { itens, incrementar, decrementar } = useCarrinho();
   const [expandir, setExpandir] = useState(false);
@@ -47,57 +44,87 @@ export default function CardProduto({ produto, onSelecionar, selecionado, modoMi
         flexDirection: "column",
         height: "100%",
         transition: "0.2s",
+        position: "relative",
+        overflow: "hidden",
         "&:hover": {
           boxShadow: 4,
         },
       }}
     >
-      {/* Imagem com fallback */}
-      {produto.img && !imgError ? (
-        <CardMedia
-          component="img"
-          loading="lazy"
-          image={produto.img}
-          onError={() => setImgError(true)}
-          sx={{
-            height: { xs: 100, sm: 120, md: 160 },
-            objectFit: "cover",
-          }}
-        />
-      ) : (
-        <Box
-          sx={{
-            height: { xs: 100, sm: 120, md: 160 },
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            bgcolor: "#f5f5f5",
-          }}
-        >
-          <RestaurantMenuIcon sx={{ fontSize: 40, color: "#bdbdbd" }} />
-        </Box>
-      )}
+      {/* Container da Imagem mais compacto */}
+      <Box sx={{ position: "relative", width: "100%", overflow: "hidden" }}>
+        {produto.img && !imgError ? (
+          <CardMedia
+            component="img"
+            loading="lazy"
+            image={produto.img}
+            onError={() => setImgError(true)}
+            sx={{
+              height: { xs: 90, sm: 105, md: 120 }, // Altura reduzida para evitar espaços vazios
+              objectFit: "cover",
+              width: "100%",
+            }}
+          />
+        ) : (
+          <Box
+            sx={{
+              height: { xs: 90, sm: 105, md: 120 }, // Altura proporcional para o fallback
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              bgcolor: "#f5f5f5",
+            }}
+          >
+            <RestaurantMenuIcon sx={{ fontSize: 50, color: "#bdbdbd" }} />
+          </Box>
+        )}
 
+        {/* Descrição flutuante sobre a imagem quando expandida */}
+        {produto.descricao && (
+          <Collapse 
+            in={expandir} 
+            sx={{
+              position: "absolute",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              bgcolor: "rgba(255, 255, 255, 0.95)",
+              backdropFilter: "blur(4px)",
+              overflowY: "auto",
+              zIndex: 2,
+              borderTop: "1px solid #ddd",
+            }}
+          >
+            <Box sx={{ p: 0.8 }}>
+              <Typography
+                color="text.secondary"
+              >
+                {produto.descricao}
+              </Typography>
+            </Box>
+          </Collapse>
+        )}
+      </Box>
+
+      {/* Conteúdo principal compacto */}
       <CardContent
         sx={{
           flexGrow: 1,
-          p: 1, // antes era padrão (16px)
+          p: 1,
           "&:last-child": { pb: 1 },
         }}
       >
-        {/* Nome + seta */}
         <Box
           sx={{
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            gap: 1,
+            gap: 0.5,
           }}
         >
           <Typography
             fontWeight="bold"
             sx={{
-              lineHeight: 1.2,
               wordBreak: "break-word",
             }}
           >
@@ -109,6 +136,7 @@ export default function CardProduto({ produto, onSelecionar, selecionado, modoMi
               size="small"
               onClick={() => setExpandir(!expandir)}
               sx={{
+                p: 0.5,
                 transition: "0.3s",
                 transform: expandir ? "rotate(180deg)" : "rotate(0deg)",
               }}
@@ -117,22 +145,9 @@ export default function CardProduto({ produto, onSelecionar, selecionado, modoMi
             </IconButton>
           )}
         </Box>
-
-        {/* Descrição colapsável */}
-        {produto.descricao && (
-          <Collapse in={expandir}>
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{ lineHeight: 1.4 }}
-            >
-              {produto.descricao}
-            </Typography>
-          </Collapse>
-        )}
       </CardContent>
 
-      {/* Rodapé profissional: preço + ações */}
+      {/* Rodapé compacto */}
       <Box
         sx={{
           mt: "auto",
@@ -140,24 +155,20 @@ export default function CardProduto({ produto, onSelecionar, selecionado, modoMi
           pt: 0,
           display: "flex",
           flexDirection: "column",
-          gap: 0.5, // menor gap
+          gap: 0.5,
         }}
       >
-        {/* Preço acima */}
         <Typography
           color="primary"
           fontWeight="bold"
           sx={{
-            fontSize: 16, // antes 18
             whiteSpace: "nowrap",
           }}
         >
           R$ {produto.valor.toFixed(2)}
         </Typography>
 
-        {/* Botão ou Controle */}
         {temExtras ? (
-          // 🔥 SEMPRE botão adicionar (abre modal)
           <Button
             fullWidth
             variant="contained"
@@ -167,13 +178,11 @@ export default function CardProduto({ produto, onSelecionar, selecionado, modoMi
             sx={{
               textTransform: "none",
               fontWeight: "bold",
-              fontSize: 12,
             }}
           >
             {modoMisto ? "Selecionar" : "Adicionar"}
           </Button>
         ) : !itemCarrinho ? (
-          // 🔹 sem extras e ainda não adicionou
           <Button
             fullWidth
             variant="contained"
@@ -183,13 +192,11 @@ export default function CardProduto({ produto, onSelecionar, selecionado, modoMi
             sx={{
               textTransform: "none",
               fontWeight: "bold",
-              fontSize: 12,
             }}
           >
             Adicionar
           </Button>
         ) : (
-          // 🔹 sem extras → controle +/-
           <Box
             sx={{
               width: "100%",
@@ -197,9 +204,9 @@ export default function CardProduto({ produto, onSelecionar, selecionado, modoMi
               alignItems: "center",
               justifyContent: "space-between",
               border: "1px solid #e0e0e0",
-              borderRadius: 2,
-              px: 1,
-              py: 0.3,
+              borderRadius: 1.5,
+              px: 0.5,
+              py: 0.1,
             }}
           >
             <IconButton
@@ -209,7 +216,7 @@ export default function CardProduto({ produto, onSelecionar, selecionado, modoMi
               <RemoveIcon fontSize="small" />
             </IconButton>
 
-            <Typography fontWeight="bold" fontSize={16}>
+            <Typography fontWeight="bold" fontSize={15}>
               {quantidadeTotal}
             </Typography>
 
