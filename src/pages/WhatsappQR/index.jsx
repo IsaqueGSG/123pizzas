@@ -55,10 +55,14 @@ export default function WhatsQR() {
       return (
         <>
           <Typography fontWeight="bold" sx={{ mb: 2 }}>
-            {status === "error" ? "Erro ao iniciar conexão" : "Preparando conexão..."}
+            {status === "error" ? "Erro ao iniciar conexão" : "Aguardando resposta do WhatsApp..."}
           </Typography>
-          
+
           <CircularProgress sx={{ mb: 2 }} />
+
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+            Se esta etapa demorar muito, a sessão pode ter expirado.
+          </Typography>
         </>
       );
     }
@@ -98,18 +102,15 @@ export default function WhatsQR() {
       >
         {renderContent()}
 
-        {/* 🔽 Botão de Reset (Sempre visível se não estiver 'ready' para emergências) */}
-        {isDesktop && status !== "ready" && (
+        {isDesktop &&(
           <Box sx={{ mt: 4, pt: 2, borderTop: "1px dashed #ccc" }}>
-            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
-              O QR não aparece ou a conexão está travada?
-            </Typography>
             <Button
               variant="outlined"
               color="warning"
               onClick={restartWhats}
+              fullWidth
             >
-              Forçar reinicialização total
+              Forçar reinicialização total (Limpar Dados)
             </Button>
           </Box>
         )}
