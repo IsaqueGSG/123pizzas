@@ -450,6 +450,7 @@ export default function Checkout() {
         )}
 
         {/* ABA 3: PAGAMENTO (Dinamizado) */}
+        {/* ABA 3: PAGAMENTO (Dinamizado) */}
         {aba === 3 && (
           <Card sx={{ my: 2, borderRadius: 3 }}>
             <CardContent>
@@ -461,14 +462,13 @@ export default function Checkout() {
                 sx={{ mb: 2 }}
                 value={cliente.formaPagamento.forma}
                 onChange={(e) => {
-                  // Encontra o objeto de pagamento selecionado
                   const selecionado = preferencias.pagamentos.find(p => p.nome === e.target.value);
                   setCliente({
                     ...cliente,
                     formaPagamento: {
                       ...cliente.formaPagamento,
                       forma: e.target.value,
-                      obsExibicao: selecionado?.obs || "" // Salva a obs para exibir
+                      obsExibicao: selecionado?.obs || ""
                     }
                   });
                 }}
@@ -478,9 +478,8 @@ export default function Checkout() {
                 ))}
               </TextField>
 
-              {/* Exibe a observação se existir */}
               {cliente.formaPagamento.obsExibicao && (
-                <Card variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
+                <Card variant="outlined" sx={{ p: 1.5, borderRadius: 2, mb: 2 }}>
                   <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>{cliente.formaPagamento.obsExibicao}</Typography>
                 </Card>
               )}
@@ -499,7 +498,7 @@ export default function Checkout() {
                       fullWidth
                       type="number"
                       size="small"
-                      sx={{ mt: 1 }}
+                      sx={{ mt: 1, mb: 2 }}
                       value={cliente.formaPagamento.obsPagamento}
                       error={!!errosForm.obsPagamento}
                       helperText={errosForm.obsPagamento}
@@ -513,9 +512,82 @@ export default function Checkout() {
                   )}
                 </>
               )}
+
+              {/* CARD RESUMO DO PEDIDO */}
+              <Card
+                variant="outlined"
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  display: "flex",
+                  flexDirection: "column",
+                  bgcolor: "action.hover",
+                  mt: 2
+                }}
+              >
+                {/* CABEÇALHO DO RESUMO */}
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="subtitle1" fontWeight="bold" sx={{ lineHeight: 1.2 }}>
+                    {cliente.nome || "Nome do Cliente"} - {cliente.telefone || "Telefone"}
+                  </Typography>
+
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                    {checkRetirarLoja ? (
+                      "📍 Retirar na Loja"
+                    ) : (
+                      <>
+                        📍 {endereco?.rua || "Rua não informada"}, {endereco?.numero || "S/N"} - {endereco?.bairro || ""}
+                      </>
+                    )}
+                  </Typography>
+                </Box>
+
+                <Divider sx={{ my: 1.5 }} />
+
+                {/* ITENS DO CARRINHO */}
+                <Typography variant="subtitle2" fontWeight="bold" color="text.secondary" sx={{ mb: 1 }}>
+                  🍽️ ITENS DO PEDIDO
+                </Typography>
+
+                {itens.map((item, index) => (
+                  <Box key={index} sx={{ mb: 1 }}>
+                    <Typography variant="body2" fontWeight="bold">
+                      {item.quantidade ?? 1}x {item.nome}
+                    </Typography>
+                    {item.observacao && (
+                      <Typography variant="caption" color="text.secondary" display="block">
+                        • Obs: {item.observacao}
+                      </Typography>
+                    )}
+                  </Box>
+                ))}
+
+                <Divider sx={{ my: 1.5 }} />
+
+                {/* TOTAIS E PAGAMENTO */}
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                  <Typography variant="body2">
+                    Subtotal: R$ {valorTotalCarrinho.toFixed(2)}
+                  </Typography>
+                  {!checkRetirarLoja && (
+                    <Typography variant="body2">
+                      Taxa de Entrega: R$ {taxaEntregaEfetiva.toFixed(2)}
+                    </Typography>
+                  )}
+                  <Typography fontWeight="bold" sx={{ mt: 0.5 }}>
+                    Total Geral: R$ {valorTotalPedido.toFixed(2)}
+                  </Typography>
+                  <Typography variant="body2" color="primary" fontWeight="bold" sx={{ mt: 0.5 }}>
+                    Pagamento: {cliente.formaPagamento.forma || "Não selecionado"}
+                    {checkTroco && cliente.formaPagamento.obsPagamento && ` (Troco para: R$ ${Number(cliente.formaPagamento.obsPagamento).toFixed(2)})`}
+                  </Typography>
+                </Box>
+              </Card>
+
             </CardContent>
           </Card>
         )}
+
       </Box>
 
       {/* FOOTER FIXO */}
