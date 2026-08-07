@@ -19,6 +19,7 @@ import { useEffect, useState, useRef, useMemo } from "react";
 import { useLoja } from "../../contexts/LojaContext";
 import { useEntrega } from "../../contexts/EntregaContext";
 import { useCarrinho } from "../../contexts/CarrinhoContext";
+import { usePreferencias } from "../../contexts/PreferenciasContext"; // 🟢 Importado para pegar pagamentos dinâmicos
 
 import CarrinhoDrawer from "../../components/CarrinhoDrawer";
 import MapaEntrega from "../../components/EnderecoEntega";
@@ -27,6 +28,7 @@ import { criarPedido, buscarUltimoEnderecoPorTelefone } from "../../services/ped
 
 export default function Checkout() {
   const { idLoja } = useLoja();
+  const { preferencias } = usePreferencias(); // 🟢 Preferências da loja
   const {
     enderecoLoja,
     endereco,
@@ -39,9 +41,8 @@ export default function Checkout() {
   const [checkRetirarLoja, setCheckRetirarLoja] = useState(false);
   const [aba, setAba] = useState(0);
   const [carregandoEnvio, setCarregandoEnvio] = useState(false);
-  const [carregandoEndereco, setCarregandoEndereco] = useState(false); // 🟢 UX: Loading de endereço
+  const [carregandoEndereco, setCarregandoEndereco] = useState(false);
 
-  // Estado para erros visuais no formulário (substituindo alerts)
   const [errosForm, setErrosForm] = useState({});
 
   const navigate = useNavigate();
@@ -91,7 +92,17 @@ export default function Checkout() {
 
   const telefoneValido = /^\d{10,11}$/.test(telefoneLimpo);
 
-  // 🟢 UX: Validação refinada sem travar a tela com Alerts
+  // Formas de pagamento ativas vindas do painel do admin
+  const formasPagamentoAtivas = useMemo(() => {
+    const pagamentosCfg = preferencias?.pagamentos || {};
+    // Exemplo estruturado: { pix: { ativo: true, nome: "PIX" }, dinheiro: { ativo: true, nome: "Dinheiro" }, ... }
+    // Ou se preferir um array simples salvo nas preferências, ajuste conforme sua modelagem.
+    // Aqui assumimos um objeto onde filtramos os ativos:
+    return Object.entries(pagamentosCfg)
+      .filter(([_, config]) => config.ativo)
+      .map(([key, config]) => config.nome || key.toUpperCase());
+  }, [preferencias]);
+
   const validarAbaItens = () => {
     if (itens.length === 0) {
       setErrosForm(prev => ({ ...prev, carrinho: "Seu carrinho está vazio." }));
@@ -109,19 +120,6 @@ export default function Checkout() {
     } else if (!telefoneValido) {
       novosErros.telefone = "Telefone inválido. Inclua o DDD (ex: 11999999999).";
     }
-    if (!cliente.formaPagamento.forma) novosErros.formaPagamento = "Selecione a forma de pagamento.";
-
-    if (cliente.formaPagamento.forma === "DINHEIRO" && checkTroco) {
-      if (!cliente.formaPagamento.obsPagamento) {
-        novosErros.obsPagamento = "Informe o valor para o troco.";
-      } else {
-        const troco = Number(cliente.formaPagamento.obsPagamento);
-        if (troco < valorTotalPedido) {
-          novosErros.obsPagamento = `Menor que o total (R$ ${valorTotalPedido.toFixed(2)})`;
-        }
-      }
-    }
-
     setErrosForm(prev => ({ ...prev, ...novosErros }));
     return Object.keys(novosErros).length === 0;
   };
@@ -141,15 +139,35 @@ export default function Checkout() {
     return true;
   };
 
+  const validarAbaPagamento = () => {
+    const novosErros = {};
+    if (!cliente.formaPagamento.forma) novosErros.formaPagamento = "Selecione a forma de pagamento.";
+
+    if (cliente.formaPagamento.forma === "DINHEIRO" && checkTroco) {
+      if (!cliente.formaPagamento.obsPagamento) {
+        novosErros.obsPagamento = "Informe o valor para o troco.";
+      } else {
+        const troco = Number(cliente.formaPagamento.obsPagamento);
+        if (troco < valorTotalPedido) {
+          novosErros.obsPagamento = `Menor que o total (R$ ${valorTotalPedido.toFixed(2)})`;
+        }
+      }
+    }
+
+    setErrosForm(prev => ({ ...prev, ...novosErros }));
+    return Object.keys(novosErros).length === 0;
+  };
+
   const lidarComAvanco = () => {
-    // Reseta erros locais da aba atual antes de testar
     setErrosForm({});
     if (aba === 0) {
       if (validarAbaItens()) setAba(1);
     } else if (aba === 1) {
       if (validarAbaCliente()) setAba(2);
     } else if (aba === 2) {
-      if (validarAbaEntrega()) finalizarPedido();
+      if (validarAbaEntrega()) setAba(3);
+    } else if (aba === 3) {
+      if (validarAbaPagamento()) finalizarPedido();
     }
   };
 
@@ -187,7 +205,6 @@ export default function Checkout() {
     }
   }
 
-  // 🟢 CORREÇÃO: Disparar busca e cálculo automático independente do método de entrada (Input manual ou Autofill)
   useEffect(() => {
     let ativo = true;
 
@@ -197,14 +214,12 @@ export default function Checkout() {
         try {
           const enderecoEncontrado = await buscarUltimoEnderecoPorTelefone(idLoja, telefoneLimpo);
           if (enderecoEncontrado && ativo) {
-            // Define o endereço no context de forma síncrona
             setEndereco({
               ...enderecoEncontrado,
               loading: false,
               erro: ""
             });
 
-            // 🔥 UX: Força o cálculo imediato da rota em segundo plano para agilizar
             setTimeout(() => {
               calcularEntrega();
             }, 100);
@@ -233,8 +248,9 @@ export default function Checkout() {
   const getTextoBotao = () => {
     if (carregandoEnvio) return "Processando pedido...";
     if (carregandoEndereco) return "Buscando seu endereço...";
-    if (aba === 0) return "Continuar para dados do cliente";
+    if (aba === 0) return "Continuar para dados";
     if (aba === 1) return "Continuar para entrega";
+    if (aba === 2) return "Continuar para pagamento";
     return "Finalizar pedido";
   };
 
@@ -263,8 +279,6 @@ export default function Checkout() {
     document.body.appendChild(script);
   }, []);
 
-  const formasPagamento = ["PIX", "DINHEIRO", "CARTÃO", "VALE REFEIÇÃO - VALE ALIMENTAÇÃO"];
-
   useEffect(() => {
     if (!checkTroco) {
       setCliente(prev => ({
@@ -277,6 +291,7 @@ export default function Checkout() {
   const lidarComTrocaAba = (novaAba) => {
     if (novaAba === 1 && !validarAbaItens()) return;
     if (novaAba === 2 && (!validarAbaItens() || !validarAbaCliente())) return;
+    if (novaAba === 3 && (!validarAbaItens() || !validarAbaCliente() || !validarAbaEntrega())) return;
     setAba(novaAba);
   };
 
@@ -295,7 +310,7 @@ export default function Checkout() {
   }
 
   return (
-    <Box sx={{ p: 2, pt: 0, pb: 22 }}>
+    <Box sx={{ pt: 0, pb: 22 }}>
       <CarrinhoDrawer />
 
       <Tabs
@@ -307,208 +322,203 @@ export default function Checkout() {
         <Tab label="Itens" />
         <Tab label="Cliente" />
         <Tab label="Entrega" />
+        <Tab label="Pagamento" />
       </Tabs>
 
-      {/* ABA 0: LISTA DE ITENS */}
-      {aba === 0 && (
-        <Card sx={{ my: 2, borderRadius: 3 }}>
-          <CardContent>
-            {itens.length === 0 && (
-              <Typography color="text.secondary">Seu carrinho está vazio</Typography>
-            )}
+      <Box sx={{ px: 2 }}>
 
-            {itens.map((item) => (
-              <Card key={item.id} sx={{ mb: 1.5, p: 1.5, borderRadius: 2 }} variant="outlined">
-                <Box sx={{ display: "flex", gap: 2 }}>
-                  <Avatar src={item.img} variant="rounded" sx={{ width: 64, height: 64 }} />
-                  <Box sx={{ flexGrow: 1 }}>
-                    <Typography fontWeight="bold">{item.nome}</Typography>
-                    {item.descricao && (
-                      <Typography variant="body2" color="text.secondary">{item.descricao}</Typography>
-                    )}
-                    {item.selecoes && Object.keys(item.selecoes).length > 0 && (
-                      <Box sx={{ mt: 0.5 }}>
-                        {Object.entries(item.selecoes).map(([grupoId, grupo]) => (
-                          <Typography key={grupoId} variant="caption" color="text.secondary" display="block">
-                            <strong>{grupo.nome}:</strong> {grupo.itens.map(i => i.nome).join(", ")}
-                          </Typography>
-                        ))}
-                      </Box>
-                    )}
-                    {item?.observacao && (
-                      <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5, fontStyle: "italic" }}>
-                        Obs: {item.observacao}
-                      </Typography>
-                    )}
-                  </Box>
+        {/* ABA 0: ITENS */}
+        {aba === 0 && (
+          <Card sx={{ my: 2, borderRadius: 3 }}>
+            <CardContent>
+              {itens.length === 0 && (
+                <Typography color="text.secondary">Seu carrinho está vazio</Typography>
+              )}
 
-                  <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-end", justifyContent: "space-between" }}>
-                    <Box sx={{ display: "flex", alignItems: "center", bgcolor: "action.hover", borderRadius: 10, px: 0.5 }}>
-                      <IconButton size="small" onClick={() => decrementar(item.id)}>
-                        <RemoveIcon fontSize="small" />
-                      </IconButton>
-                      <Typography fontWeight="bold" sx={{ mx: 1 }}>{item.quantidade ?? 1}</Typography>
-                      <IconButton size="small" onClick={() => incrementar(item.id)}>
-                        <AddIcon fontSize="small" />
-                      </IconButton>
+              {itens.map((item) => (
+                <Card key={item.id} sx={{ mb: 1.5, p: 1.5, borderRadius: 2 }} variant="outlined">
+                  <Box sx={{ display: "flex", gap: 2 }}>
+                    <Avatar src={item.img} variant="rounded" sx={{ width: 64, height: 64 }} />
+                    <Box sx={{ flexGrow: 1 }}>
+                      <Typography fontWeight="bold">{item.nome}</Typography>
+                      {item.descricao && (
+                        <Typography variant="body2" color="text.secondary">{item.descricao}</Typography>
+                      )}
                     </Box>
-                    <Typography fontWeight="bold">
-                      R$ {(Number(item.valor ?? 0) * Number(item.quantidade ?? 1)).toFixed(2)}
-                    </Typography>
+                    <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-end", justifyContent: "space-between" }}>
+                      <Box sx={{ display: "flex", alignItems: "center", bgcolor: "action.hover", borderRadius: 10, px: 0.5 }}>
+                        <IconButton size="small" onClick={() => decrementar(item.id)}>
+                          <RemoveIcon fontSize="small" />
+                        </IconButton>
+                        <Typography fontWeight="bold" sx={{ mx: 1 }}>{item.quantidade ?? 1}</Typography>
+                        <IconButton size="small" onClick={() => incrementar(item.id)}>
+                          <AddIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                      <Typography fontWeight="bold">
+                        R$ {(Number(item.valor ?? 0) * Number(item.quantidade ?? 1)).toFixed(2)}
+                      </Typography>
+                    </Box>
                   </Box>
-                </Box>
-              </Card>
-            ))}
-
-            <Divider sx={{ my: 2 }} />
-            <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-              <Typography fontWeight="bold">Total do carrinho</Typography>
-              <Typography fontWeight="bold">R$ {valorTotalCarrinho.toFixed(2)}</Typography>
-            </Box>
-            {errosForm.carrinho && (
-              <FormHelperText error sx={{ mt: 1, textAlign: "center" }}>{errosForm.carrinho}</FormHelperText>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* ABA 1: DADOS DO CLIENTE */}
-      {aba === 1 && (
-        <Card sx={{ my: 2, borderRadius: 3, position: "relative" }}>
-          <CardContent>
-            {carregandoEndereco && (
-              <Box sx={{
-                position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
-                bgcolor: "rgba(255,255,255,0.7)", zIndex: 10,
-                display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: 1
-              }}>
-                <CircularProgress size={32} />
-                <Typography variant="body2" color="text.secondary">Recuperando endereço do histórico...</Typography>
-              </Box>
-            )}
-
-            <TextField
-              label="Nome"
-              fullWidth
-              size="small"
-              sx={{ mb: 2 }}
-              value={cliente.nome}
-              error={!!errosForm.nome}
-              helperText={errosForm.nome}
-              onChange={(e) => setCliente({ ...cliente, nome: e.target.value })}
-            />
-
-            <TextField
-              label="Telefone"
-              type="tel"
-              fullWidth
-              size="small"
-              sx={{ mb: 2 }}
-              value={cliente.telefone}
-              error={!!errosForm.telefone}
-              helperText={errosForm.telefone}
-              onChange={(e) => {
-                const formatado = formatarTelefone(e.target.value);
-                setCliente({ ...cliente, telefone: formatado });
-              }}
-            />
-
-            <TextField
-              label="Forma de pagamento"
-              select
-              fullWidth
-              size="small"
-              sx={{ mb: 2 }}
-              value={cliente.formaPagamento.forma}
-              error={!!errosForm.formaPagamento}
-              helperText={errosForm.formaPagamento}
-              onChange={(e) =>
-                setCliente({
-                  ...cliente,
-                  formaPagamento: { ...cliente.formaPagamento, forma: e.target.value, obsPagamento: "" }
-                })
-              }
-            >
-              {formasPagamento.map((f) => (
-                <MenuItem key={f} value={f}>{f}</MenuItem>
+                </Card>
               ))}
-            </TextField>
 
-            {cliente.formaPagamento.forma === "DINHEIRO" && (
-              <>
-                <FormControlLabel
-                  control={
-                    <Checkbox checked={checkTroco} onChange={(e) => setCheckTroco(e.target.checked)} />
-                  }
-                  label="Precisa de troco?"
-                />
-                {checkTroco && (
-                  <TextField
-                    label="Troco para quanto?"
-                    fullWidth
-                    type="number"
-                    size="small"
-                    sx={{ mt: 1 }}
-                    value={cliente.formaPagamento.obsPagamento}
-                    error={!!errosForm.obsPagamento}
-                    helperText={errosForm.obsPagamento}
-                    onChange={(e) =>
-                      setCliente({
-                        ...cliente,
-                        formaPagamento: { ...cliente.formaPagamento, obsPagamento: e.target.value }
-                      })
-                    }
-                  />
-                )}
-              </>
-            )}
-
-            {cliente.formaPagamento.forma === "PIX" && (
-              <Typography variant="body2" sx={{ mt: 1 }} color="success.main">
-                ✓ O código Copia e Cola do PIX será fornecido na finalização.
-              </Typography>
-            )}
-
-            {cliente.formaPagamento.forma === "VALE REFEIÇÃO - VALE ALIMENTAÇÃO" && (
-              <Typography variant="body2" sx={{ mt: 1 }} color="text.secondary">
-                Por favor, informe a bandeira (ex: Sodexo, Alelo) nas observações de entrega.
-              </Typography>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* ABA 2: DADOS DA ENTREGA */}
-      {aba === 2 && (
-        <Card sx={{ my: 2, borderRadius: 3 }}>
-          <CardContent>
-            <FormControlLabel
-              control={
-                <Checkbox checked={checkRetirarLoja} onChange={(e) => setCheckRetirarLoja(e.target.checked)} />
-              }
-              label="Quero retirar pessoalmente na Loja."
-            />
-
-            <Card variant="outlined" sx={{ my: 2, p: 2, bgcolor: "action.hover", borderRadius: 2 }}>
-              <Typography fontWeight="bold" variant="body2">Endereço da Loja:</Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>{enderecoTexto}</Typography>
-            </Card>
-
-            {!checkRetirarLoja && (
-              <Box sx={{ mt: 1 }}>
-                <MapaEntrega />
-                {errosForm.entrega && (
-                  <FormHelperText error sx={{ mt: 1, fontSize: "0.85rem", textAlign: "center" }}>
-                    {errosForm.entrega}
-                  </FormHelperText>
-                )}
+              <Divider sx={{ my: 2 }} />
+              <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                <Typography fontWeight="bold">Total do carrinho</Typography>
+                <Typography fontWeight="bold">R$ {valorTotalCarrinho.toFixed(2)}</Typography>
               </Box>
-            )}
-          </CardContent>
-        </Card>
-      )}
+              {errosForm.carrinho && (
+                <FormHelperText error sx={{ mt: 1, textAlign: "center" }}>{errosForm.carrinho}</FormHelperText>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
-      {/* FOOTER FIXO SUPER COMPACTO */}
+        {/* ABA 1: CLIENTE */}
+        {aba === 1 && (
+          <Card sx={{ my: 2, borderRadius: 3, position: "relative" }}>
+            <CardContent>
+              {carregandoEndereco && (
+                <Box sx={{
+                  position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+                  bgcolor: "rgba(255,255,255,0.7)", zIndex: 10,
+                  display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: 1
+                }}>
+                  <CircularProgress size={32} />
+                  <Typography variant="body2" color="text.secondary">Recuperando endereço do histórico...</Typography>
+                </Box>
+              )}
+
+              <TextField
+                label="Nome"
+                fullWidth
+                size="small"
+                sx={{ mb: 2 }}
+                value={cliente.nome}
+                error={!!errosForm.nome}
+                helperText={errosForm.nome}
+                onChange={(e) => setCliente({ ...cliente, nome: e.target.value })}
+              />
+
+              <TextField
+                label="Telefone"
+                type="tel"
+                fullWidth
+                size="small"
+                sx={{ mb: 2 }}
+                value={cliente.telefone}
+                error={!!errosForm.telefone}
+                helperText={errosForm.telefone}
+                onChange={(e) => {
+                  const formatado = formatarTelefone(e.target.value);
+                  setCliente({ ...cliente, telefone: formatado });
+                }}
+              />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ABA 2: ENTREGA */}
+        {aba === 2 && (
+          <Card sx={{ my: 2, borderRadius: 3 }}>
+            <CardContent>
+              <FormControlLabel
+                control={
+                  <Checkbox checked={checkRetirarLoja} onChange={(e) => setCheckRetirarLoja(e.target.checked)} />
+                }
+                label="Quero retirar pessoalmente na Loja."
+              />
+
+              <Card variant="outlined" sx={{ my: 2, p: 2, bgcolor: "action.hover", borderRadius: 2 }}>
+                <Typography fontWeight="bold" variant="body2">Endereço da Loja:</Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>{enderecoTexto}</Typography>
+              </Card>
+
+              {!checkRetirarLoja && (
+                <Box sx={{ mt: 1 }}>
+                  <MapaEntrega />
+                  {errosForm.entrega && (
+                    <FormHelperText error sx={{ mt: 1, fontSize: "0.85rem", textAlign: "center" }}>
+                      {errosForm.entrega}
+                    </FormHelperText>
+                  )}
+                </Box>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ABA 3: PAGAMENTO (Dinamizado) */}
+        {aba === 3 && (
+          <Card sx={{ my: 2, borderRadius: 3 }}>
+            <CardContent>
+              <TextField
+                label="Forma de pagamento"
+                select
+                fullWidth
+                size="small"
+                sx={{ mb: 2 }}
+                value={cliente.formaPagamento.forma}
+                onChange={(e) => {
+                  // Encontra o objeto de pagamento selecionado
+                  const selecionado = preferencias.pagamentos.find(p => p.nome === e.target.value);
+                  setCliente({
+                    ...cliente,
+                    formaPagamento: {
+                      ...cliente.formaPagamento,
+                      forma: e.target.value,
+                      obsExibicao: selecionado?.obs || "" // Salva a obs para exibir
+                    }
+                  });
+                }}
+              >
+                {preferencias?.pagamentos?.map((p) => (
+                  <MenuItem key={p.nome} value={p.nome}>{p.nome}</MenuItem>
+                ))}
+              </TextField>
+
+              {/* Exibe a observação se existir */}
+              {cliente.formaPagamento.obsExibicao && (
+                <Card variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
+                  <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>{cliente.formaPagamento.obsExibicao}</Typography>
+                </Card>
+              )}
+
+              {cliente.formaPagamento.forma === "DINHEIRO" && (
+                <>
+                  <FormControlLabel
+                    control={
+                      <Checkbox checked={checkTroco} onChange={(e) => setCheckTroco(e.target.checked)} />
+                    }
+                    label="Precisa de troco?"
+                  />
+                  {checkTroco && (
+                    <TextField
+                      label="Troco para quanto?"
+                      fullWidth
+                      type="number"
+                      size="small"
+                      sx={{ mt: 1 }}
+                      value={cliente.formaPagamento.obsPagamento}
+                      error={!!errosForm.obsPagamento}
+                      helperText={errosForm.obsPagamento}
+                      onChange={(e) =>
+                        setCliente({
+                          ...cliente,
+                          formaPagamento: { ...cliente.formaPagamento, obsPagamento: e.target.value }
+                        })
+                      }
+                    />
+                  )}
+                </>
+              )}
+            </CardContent>
+          </Card>
+        )}
+      </Box>
+
+      {/* FOOTER FIXO */}
       <Box
         sx={{
           position: "fixed",
@@ -517,47 +527,19 @@ export default function Checkout() {
           width: "100%",
           bgcolor: "background.paper",
           boxShadow: "0 -3px 12px rgba(0,0,0,0.12)",
-          p: 1.5, // 🟢 Reduzido de 2 para 1.5 para salvar espaço
+          p: 1.5,
           zIndex: 1200,
           borderTopLeftRadius: 12,
           borderTopRightRadius: 12,
         }}
       >
-        <Card sx={{ mb: 1, boxShadow: "none", bgcolor: "grey.50", border: "1px solid", borderColor: "grey.200" }}>
-          <CardContent sx={{ p: "8px 12px !important" }}>
-            <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.2 }}>
-              <Typography variant="subtitle1" color="text.secondary" fontWeight="bold">
-                Subtotal:
-              </Typography>
-              <Typography variant="subtitle1" color="text.secondary" fontWeight="bold">
-                R$ {valorTotalCarrinho.toFixed(2)}
-              </Typography>
-            </Box>
-            <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.2 }}>
-              <Typography variant="subtitle1" color="text.secondary" fontWeight="bold">
-                Taxa de entrega:
-              </Typography>
-              <Typography variant="subtitle1" color="text.secondary" fontWeight="bold">
-                {checkRetirarLoja ? "Grátis (Retirada)" : `R$ ${taxaEntregaEfetiva.toFixed(2)}`}
-              </Typography>
-            </Box>
-            <Divider sx={{ my: 0.5 }} />
-            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <Typography variant="subtitle1" fontWeight="bold">Total a Pagar:</Typography> 
-              <Typography variant="subtitle1" fontWeight="bold" color="primary"> 
-                R$ {valorTotalPedido.toFixed(2)}
-              </Typography>
-            </Box>
-          </CardContent>
-        </Card>
-
         <Button
           variant="contained"
-          size="medium" // 🟢 De "large" para "medium"
+          size="medium"
           fullWidth
           disabled={carregandoEnvio || carregandoEndereco || itens.length === 0}
           onClick={lidarComAvanco}
-          sx={{ py: 1, borderRadius: 2, fontWeight: "bold", textTransform: "none" }} // 🟢 py reduzido de 1.5 para 1
+          sx={{ py: 1, borderRadius: 2, fontWeight: "bold", textTransform: "none" }}
         >
           {carregandoEndereco ? (
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>

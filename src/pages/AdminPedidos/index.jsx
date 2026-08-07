@@ -319,10 +319,17 @@ export default function AdminPedidos() {
       <Tabs
         value={abaAtiva}
         onChange={(e, newValue) => setAbaAtiva(newValue)}
-        sx={{ mb: 3 }}
-        variant="scrollable"
-        scrollButtons
-        allowScrollButtonsMobile
+        variant="fullWidth"
+        sx={{
+          mb: 3,
+          px: 0,
+          mx: -2, // Puxa para as bordas da tela se o Box pai tiver padding de 2
+          width: "calc(100% + 32px)", // Compensa a margem negativa para ocupar exatamente a largura total
+          "& .MuiTab-root": {
+            minWidth: 0,
+            px: 1, // Reduz o padding lateral interno de cada aba
+          }
+        }}
       >
         {statusTabs.map((status) => (
           <Tab

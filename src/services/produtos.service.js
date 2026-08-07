@@ -13,6 +13,7 @@ import { db } from "../config/firebase";
 
 
 export async function getProdutos(idLoja) {
+  console.log("Buscando produtos da loja:", idLoja);
   const snapshot = await getDocs(collection(
     db,
     "clientes123pedidos",
@@ -27,6 +28,8 @@ export async function getProdutos(idLoja) {
 }
 
 export async function getProdutosPorTipo(idLoja, tipo) {
+  console.log("Buscando produtos por tipo da loja:", idLoja);
+
   const q = query(collection(
     db,
     "clientes123pedidos",

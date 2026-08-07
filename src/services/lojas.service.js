@@ -3,6 +3,8 @@ import { db } from "../config/firebase";
 
 // ⭐ Buscar UMA loja
 export const getLoja = async (idLoja) => {
+    console.log("getLoja", idLoja);
+
     if (!idLoja) return null;
 
     const snap = await getDoc(doc(db, "clientes123pedidos", idLoja));

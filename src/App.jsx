@@ -30,6 +30,7 @@ import ConfirmarCriacao from "./pages/ConfirmarCriacao";
 import AdminImpressora from "./pages/AdminImpressora";
 import AdminEntrega from "./pages/AdminEntrega";
 import AdminHorarios from "./pages/AdminHorarios";
+import AdminPagamentos from "./pages/AdminPagamentos";
 
 import PrivateRoute from "./components/PrivateRoute";
 
@@ -129,6 +130,10 @@ const App = () => {
                     <Route
                       path="horarios"
                       element={<PrivateRoute><AdminHorarios /></PrivateRoute>}
+                    />
+                    <Route
+                      path="pagamentos"
+                      element={<PrivateRoute><AdminPagamentos /></PrivateRoute>}
                     />
                   </Route>
 

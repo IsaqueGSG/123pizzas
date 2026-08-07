@@ -137,7 +137,14 @@ export default function AdminDrawer() {
             <ListItemText primary="Ajustar Horários" />
           </ListItemButton>
         </ListItem>
-{/* 
+
+        <ListItem disablePadding>
+          <ListItemButton onClick={() => navigate(`/${idLoja}/admin/pagamentos`)}>
+            <ListItemText primary="Ajustar Pagamentos" />
+          </ListItemButton>
+        </ListItem>
+
+        {/* 
         <ListItem disablePadding>
           <ListItemButton onClick={() => navigate(`/${idLoja}/admin/preferencias`)}>
             <SettingsIcon sx={{ mr: 2 }} />

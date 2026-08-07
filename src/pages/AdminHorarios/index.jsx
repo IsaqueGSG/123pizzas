@@ -26,7 +26,7 @@ const DIAS_SEMANA = [
     "quarta",
     "quinta",
     "sexta",
-    "sabado",
+    "sabado", 
     "domingo"
 ];
 

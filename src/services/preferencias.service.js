@@ -3,6 +3,7 @@ import { db } from "../config/firebase";
 
 
 export async function getPreferencias(idLoja) {
+  console.log("getPreferencias", idLoja);
   const snap = await getDoc(doc(
     db,
     "clientes123pedidos",

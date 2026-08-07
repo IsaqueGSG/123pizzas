@@ -8,9 +8,9 @@ import {
   updateDoc,
   deleteDoc,
   onSnapshot,
-  where, 
-  limit, 
-  getDocs 
+  where,
+  limit,
+  getDocs
 } from "firebase/firestore";
 
 import { db } from "../config/firebase";
@@ -109,8 +109,10 @@ export async function processarPedido({
 }
 
 export async function buscarUltimoEnderecoPorTelefone(idLoja, telefone) {
+  console.log("buscarUltimoEnderecoPorTelefone", idLoja);
+
   const pedidosRef = collection(db, "clientes123pedidos", idLoja, "pedidos");
-  
+
   // Criamos uma query buscando pelo telefone do cliente, ordenando pelo mais recente
   const q = query(
     pedidosRef,
@@ -120,7 +122,7 @@ export async function buscarUltimoEnderecoPorTelefone(idLoja, telefone) {
   );
 
   const querySnapshot = await getDocs(q);
-  
+
   if (querySnapshot.empty) return null;
 
   // Retorna apenas o endereço do primeiro (mais recente) documento encontrado
