@@ -110,12 +110,12 @@ export default function AdminDrawer() {
           </ListItemButton>
         </ListItem>
 
-        <ListItem disablePadding>
+        {/* <ListItem disablePadding>
           <ListItemButton onClick={() => navigate(`/${idLoja}/admin/assinatura`)}>
             <CreditCardIcon sx={{ mr: 2 }} />
             <ListItemText primary="Assinatura" />
           </ListItemButton>
-        </ListItem>
+        </ListItem> */}
 
         <ListItem disablePadding>
           <ListItemButton onClick={() => navigate(`/${idLoja}/admin/impressora`)}>
@@ -140,6 +140,7 @@ export default function AdminDrawer() {
 
         <ListItem disablePadding>
           <ListItemButton onClick={() => navigate(`/${idLoja}/admin/pagamentos`)}>
+            <CreditCardIcon sx={{ mr: 2 }} />
             <ListItemText primary="Ajustar Pagamentos" />
           </ListItemButton>
         </ListItem>

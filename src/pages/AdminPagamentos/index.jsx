@@ -6,6 +6,7 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import AdminDrawer from "../../components/AdminDrawer";
+import LockIcon from "@mui/icons-material/Lock";
 import { usePreferencias } from "../../contexts/PreferenciasContext";
 
 export default function AdminPagamentos() {
@@ -18,8 +19,23 @@ export default function AdminPagamentos() {
     }, [preferencias]);
 
     const atualizarItem = (index, campo, valor) => {
+        if (campo === "nome") {
+            const nomeNormalizado = valor.trim().toLowerCase();
+
+            if (
+                nomeNormalizado === "dinheiro" ||
+                nomeNormalizado === "cash"
+            ) {
+                return;
+            }
+        }
+
         const novos = [...pagamentos];
-        novos[index][campo] = valor;
+        novos[index] = {
+            ...novos[index],
+            [campo]: valor
+        };
+
         setPagamentos(novos);
     };
 
@@ -49,6 +65,32 @@ export default function AdminPagamentos() {
             <Typography variant="h6" sx={{ mb: 2 }}>💳 Configurar Formas de Pagamento</Typography>
 
             <Stack spacing={2}>
+
+                <Card variant="outlined" sx={{ p: 2 }}>
+
+
+                    <Box sx={{
+                        position: 'relative',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                    }}>
+                        <TextField
+                            fullWidth
+                            label="Forma de pagamento padrão (não editável)"
+                            size="small"
+                            value="Dinheiro"
+                            disabled
+                        />
+                        <IconButton
+                            size="small"
+                            sx={{ m: 1 }}
+                        >
+                            <LockIcon fontSize="small" />
+                        </IconButton>
+                    </Box>
+                </Card>
+
                 {pagamentos.map((pag, index) => (
                     <Card key={pag.id || index} variant="outlined" sx={{ p: 2, position: 'relative' }}>
 

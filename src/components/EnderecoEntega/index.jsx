@@ -95,7 +95,12 @@ export default function MapaEntrega() {
                 autocompleteRef.current =
                     new window.google.maps.places.Autocomplete(inputRef.current, {
                         componentRestrictions: { country: "br" },
-                        fields: ["place_id", "formatted_address", "geometry", "name"],
+                        fields: [
+                            "place_id",
+                            "formatted_address",
+                            "geometry",
+                            "address_components"
+                        ],
                         types: ["address"],
                     });
 
@@ -104,16 +109,58 @@ export default function MapaEntrega() {
 
                     if (!place.geometry) return;
 
-                    atualizarCampo("placeId", place.place_id);
-                    atualizarCampo("enderecoFormatado", place.formatted_address);
-                    atualizarCampo("lat", place.geometry.location.lat());
-                    atualizarCampo("lng", place.geometry.location.lng());
+                    const components = place.address_components || [];
+
+                    const getComponent = (type) => {
+                        const component = components.find(c =>
+                            c.types.includes(type)
+                        );
+
+                        return component?.long_name || "";
+                    };
+
+                    const rua = getComponent("route");
+
+                    const bairro =
+                        getComponent("sublocality_level_1") ||
+                        getComponent("sublocality") ||
+                        getComponent("neighborhood");
+
+                    const cidade =
+                        getComponent("administrative_area_level_2");
+
+                    const uf =
+                        getComponent("administrative_area_level_1");
+
+                    const cep =
+                        getComponent("postal_code");
+
+                    atualizarCampo("placeId", place.place_id || "");
+                    atualizarCampo(
+                        "enderecoFormatado",
+                        place.formatted_address || ""
+                    );
+
+                    atualizarCampo("rua", rua);
+                    atualizarCampo("bairro", bairro);
+                    atualizarCampo("cidade", cidade);
+                    atualizarCampo("uf", uf);
+                    atualizarCampo("cep", cep);
+
+                    atualizarCampo(
+                        "lat",
+                        place.geometry.location.lat()
+                    );
+
+                    atualizarCampo(
+                        "lng",
+                        place.geometry.location.lng()
+                    );
 
                     setSessionToken(sessionTokenRef.current);
 
                     sessionTokenRef.current =
                         new window.google.maps.places.AutocompleteSessionToken();
-
                 });
 
                 setLoaded(true);
@@ -124,11 +171,25 @@ export default function MapaEntrega() {
     }, []);
 
     useEffect(() => {
-        // Só calcula se tiver lat/lng E se o usuário já digitou algo no campo número
-        if (endereco.lat && endereco.lng && endereco.numero && endereco.numero.length > 0) {
-            calcularEntrega();
+        const temCoordenadas =
+            endereco.lat !== null &&
+            endereco.lng !== null &&
+            endereco.lat !== undefined &&
+            endereco.lng !== undefined;
+
+        const temPlaceId =
+            Boolean(endereco.placeId);
+
+        if (temCoordenadas && temPlaceId) {
+            calcularEntrega({
+                ...endereco
+            });
         }
-    }, [endereco.numero, endereco.lat, endereco.lng]);
+    }, [
+        endereco.lat,
+        endereco.lng,
+        endereco.placeId
+    ]);
 
     // Sincroniza o input físico com o endereço do contexto (útil para preenchimento automático pelo telefone)
     useEffect(() => {

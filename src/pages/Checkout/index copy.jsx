@@ -29,7 +29,6 @@ import { criarPedido, buscarUltimoEnderecoPorTelefone } from "../../services/ped
 export default function Checkout() {
   const { idLoja } = useLoja();
   const { preferencias } = usePreferencias(); // 🟢 Preferências da loja
-  console.log(preferencias); // 🟢 Log para verificar a estrutura das preferências
   const {
     enderecoLoja,
     endereco,
@@ -61,13 +60,8 @@ export default function Checkout() {
     0
   );
 
-  const taxaEntregaEfetiva = checkRetirarLoja
-    ? 0
-    : Number(endereco?.taxaEntrega ?? 0);
-
-  const valorTotalPedido =
-    Number(valorTotalCarrinho) +
-    taxaEntregaEfetiva;
+  const taxaEntregaEfetiva = checkRetirarLoja ? 0 : (endereco?.taxaEntrega ?? 0);
+  const valorTotalPedido = valorTotalCarrinho + taxaEntregaEfetiva;
 
   const [cliente, setCliente] = useState({
     nome: "",
@@ -226,6 +220,8 @@ export default function Checkout() {
               loading: false,
               erro: ""
             });
+
+            calcularEntrega();
           }
         } catch (error) {
           console.error("Erro ao buscar histórico de endereço:", error);
@@ -423,34 +419,60 @@ export default function Checkout() {
         )}
 
         {/* ABA 2: ENTREGA */}
-        {aba === 2 && (
+        <Box sx={{ display: aba === 2 ? "block" : "none" }}>
           <Card sx={{ my: 2, borderRadius: 3 }}>
             <CardContent>
               <FormControlLabel
                 control={
-                  <Checkbox checked={checkRetirarLoja} onChange={(e) => setCheckRetirarLoja(e.target.checked)} />
+                  <Checkbox
+                    checked={checkRetirarLoja}
+                    onChange={(e) => setCheckRetirarLoja(e.target.checked)}
+                  />
                 }
                 label="Quero retirar pessoalmente na Loja."
               />
 
-              <Card variant="outlined" sx={{ my: 2, p: 2, bgcolor: "action.hover", borderRadius: 2 }}>
-                <Typography fontWeight="bold" variant="body2">Endereço da Loja:</Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>{enderecoTexto}</Typography>
+              <Card
+                variant="outlined"
+                sx={{
+                  my: 2,
+                  p: 2,
+                  bgcolor: "action.hover",
+                  borderRadius: 2
+                }}
+              >
+                <Typography fontWeight="bold" variant="body2">
+                  Endereço da Loja:
+                </Typography>
+
+                <Typography variant="body2" color="text.secondary">
+                  {enderecoTexto}
+                </Typography>
               </Card>
 
-              {!checkRetirarLoja && (
-                <Box sx={{ mt: 1 }}>
-                  <MapaEntrega />
-                  {errosForm.entrega && (
-                    <FormHelperText error sx={{ mt: 1, fontSize: "0.85rem", textAlign: "center" }}>
-                      {errosForm.entrega}
-                    </FormHelperText>
-                  )}
-                </Box>
+              <Box
+                sx={{
+                  display: checkRetirarLoja ? "none" : "block"
+                }}
+              >
+                <MapaEntrega />
+              </Box>
+
+              {errosForm.entrega && (
+                <FormHelperText
+                  error
+                  sx={{
+                    mt: 1,
+                    fontSize: "0.85rem",
+                    textAlign: "center"
+                  }}
+                >
+                  {errosForm.entrega}
+                </FormHelperText>
               )}
             </CardContent>
           </Card>
-        )}
+        </Box>
 
         {/* ABA 3: PAGAMENTO (Dinamizado) */}
         {aba === 3 && (
@@ -475,9 +497,8 @@ export default function Checkout() {
                   });
                 }}
               >
-                <MenuItem key={"Dinheiro"} value={"DINHEIRO"}>Dinheiro</MenuItem>
                 {preferencias?.pagamentos?.map((p) => (
-                  <MenuItem key={p.id} value={p.nome}>{p.nome}</MenuItem>
+                  <MenuItem key={p.nome} value={p.nome}>{p.nome}</MenuItem>
                 ))}
               </TextField>
 
