@@ -38,28 +38,101 @@ export function abertoAgora(horarios, dataAtual = new Date()) {
     "sabado"
   ];
 
-  const diaAtual = dias[dataAtual.getDay()];
-  const config = horarios[diaAtual];
+  const diaAtualIndex = dataAtual.getDay();
+  const diaAtual = dias[diaAtualIndex];
 
-  if (!config || !config.ativo) return false;
+  const minutosAgora =
+    dataAtual.getHours() * 60 + dataAtual.getMinutes();
 
-  if (!config.inicio || !config.fim) return false; // proteção extra
+  // =====================================================
+  // FUNÇÃO PARA VERIFICAR UM HORÁRIO
+  // =====================================================
+  const horarioAberto = (config, minutos) => {
+    if (!config?.ativo) {
+      return false;
+    }
 
-  const [hA, mA] = config.inicio.split(":").map(Number);
-  const [hF, mF] = config.fim.split(":").map(Number);
+    if (!config.inicio || !config.fim) {
+      return false;
+    }
 
-  const minutosAgora = dataAtual.getHours() * 60 + dataAtual.getMinutes();
-  const minutosAbertura = hA * 60 + mA;
-  const minutosFechamento = hF * 60 + mF;
+    const [hInicio, mInicio] = config.inicio.split(":").map(Number);
+    const [hFim, mFim] = config.fim.split(":").map(Number);
 
-  // horário normal
-  if (minutosFechamento > minutosAbertura) {
-    return minutosAgora >= minutosAbertura && minutosAgora <= minutosFechamento;
+    const inicio = hInicio * 60 + mInicio;
+    const fim = hFim * 60 + mFim;
+
+    // =================================================
+    // 00:00 → 00:00 = DIA INTEIRO
+    // =================================================
+    if (inicio === 0 && fim === 0) {
+      return true;
+    }
+
+    // =================================================
+    // HORÁRIO NORMAL
+    // Ex: 08:00 → 18:00
+    // =================================================
+    if (fim > inicio) {
+      return minutos >= inicio && minutos <= fim;
+    }
+
+    // =================================================
+    // HORÁRIO QUE ATRAVESSA MEIA-NOITE
+    // Ex: 18:00 → 02:00
+    //
+    // Aqui só verificamos a parte do dia de início.
+    // A parte da madrugada será verificada pelo
+    // dia anterior.
+    // =================================================
+    if (fim < inicio) {
+      return minutos >= inicio;
+    }
+
+    return false;
+  };
+
+  // =====================================================
+  // 1. VERIFICA O HORÁRIO DO DIA ATUAL
+  // =====================================================
+
+  const configAtual = horarios[diaAtual];
+
+  if (horarioAberto(configAtual, minutosAgora)) {
+    return true;
   }
 
-  // atravessa meia-noite
-  return (
-    minutosAgora >= minutosAbertura ||
-    minutosAgora <= minutosFechamento
-  );
+  // =====================================================
+  // 2. VERIFICA SE ESTAMOS NA MADRUGADA DO DIA ANTERIOR
+  // =====================================================
+
+  const diaAnteriorIndex = (diaAtualIndex + 6) % 7;
+  const diaAnterior = dias[diaAnteriorIndex];
+
+  const configAnterior = horarios[diaAnterior];
+
+  if (
+    configAnterior?.ativo &&
+    configAnterior.inicio &&
+    configAnterior.fim
+  ) {
+    const [hInicio, mInicio] =
+      configAnterior.inicio.split(":").map(Number);
+
+    const [hFim, mFim] =
+      configAnterior.fim.split(":").map(Number);
+
+    const inicioAnterior = hInicio * 60 + mInicio;
+    const fimAnterior = hFim * 60 + mFim;
+
+    // O horário atravessa meia-noite
+    if (
+      fimAnterior < inicioAnterior &&
+      minutosAgora <= fimAnterior
+    ) {
+      return true;
+    }
+  }
+
+  return false;
 }

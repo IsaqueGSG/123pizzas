@@ -32,7 +32,6 @@ const DIAS_SEMANA = [
 
 export default function AdminHorarios() {
     const { preferencias, atualizarPreferencias, loading } = usePreferencias();
-    console.log("preferencias do contexto: ", preferencias);
     const [prefs, setPrefs] = useState(preferencias);
 
     useEffect(() => {
@@ -120,9 +119,9 @@ export default function AdminHorarios() {
                                         />
 
                                         {/* 2. Lógica visual para horários que viram a noite */}
-                                        {config.fim < config.inicio && config.fim !== "00:00" && (
+                                        {config.fim < config.inicio && config.fim !== "00:00" && screen.width > 400 && (
                                             <Typography variant="caption" color="primary" sx={{ fontWeight: 'bold' }}>
-                                                +1 dia
+                                                ⚠️ Este horário atravessa a meia-noite de {dia.charAt(0).toUpperCase() + dia.slice(1)} para o próximo dia.
                                             </Typography>
                                         )}
                                     </Box>
