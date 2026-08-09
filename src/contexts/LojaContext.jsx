@@ -1,137 +1,196 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { getLoja } from "../services/lojas.service";
-import { useNavigate } from "react-router-dom";
-
 
 const LojaContext = createContext(null);
 
 export function LojaProvider({ children }) {
-  const location = useLocation();
-  const navigate = useNavigate();
+    const location = useLocation();
+    const navigate = useNavigate();
 
-  const [loja, setLoja] = useState(null);
-  const [idLoja, setIdLojaState] = useState(null);
-  const [ready, setReady] = useState(false);
+    const [loja, setLoja] = useState(null);
+    const [idLoja, setIdLojaState] = useState(null);
+    const [ready, setReady] = useState(false);
 
-  const [blocked, setBlocked] = useState(false);
-  const [needsPaymentAction, setNeedsPaymentAction] = useState(false);
+    const [blocked, setBlocked] = useState(false);
+    const [needsPaymentAction, setNeedsPaymentAction] = useState(false);
 
-  const setIdLoja = async (lojaId) => {
-    if (lojaId) {
-      localStorage.setItem("idLoja", lojaId);
-      setIdLojaState(lojaId);
+    const firstSegment = location.pathname.split("/")[1];
 
-      const data = await getLoja(lojaId);
-      setLoja(data || null);
+    // =========================================================
+    // ALTERAR LOJA MANUALMENTE
+    // =========================================================
+    const setIdLoja = async (lojaId) => {
+        if (lojaId) {
+            localStorage.setItem("idLoja", lojaId);
+            setIdLojaState(lojaId);
 
-    } else {
-      localStorage.removeItem("idLoja");
-      setIdLojaState(null);
-      setLoja(null);
+            const data = await getLoja(lojaId);
+
+            if (data) {
+                const assinatura = data.assinatura || {};
+
+                setLoja(data);
+                setBlocked(isBlocked(assinatura));
+                setNeedsPaymentAction(needsAction(assinatura));
+            } else {
+                setLoja(null);
+                setBlocked(false);
+                setNeedsPaymentAction(false);
+            }
+
+        } else {
+            localStorage.removeItem("idLoja");
+
+            setIdLojaState(null);
+            setLoja(null);
+            setBlocked(false);
+            setNeedsPaymentAction(false);
+        }
+    };
+
+    // =========================================================
+    // REGRAS DA ASSINATURA
+    // =========================================================
+    function isBlocked(assinatura) {
+        return (
+            assinatura?.statusPagamento === "atrasado" ||
+            assinatura?.statusPagamento === "cancelado"
+        );
     }
-  };
 
-  function isBlocked(assinatura) {
-    return (
-      assinatura?.statusPagamento === "atrasado" ||
-      assinatura?.statusPagamento === "cancelado"
-    );
-  }
+    function needsAction(assinatura) {
+        return assinatura?.requiresAction === true;
+    }
 
-  function needsAction(assinatura) {
-    return assinatura?.requiresAction === true;
-  }
+    // =========================================================
+    // CARREGAR LOJA
+    //
+    // IMPORTANTE:
+    // Este effect NÃO depende de location.pathname.
+    // Depende somente do ID da loja.
+    // =========================================================
+    useEffect(() => {
+        async function carregarLoja() {
+            setReady(false);
 
-  // ⭐ resolver loja por prioridade
-  useEffect(() => {
-    async function resolverLoja() {
-      const pathSegments = location.pathname.split("/");
-      const firstSegment = pathSegments[1];
+            const rotasGlobais = [
+                "",
+                "login",
+                "registro-saas",
+                "registro-cobranca",
+                "confirmar-criacao"
+            ];
 
-      const rotasGlobais = ["", "login"];
+            let lojaId = firstSegment;
 
-      // 🔒 Rotas globais → usar localStorage
-      if (rotasGlobais.includes(firstSegment)) {
-        const saved = localStorage.getItem("idLoja");
+            // Rotas que não possuem /:idLoja
+            if (rotasGlobais.includes(firstSegment)) {
+                lojaId = localStorage.getItem("idLoja");
+            }
 
-        if (saved) {
-          const data = await getLoja(saved);
+            if (!lojaId) {
+                setLoja(null);
+                setIdLojaState(null);
+                setBlocked(false);
+                setNeedsPaymentAction(false);
 
-          if (data) {
+                setReady(true);
+                return;
+            }
+
+            console.log("🏪 Buscando loja:", lojaId);
+
+            const data = await getLoja(lojaId);
+
+            if (!data) {
+                setLoja(null);
+                setIdLojaState(null);
+                setBlocked(false);
+                setNeedsPaymentAction(false);
+
+                setReady(true);
+                return;
+            }
+
             const assinatura = data.assinatura || {};
+
+            setLoja(data);
+            setIdLojaState(data.idLoja);
 
             setBlocked(isBlocked(assinatura));
             setNeedsPaymentAction(needsAction(assinatura));
 
-            if (needsAction(assinatura) && location.pathname.includes("/admin")) {
-              navigate("/registro-cobranca");
-              setReady(true);
-              return;
-            }
+            localStorage.setItem("idLoja", data.idLoja);
 
-            setLoja(data);
-            setIdLojaState(data.idLoja);
-          }
+            setReady(true);
         }
 
-        setReady(true);
-        return;
-      }
+        carregarLoja();
 
-      // 🌐 URL define loja (modo web)
-      const data = await getLoja(firstSegment);
-      if (!data) {
-        setReady(true);
-        return;
-      }
+    }, [firstSegment]);
 
-      const assinatura = data?.assinatura || {};
-      const isAdminRoute = location.pathname.startsWith(`/${firstSegment}/admin`);
-      const isCobrancaRoute = location.pathname.includes("registro-cobranca");
 
-      setBlocked(isBlocked(assinatura));
-      setNeedsPaymentAction(needsAction(assinatura));
+    // =========================================================
+    // REGRAS DE NAVEGAÇÃO DA ASSINATURA
+    //
+    // Este effect pode rodar quando trocar de rota.
+    // MAS NÃO FAZ getLoja().
+    // Ele usa o estado "loja" que já temos.
+    // =========================================================
+    useEffect(() => {
 
-      // 🔥 REDIRECIONA APENAS QUEM PRECISA FINALIZAR COBRANÇA
-      if (
-        needsAction(assinatura) &&
-        isAdminRoute &&
-        !isCobrancaRoute
-      ) {
-        alert("Finalize sua cobrança para continuar");
+        if (!loja) return;
 
-        localStorage.setItem("idLoja", data.idLoja);
+        const assinatura = loja.assinatura || {};
 
-        navigate("/registro-cobranca");
+        const precisaFinalizarCobranca =
+            assinatura.requiresAction === true;
 
-        setReady(true);
-        return;
-      }
+        const isAdminRoute =
+            location.pathname.includes("/admin");
 
-      setLoja(data);
-      setIdLojaState(data.idLoja);
-      localStorage.setItem("idLoja", data.idLoja);
+        const isCobrancaRoute =
+            location.pathname === "/registro-cobranca";
 
-      setReady(true);
-    }
+        if (
+            precisaFinalizarCobranca &&
+            isAdminRoute &&
+            !isCobrancaRoute
+        ) {
+            console.log(
+                "⚠️ Usuário precisa finalizar cobrança"
+            );
 
-    resolverLoja();
+            navigate("/registro-cobranca", {
+                replace: true
+            });
+        }
 
-  }, [location.pathname]);
-
-  return (
-    <LojaContext.Provider
-      value={{
+    }, [
+        location.pathname,
         loja,
-        idLoja,
-        setIdLoja,
-        ready,
-      }}
-    >
-      {children}
-    </LojaContext.Provider>
-  );
+        navigate
+    ]);
+
+
+    // =========================================================
+    // CONTEXT
+    // =========================================================
+    return (
+        <LojaContext.Provider
+            value={{
+                loja,
+                idLoja,
+                setIdLoja,
+                ready,
+                blocked,
+                needsPaymentAction,
+            }}
+        >
+            {children}
+        </LojaContext.Provider>
+    );
 }
 
 export const useLoja = () => useContext(LojaContext);
