@@ -27,6 +27,8 @@ import {
   TableHead,
   TableRow,
   Avatar,
+  FormControlLabel,
+  Checkbox,
 } from "@mui/material";
 
 import {
@@ -144,6 +146,8 @@ function formatarHora(data) {
     minute: "2-digit",
   });
 }
+
+
 
 /* =========================================================
    CORES / STATUS
@@ -482,6 +486,7 @@ export default function RelatoriosPage() {
     tipo: "todos",
     pagamento: "todos",
     status: "todos",
+    incluirCancelados: false,
   });
 
   /* =======================================================
@@ -549,6 +554,10 @@ export default function RelatoriosPage() {
         filtros.status !== "todos" &&
         pedido.status !== filtros.status
       ) {
+        return false;
+      }
+
+      if (!filtros.incluirCancelados && pedido.status === "cancelado") {
         return false;
       }
 
@@ -1041,6 +1050,22 @@ export default function RelatoriosPage() {
           >
             30 dias
           </Button>
+
+          {/* checkboc para incluir pedidos cancelados */}
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={filtros.incluirCancelados}
+                onChange={(e) =>
+                  setFiltros((old) => ({
+                    ...old,
+                    incluirCancelados: e.target.checked,
+                  }))
+                }
+              />
+            }
+            label="Incluir pedidos cancelados"
+          />
         </Stack>
 
         <Grid container spacing={2}>
@@ -1051,19 +1076,18 @@ export default function RelatoriosPage() {
               label="Data inicial"
               type="date"
               value={
-                filtros.inicio
-                  ? filtros.inicio
-                    .toISOString()
-                    .slice(0, 10)
+                filtros.inicio && !isNaN(new Date(filtros.inicio).getTime())
+                  ? filtros.inicio.toISOString().slice(0, 10)
                   : ""
               }
               onChange={(e) => {
-                const data = new Date(
-                  `${e.target.value}T00:00:00`
-                );
+                // Proteção contra input vazio
+                if (!e.target.value) return;
+
+                const data = new Date(`${e.target.value}T00:00:00`);
+                if (isNaN(data.getTime())) return; // Ignora se data for inválida
 
                 setPeriodo("personalizado");
-
                 setFiltros((old) => ({
                   ...old,
                   inicio: data,
@@ -1082,19 +1106,17 @@ export default function RelatoriosPage() {
               label="Data final"
               type="date"
               value={
-                filtros.fim
-                  ? filtros.fim
-                    .toISOString()
-                    .slice(0, 10)
+                filtros.fim && !isNaN(new Date(filtros.fim).getTime())
+                  ? filtros.fim.toISOString().slice(0, 10)
                   : ""
               }
               onChange={(e) => {
-                const data = new Date(
-                  `${e.target.value}T23:59:59`
-                );
+                if (!e.target.value) return;
+
+                const data = new Date(`${e.target.value}T23:59:59`);
+                if (isNaN(data.getTime())) return;
 
                 setPeriodo("personalizado");
-
                 setFiltros((old) => ({
                   ...old,
                   fim: data,
@@ -1105,6 +1127,7 @@ export default function RelatoriosPage() {
               }}
             />
           </Grid>
+
           <Grid item xs={12} sm={6} md={2}>
             <TextField
               fullWidth
@@ -1115,7 +1138,7 @@ export default function RelatoriosPage() {
               onChange={(e) =>
                 setFiltros((old) => ({
                   ...old,
-                  horaInicio: e.target.value,
+                  horaInicio: e.target.value || "00:00", // Fallback seguro
                 }))
               }
               InputLabelProps={{
@@ -1134,7 +1157,7 @@ export default function RelatoriosPage() {
               onChange={(e) =>
                 setFiltros((old) => ({
                   ...old,
-                  horaFim: e.target.value,
+                  horaFim: e.target.value || "23:59", // Fallback seguro
                 }))
               }
               InputLabelProps={{
