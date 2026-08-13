@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 
@@ -20,6 +21,8 @@ import Typography from "@mui/material/Typography";
 import LockClockIcon from "@mui/icons-material/LockClock";
 
 export default function Cardapio() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm')); // Verifica se a tela é menor que 'sm' (600px)
 
@@ -34,6 +37,85 @@ export default function Cardapio() {
   const [produtoSelecionado, setProdutoSelecionado] = useState(null);
   const [openModal, setOpenModal] = useState(false);
   const [categoriaSelecionada, setCategoriaSelecionada] = useState(null);
+
+  //busca
+  const [produtoDestacado, setProdutoDestacado] = useState(null);
+  useEffect(() => {
+
+    const produtoId =
+      location.state?.produtoId;
+
+    const categoriaId =
+      location.state?.categoriaId;
+
+    if (!produtoId || !categoriaId) {
+      return;
+    }
+
+    // Primeiro muda para a categoria
+    setCategoriaSelecionada(categoriaId);
+
+  }, [location.state]);
+
+  useEffect(() => {
+
+    const produtoId =
+      location.state?.produtoId;
+
+    if (!produtoId) {
+      return;
+    }
+
+    // Espera a categoria selecionada renderizar
+    if (
+      categoriaSelecionada !==
+      location.state.categoriaId
+    ) {
+      return;
+    }
+
+    const elemento =
+      document.getElementById(
+        `produto-${produtoId}`
+      );
+
+    if (!elemento) {
+      return;
+    }
+
+    requestAnimationFrame(() => {
+
+      elemento.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+
+      setProdutoDestacado(
+        produtoId
+      );
+
+    });
+
+    const timer = setTimeout(() => {
+
+      setProdutoDestacado(null);
+
+      navigate(location.pathname, {
+        replace: true,
+        state: {},
+      });
+
+    }, 1800);
+
+    return () => {
+      clearTimeout(timer);
+    };
+
+  }, [
+    categoriaSelecionada,
+    location.state,
+    navigate
+  ]);
 
   function categoriaDisponivel(cat) {
     const inicio = cat?.horarioFuncionamento?.inicio;
@@ -276,14 +358,38 @@ export default function Cardapio() {
           }}
         >
           {produtosOrdenados.map((produto) => (
-            <CardProduto
-              modoMisto={modoMisto}
-              produto={produto}
+
+            <Box
               key={produto.id}
-              selecionado={saboresSelecionados.some(s => s.id === produto.id)}
-              onSelecionar={() => selecionarProduto(produto)}
-              foraDeHorario={categoriaAtual && !categoriaAberta}
-            />
+              id={`produto-${produto.id}`}
+            >
+
+              <CardProduto
+                modoMisto={modoMisto}
+                produto={produto}
+
+                selecionado={
+                  saboresSelecionados.some(
+                    s => s.id === produto.id
+                  )
+                }
+
+                onSelecionar={() =>
+                  selecionarProduto(produto)
+                }
+
+                foraDeHorario={
+                  categoriaAtual &&
+                  !categoriaAberta
+                }
+
+                destacado={
+                  produtoDestacado === produto.id
+                }
+              />
+
+            </Box>
+
           ))}
         </Box>
 
