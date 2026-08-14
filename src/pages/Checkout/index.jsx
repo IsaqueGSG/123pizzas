@@ -16,6 +16,7 @@ import RemoveIcon from "@mui/icons-material/Remove";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef, useMemo } from "react";
 
+import { useAuth } from "../../contexts/AuthContext";
 import { useLoja } from "../../contexts/LojaContext";
 import { useEntrega } from "../../contexts/EntregaContext";
 import { useCarrinho } from "../../contexts/CarrinhoContext";
@@ -29,7 +30,8 @@ import { criarPedido, buscarUltimoEnderecoPorTelefone } from "../../services/ped
 export default function Checkout() {
   const { idLoja } = useLoja();
   const { preferencias } = usePreferencias(); // 🟢 Preferências da loja
-  console.log(preferencias); // 🟢 Log para verificar a estrutura das preferências
+  const { user } = useAuth();
+
   const {
     enderecoLoja,
     endereco,
@@ -165,6 +167,7 @@ export default function Checkout() {
   };
 
   const lidarComAvanco = () => {
+
     setErrosForm({});
     if (aba === 0) {
       if (validarAbaItens()) setAba(1);
@@ -176,6 +179,7 @@ export default function Checkout() {
       if (validarAbaPagamento()) finalizarPedido();
     }
   };
+
 
   async function finalizarPedido() {
     if (carregandoEnvio) return;
@@ -202,7 +206,13 @@ export default function Checkout() {
       await criarPedido(idLoja, pedido);
       limparCarrinho();
       clearEndereco();
-      navigate(`/${idLoja}`);
+
+      if (user) {
+        window.close();
+      } else {
+        navigate(`/${idLoja}`);
+      }
+
     } catch (error) {
       console.error("Erro ao criar pedido:", error);
       pedidoFinalizadoRef.current = false;
@@ -292,6 +302,11 @@ export default function Checkout() {
   }, [checkTroco]);
 
   const lidarComTrocaAba = (novaAba) => {
+
+    if (user) {
+      return setAba(novaAba);
+    }
+
     if (novaAba === 1 && !validarAbaItens()) return;
     if (novaAba === 2 && (!validarAbaItens() || !validarAbaCliente())) return;
     if (novaAba === 3 && (!validarAbaItens() || !validarAbaCliente() || !validarAbaEntrega())) return;
@@ -614,7 +629,12 @@ export default function Checkout() {
           fullWidth
           disabled={carregandoEnvio || carregandoEndereco || itens.length === 0}
           onClick={lidarComAvanco}
-          sx={{ py: 1, borderRadius: 2, fontWeight: "bold", textTransform: "none" }}
+          sx={{
+            py: 1,
+            borderRadius: 2,
+            fontWeight: "bold",
+            textTransform: "none"
+          }}
         >
           {carregandoEndereco ? (
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -625,6 +645,38 @@ export default function Checkout() {
             getTextoBotao()
           )}
         </Button>
+
+        {user && (
+          <Button
+            variant="outlined"
+            color="success"
+            fullWidth
+            sx={{
+              mt: 1,
+              py: 1,
+              borderRadius: 2,
+              fontWeight: "bold",
+              textTransform: "none"
+            }}
+            disabled={carregandoEnvio || carregandoEndereco || itens.length === 0}
+            onClick={() => {
+              const nomeValido = cliente.nome.trim().length > 0;
+
+              if (!nomeValido && !telefoneValido) {
+                alert("Informe o nome ou telefone do cliente.");
+                return;
+              }
+
+              setCheckRetirarLoja(true);
+
+              setTimeout(() => {
+                finalizarPedido();
+              }, 100);
+            }}
+          >
+            Finalizar Balcão
+          </Button>
+        )}
       </Box>
     </Box>
   );

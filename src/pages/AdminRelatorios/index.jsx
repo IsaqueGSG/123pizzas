@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { DataGrid } from "@mui/x-data-grid";
 
 import {
   Box,
@@ -146,7 +147,6 @@ function formatarHora(data) {
     minute: "2-digit",
   });
 }
-
 
 
 /* =========================================================
@@ -464,6 +464,101 @@ function HoursChart({ dados }) {
     </Stack>
   );
 }
+
+const columnsPedidos = [
+  {
+    field: "pedido",
+    headerName: "Pedido",
+    flex: 0.7,
+    minWidth: 100,
+  },
+
+  {
+    field: "cliente",
+    headerName: "Cliente",
+    flex: 1.5,
+    minWidth: 180,
+  },
+
+  {
+    field: "data",
+    headerName: "Data",
+    flex: 1,
+    minWidth: 130,
+  },
+
+  {
+    field: "hora",
+    headerName: "Hora",
+    flex: 0.7,
+    minWidth: 90,
+  },
+
+  {
+    field: "modalidade",
+    headerName: "Modalidade",
+    flex: 1,
+    minWidth: 130,
+
+    renderCell: (params) => (
+      <Chip
+        size="small"
+        icon={
+          params.value === "Retirada"
+            ? <Storefront />
+            : <DeliveryDining />
+        }
+        label={params.value}
+        variant="outlined"
+      />
+    ),
+  },
+
+  {
+    field: "pagamento",
+    headerName: "Pagamento",
+    flex: 1,
+    minWidth: 130,
+  },
+
+  {
+    field: "status",
+    headerName: "Status",
+    flex: 1,
+    minWidth: 130,
+
+    renderCell: (params) => (
+      <Chip
+        size="small"
+        color={
+          STATUS_COLORS[params.value] ||
+          "default"
+        }
+        label={
+          STATUS_LABELS[params.value] ||
+          params.value
+        }
+      />
+    ),
+  },
+
+  {
+    field: "total",
+    headerName: "Total",
+    flex: 0.9,
+    minWidth: 110,
+    type: "number",
+
+    align: "right",
+    headerAlign: "right",
+
+    renderCell: (params) => (
+      <Typography fontWeight={700}>
+        {dinheiro(params.value)}
+      </Typography>
+    ),
+  },
+];
 
 /* =========================================================
    COMPONENTE PRINCIPAL
@@ -840,6 +935,36 @@ export default function RelatoriosPage() {
       })
       .slice(0, 8);
   }, [pedidosFiltrados]);
+
+  const rowsPedidos = pedidosRecentes.map((pedido) => {
+    const data = converterData(pedido.createdAt);
+
+    const status = pedido.status || "não informado";
+
+    return {
+      id: pedido.id,
+
+      pedido: `#${pedido.id?.slice(-6)}`,
+
+      cliente:
+        pedido?.cliente?.nome ||
+        "Cliente não informado",
+
+      data: formatarData(data),
+
+      hora: formatarHora(data),
+
+      modalidade: pedido.retirarNaLoja
+        ? "Retirada"
+        : "Entrega",
+
+      pagamento: obterPagamento(pedido),
+
+      status,
+
+      total: Number(pedido.total || 0),
+    };
+  });
 
   /* =======================================================
      APLICAR PERÍODO RÁPIDO
@@ -2147,164 +2272,49 @@ export default function RelatoriosPage() {
           </Stack>
         </Box>
 
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>
-                  Pedido
-                </TableCell>
+        <Box
+          sx={{
+            width: "100%",
+            overflowX: "auto",
+          }}
+        >
+          <DataGrid
+            rows={rowsPedidos}
+            columns={columnsPedidos}
 
-                <TableCell>
-                  Cliente
-                </TableCell>
+            autoHeight
 
-                <TableCell>
-                  Data
-                </TableCell>
+            pageSizeOptions={[10, 25, 50, 100]}
 
-                <TableCell>
-                  Modalidade
-                </TableCell>
+            initialState={{
+              pagination: {
+                paginationModel: {
+                  pageSize: 10,
+                  page: 0,
+                },
+              },
+            }}
 
-                <TableCell>
-                  Pagamento
-                </TableCell>
+            disableRowSelectionOnClick
 
-                <TableCell>
-                  Status
-                </TableCell>
+            sx={{
+              border: 0,
 
-                <TableCell align="right">
-                  Total
-                </TableCell>
-              </TableRow>
-            </TableHead>
+              "& .MuiDataGrid-columnHeaders": {
+                backgroundColor: "action.hover",
+                fontWeight: 700,
+              },
 
-            <TableBody>
-              {pedidosRecentes.map((pedido) => {
-                const data = converterData(
-                  pedido.createdAt
-                );
+              "& .MuiDataGrid-cell:focus": {
+                outline: "none",
+              },
 
-                const status =
-                  pedido.status ||
-                  "não informado";
-
-                return (
-                  <TableRow
-                    hover
-                    key={pedido.id}
-                  >
-                    <TableCell>
-                      <Typography
-                        variant="body2"
-                        fontWeight={700}
-                      >
-                        #{pedido.id?.slice(-6)}
-                      </Typography>
-                    </TableCell>
-
-                    <TableCell>
-                      {pedido?.cliente?.nome ||
-                        "Cliente não informado"}
-                    </TableCell>
-
-                    <TableCell>
-                      <Typography variant="body2">
-                        {formatarData(data)}
-                      </Typography>
-
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                      >
-                        {formatarHora(data)}
-                      </Typography>
-                    </TableCell>
-
-                    <TableCell>
-                      {pedido.retirarNaLoja ? (
-                        <Chip
-                          size="small"
-                          icon={
-                            <Storefront />
-                          }
-                          label="Retirada"
-                        />
-                      ) : (
-                        <Chip
-                          size="small"
-                          icon={
-                            <DeliveryDining />
-                          }
-                          label="Entrega"
-                        />
-                      )}
-                    </TableCell>
-
-                    <TableCell>
-                      {obterPagamento(pedido)}
-                    </TableCell>
-
-                    <TableCell>
-                      <Chip
-                        size="small"
-                        color={
-                          STATUS_COLORS[
-                          status
-                          ] || "default"
-                        }
-                        label={
-                          STATUS_LABELS[
-                          status
-                          ] || status
-                        }
-                      />
-                    </TableCell>
-
-                    <TableCell align="right">
-                      <Typography
-                        fontWeight={700}
-                      >
-                        {dinheiro(
-                          pedido.total
-                        )}
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-
-              {pedidosRecentes.length === 0 && (
-                <TableRow>
-                  <TableCell
-                    colSpan={7}
-                    align="center"
-                  >
-                    <Box sx={{ py: 5 }}>
-                      <ReceiptLong
-                        sx={{
-                          fontSize: 45,
-                          color:
-                            "text.disabled",
-                        }}
-                      />
-
-                      <Typography
-                        color="text.secondary"
-                        sx={{ mt: 1 }}
-                      >
-                        Nenhum pedido encontrado
-                        para os filtros selecionados.
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              "& .MuiDataGrid-columnHeader:focus": {
+                outline: "none",
+              },
+            }}
+          />
+        </Box>
       </Paper>
     </Box>
   );

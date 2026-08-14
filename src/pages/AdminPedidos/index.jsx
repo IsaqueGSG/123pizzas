@@ -370,9 +370,14 @@ export default function AdminPedidos() {
                   <Box sx={{ flex: 1 }}>
 
                     {/* Nome do Cliente e Data */}
-                    <Typography variant="subtitle1" fontWeight="bold" sx={{ lineHeight: 1.2 }}>
-                      {pedido.cliente?.nome}  {new Date(pedido.createdAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(pedido.createdAt.seconds * 1000).toLocaleDateString()}
-                    </Typography>
+                    <Box sx={{ mr: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <Typography variant="subtitle1" fontWeight="bold" sx={{ lineHeight: 1.2 }}>
+                        {pedido.cliente?.nome || "#"}
+                      </Typography>
+                      <Typography variant="subtitle1" fontWeight="bold" sx={{ lineHeight: 1.2 }}>
+                        {new Date(pedido.createdAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </Typography>
+                    </Box>
 
                     {/* Endereço/Localização */}
                     <Typography variant="body2" color="text.secondary" >
@@ -485,7 +490,7 @@ export default function AdminPedidos() {
                   <Divider sx={{ mb: 1 }} />
                   <Box sx={{ mt: 1 }}>
                     <Typography fontWeight="bold">
-                      {pedido.cliente.formaPagamento.forma}: R$ {pedido.total.toFixed(2)}
+                      {pedido.cliente.formaPagamento.forma || "Total"}: R$ {pedido.total.toFixed(2)}
                       {pedido.cliente.endereco?.taxaEntrega > 0 && ` (Entrega: R$ ${pedido.cliente.endereco?.taxaEntrega.toFixed(2)})`}
                     </Typography>
                     {
