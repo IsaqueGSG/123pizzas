@@ -10,7 +10,8 @@ import {
   onSnapshot,
   where,
   limit,
-  getDocs
+  getDocs,
+  writeBatch
 } from "firebase/firestore";
 
 import { db } from "../config/firebase";
@@ -36,16 +37,27 @@ export async function criarPedido(idLoja, { cliente, itens, total, retirarNaLoja
   );
 }
 
-export async function deletarPedido(idLoja, pedidoId) {
-  const ref = doc(
-    db,
-    "clientes123pedidos",
-    idLoja,
-    "pedidos",
-    pedidoId
-  );
+export async function deletarPedidos(idLoja, pedidosIds) {
+  const TAMANHO_BATCH = 500;
 
-  await deleteDoc(ref);
+  for (let i = 0; i < pedidosIds.length; i += TAMANHO_BATCH) {
+    const lote = pedidosIds.slice(i, i + TAMANHO_BATCH);
+    const batch = writeBatch(db);
+
+    lote.forEach((pedidoId) => {
+      const ref = doc(
+        db,
+        "clientes123pedidos",
+        idLoja,
+        "pedidos",
+        pedidoId
+      );
+
+      batch.delete(ref);
+    });
+
+    await batch.commit();
+  }
 }
 
 export function escutarPedidos(idLoja, callback) {

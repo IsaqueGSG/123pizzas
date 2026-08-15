@@ -18,7 +18,7 @@ import PrintIcon from '@mui/icons-material/Print';
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
-import { deletarPedido, atualizarPedido } from "../../services/pedidos.service";
+import { deletarPedidos, atualizarPedido } from "../../services/pedidos.service";
 import { imprimir, geraComandaHTML } from "../../services/impressora.service";
 import { enviarMensagemWhatsApp, gerarMensagemConfirmacao, abrirConversaWhatsApp } from "../../services/whatsapp.service";
 
@@ -223,7 +223,7 @@ export default function AdminPedidos() {
     }
 
     try {
-      await deletarPedido(idLoja, pedidoSelecionado.id);
+      await deletarPedidos(idLoja, [pedidoSelecionado.id]);
     } catch (error) {
       console.error("Erro ao excluir pedido:", error);
       alert("Erro ao excluir pedido");

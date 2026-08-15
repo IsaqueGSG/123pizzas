@@ -45,6 +45,7 @@ export default function Checkout() {
   const [aba, setAba] = useState(0);
   const [carregandoEnvio, setCarregandoEnvio] = useState(false);
   const [carregandoEndereco, setCarregandoEndereco] = useState(false);
+  const [checkPago, setCheckPago] = useState(false);
 
   const [errosForm, setErrosForm] = useState({});
 
@@ -472,6 +473,7 @@ export default function Checkout() {
           <Card sx={{ my: 2, borderRadius: 3 }}>
             <CardContent>
               <TextField
+                disabled={checkPago}
                 label="Forma de pagamento"
                 select
                 fullWidth
@@ -490,7 +492,14 @@ export default function Checkout() {
                   });
                 }}
               >
+                {checkPago && (
+                  <MenuItem value="PAGO">
+                    Pago
+                  </MenuItem>
+                )}
+
                 <MenuItem key={"Dinheiro"} value={"DINHEIRO"}>Dinheiro</MenuItem>
+
                 {preferencias?.pagamentos?.map((p) => (
                   <MenuItem key={p.id} value={p.nome}>{p.nome}</MenuItem>
                 ))}
@@ -529,6 +538,30 @@ export default function Checkout() {
                     />
                   )}
                 </>
+              )}
+
+              {user && (
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={checkPago}
+                      onChange={(e) => {
+                        const pago = e.target.checked;
+
+                        setCheckPago(pago);
+
+                        setCliente(prev => ({
+                          ...prev,
+                          formaPagamento: {
+                            ...prev.formaPagamento,
+                            forma: pago ? "PAGO" : "",
+                          }
+                        }));
+                      }}
+                    />
+                  }
+                  label="Marcar pedido como PAGO?"
+                />
               )}
 
               {/* CARD RESUMO DO PEDIDO */}
@@ -664,6 +697,7 @@ export default function Checkout() {
 
               if (!nomeValido && !telefoneValido) {
                 alert("Informe o nome ou telefone do cliente.");
+                setAba(1);
                 return;
               }
 
@@ -674,7 +708,7 @@ export default function Checkout() {
               }, 100);
             }}
           >
-            Finalizar Balcão
+            Finalizar (ADM)
           </Button>
         )}
       </Box>

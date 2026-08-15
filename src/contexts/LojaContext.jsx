@@ -84,6 +84,10 @@ export function LojaProvider({ children }) {
 
             let lojaId = firstSegment;
 
+            if(lojaId === "null"){
+                return navigate("/");
+            }
+
             // Rotas que não possuem /:idLoja
             if (rotasGlobais.includes(firstSegment)) {
                 lojaId = localStorage.getItem("idLoja");
