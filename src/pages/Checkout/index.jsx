@@ -30,7 +30,7 @@ import { criarPedido, buscarUltimoEnderecoPorTelefone } from "../../services/ped
 export default function Checkout() {
   const { idLoja } = useLoja();
   const { preferencias } = usePreferencias(); // 🟢 Preferências da loja
-  const { user } = useAuth();
+  const { user, role } = useAuth();
 
   const {
     enderecoLoja,
@@ -199,7 +199,7 @@ export default function Checkout() {
         itens: itens.map(item => ({ ...item })),
         total: valorTotalPedido,
         taxaEntrega: taxaEntregaEfetiva,
-        status: "novo",
+        status: "pendente",
         impresso: false,
         criadoEm: new Date()
       };
@@ -208,7 +208,7 @@ export default function Checkout() {
       limparCarrinho();
       clearEndereco();
 
-      if (user) {
+      if (user && role === "admin") {
         window.close();
       } else {
         navigate(`/${idLoja}`);
@@ -304,7 +304,7 @@ export default function Checkout() {
 
   const lidarComTrocaAba = (novaAba) => {
 
-    if (user) {
+    if (user && role === "admin") {
       return setAba(novaAba);
     }
 
@@ -540,7 +540,7 @@ export default function Checkout() {
                 </>
               )}
 
-              {user && (
+              {user && role === "admin" && (
                 <FormControlLabel
                   control={
                     <Checkbox
@@ -679,7 +679,7 @@ export default function Checkout() {
           )}
         </Button>
 
-        {user && (
+        {user && role === "admin" && (
           <Button
             variant="outlined"
             color="success"
@@ -696,7 +696,11 @@ export default function Checkout() {
               const nomeValido = cliente.nome.trim().length > 0;
 
               if (!nomeValido && !telefoneValido) {
-                alert("Informe o nome ou telefone do cliente.");
+                setErrosForm(prev => ({
+                  ...prev,
+                  cliente: "Informe o nome ou telefone do cliente."
+                }));
+
                 setAba(1);
                 return;
               }

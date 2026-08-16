@@ -55,33 +55,35 @@ const Login = () => {
         margin: "0 auto"
       }}
     >
+      {/* caso esteja carregando lojas */}
+      {loadingLojas && (
+        <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+          <CircularProgress size={"small"} />
+        </Box>
+      )}
+
       {/* SELECT DA LOJA */}
       <FormControl fullWidth>
         <InputLabel>Selecione a loja</InputLabel>
-        {loadingLojas ? (
-          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center"}}>
-            <CircularProgress size={"small"} />
-          </Box>
-        ) : (
-          <Select
-            value={idLoja || ""}
-            label="Selecione a loja"
-            onChange={(e) => setIdLoja(e.target.value)}
-          >
-            {lojas.map((loja) => (
-              <MenuItem key={loja.idLoja} value={loja.idLoja}>
-                {loja.nome}
-              </MenuItem>
-            ))}
-          </Select>
-        )}
+        <Select
+          disabled={loadingLojas}
+          value={idLoja || ""}
+          label="Selecione a loja"
+          onChange={(e) => setIdLoja(e.target.value)}
+        >
+          {lojas.map((loja) => (
+            <MenuItem key={loja.idLoja} value={loja.idLoja}>
+              {loja.nome}
+            </MenuItem>
+          ))}
+        </Select>
       </FormControl>
 
       {/* BOTÃO LOGIN */}
       <Button
         variant="contained"
         onClick={login}
-        disabled={loading || !idLoja}
+        disabled={loading || !idLoja || !lojas.length || loadingLojas}
         fullWidth
       >
         {loading ? "Carregando..." : "Entrar com Google"}
