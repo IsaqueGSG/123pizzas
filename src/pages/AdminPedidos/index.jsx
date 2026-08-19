@@ -16,7 +16,9 @@ import {
 } from "@mui/material";
 import PrintIcon from '@mui/icons-material/Print';
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import Badge from '@mui/material/Badge';
 
 import { deletarPedidos, atualizarPedido } from "../../services/pedidos.service";
 import { imprimir, geraComandaHTML } from "../../services/impressora.service";
@@ -253,25 +255,6 @@ export default function AdminPedidos() {
 
   const aberto = !loading && abertoAgora
 
-  const pedidosAnterioresRef = useRef([]);
-
-  useEffect(() => {
-    if (!pedidos?.length) return;
-
-    const pedidosNovos = pedidos.filter(
-      pedidoAtual =>
-        !pedidosAnterioresRef.current.some(
-          pedidoAnterior => pedidoAnterior.id === pedidoAtual.id
-        )
-    );
-
-    pedidosNovos.forEach(pedido => {
-      console.log("🆕 NOVO PEDIDO RECEBIDO:", pedido);
-    });
-
-    pedidosAnterioresRef.current = pedidos;
-  }, [pedidos]);
-
   return (
     <Box sx={{ p: 2 }}>
 
@@ -435,20 +418,33 @@ export default function AdminPedidos() {
                           await imprimirPedidoSeguro(pedido);
                         }
                       }}
-                      sx={{ border: '1px solid', borderColor: 'divider' }}
+                      sx={{ border: '1px solid', borderColor: 'primary.main' }}
                     >
                       <PrintIcon fontSize="small" />
                     </IconButton>
-                    <IconButton
-                      size="small"
-                      color="success"
-                      onClick={() =>
-                        abrirConversaWhatsApp(pedido.cliente.telefone)
-                      }
-                      sx={{ border: '1px solid', borderColor: 'divider' }}
-                    >
-                      <WhatsAppIcon fontSize="small" />
-                    </IconButton>
+                    <Tooltip title={Boolean(pedido?.cliente?.telefone) ? "WhatsApp do cliente" : "Telefone não cadastrado"} arrow>
+                      <span> {/* Span necessário para o Tooltip funcionar quando o botão está disabled */}
+                        <IconButton
+                          size="small"
+                          color={Boolean(pedido?.cliente?.telefone) ? "success" : "error"}
+                          onClick={() => {
+
+                            if (Boolean(pedido?.cliente?.telefone)) {
+                              abrirConversaWhatsApp(pedido.cliente.telefone)
+                            }else{
+                              alert("Telefone não cadastrado para este cliente.");
+                            }
+                          }}
+                          //deixar aspecto de desabilitado quando não tiver telefone
+                          sx={{ 
+                            border: '1px solid', 
+                            borderColor: pedido?.cliente?.telefone ? 'success.main' : 'error.main', 
+                          }}
+                        >
+                          <WhatsAppIcon fontSize="small" />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
                   </Box>
                 </Box>
 

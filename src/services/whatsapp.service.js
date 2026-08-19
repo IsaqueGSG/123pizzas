@@ -107,11 +107,6 @@ export function gerarMensagemConfirmacao(pedido) {
 
 export async function enviarMensagemWhatsApp(idLoja, telefone, texto) {
   
-  if (!telefone) {
-    console.warn("Telefone não informado. WhatsApp não enviado.");
-    alert("Telefone não informado. WhatsApp não enviado.");
-    return { ok: false, erro: "Telefone ausente" };
-  }
 
   if (!texto || !texto.trim()) {
     console.warn("Texto vazio. WhatsApp não enviado.");
