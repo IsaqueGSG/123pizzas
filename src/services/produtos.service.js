@@ -1,25 +1,35 @@
+
 import {
   collection,
   getDocs,
   addDoc,
   doc,
+  setDoc,
   updateDoc,
   deleteDoc,
   writeBatch,
   query,
   where
 } from "firebase/firestore";
+
 import { db } from "../config/firebase";
 
+import {
+  uploadImagemProduto,
+  removerImagemRef
+} from "./storage";
 
 export async function getProdutos(idLoja) {
   console.log("Buscando produtos da loja:", idLoja);
-  const snapshot = await getDocs(collection(
-    db,
-    "clientes123pedidos",
-    idLoja,
-    "produtos"
-  ));
+
+  const snapshot = await getDocs(
+    collection(
+      db,
+      "clientes123pedidos",
+      idLoja,
+      "produtos"
+    )
+  );
 
   return snapshot.docs.map(doc => ({
     id: doc.id,
@@ -27,15 +37,20 @@ export async function getProdutos(idLoja) {
   }));
 }
 
+
 export async function getProdutosPorTipo(idLoja, tipo) {
   console.log("Buscando produtos por tipo da loja:", idLoja);
 
-  const q = query(collection(
-    db,
-    "clientes123pedidos",
-    idLoja,
-    "produtos"
-  ), where("tipo", "==", tipo));
+  const q = query(
+    collection(
+      db,
+      "clientes123pedidos",
+      idLoja,
+      "produtos"
+    ),
+    where("tipo", "==", tipo)
+  );
+
   const snapshot = await getDocs(q);
 
   return snapshot.docs.map(doc => ({
@@ -44,15 +59,26 @@ export async function getProdutosPorTipo(idLoja, tipo) {
   }));
 }
 
-export async function addProduto(idLoja, produto) {
-  console.log("Adicionando produto:", produto);
-  const docRef = await addDoc(collection(
+
+/**
+ * Cria produto usando o UUID fornecido.
+ */
+export async function addProduto(
+  idLoja,
+  idProduto,
+  dados
+) {
+  const produtoRef = doc(
     db,
     "clientes123pedidos",
     idLoja,
-    "produtos"
-  ), produto);
-  return docRef.id;
+    "produtos",
+    idProduto
+  );
+
+  await setDoc(produtoRef, dados);
+
+  return idProduto;
 }
 
 export async function duplicarProduto(idLoja, produto) {

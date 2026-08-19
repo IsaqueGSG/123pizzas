@@ -1,5 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
 const firebaseConfig = {
@@ -19,6 +20,7 @@ export const db = getFirestore(app);
 // Auth
 export const auth = getAuth(app);
 export const provider = new GoogleAuthProvider();
+export const storage = getStorage(app);
 
 //força escolher conta toda vez que for logar, mesmo que já tenha uma sessão ativa
 provider.setCustomParameters({
