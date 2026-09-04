@@ -2,7 +2,7 @@ import {
   collection, getDocs, doc, deleteDoc, writeBatch, addDoc, getDoc
 } from "firebase/firestore";
 import { db } from "../config/firebase";
-import { duplicarProdutosDaCategoria } from "./produtos.service";
+import { duplicarProdutosDaCategoria, deleteProdutosPorCat } from "./produtos.service";
 
 export async function duplicarCategoriaComProdutos(idLoja, categoriaId) {
   try {
@@ -103,8 +103,41 @@ export async function updateCategoriasPosicaoBatch(idLoja, categorias) {
 
 /* ---------- EXCLUIR CATEGORIA ---------- */
 export async function deleteCategoria(idLoja, idCategoria) {
-  const ref = doc(db, "clientes123pedidos", idLoja, "categorias", idCategoria);
-  await deleteDoc(ref);
+  try {
+    if (!idLoja || !idCategoria) {
+      throw new Error("idLoja e idCategoria são obrigatórios");
+    }
+
+    // 1. Exclui todos os produtos da categoria
+    const produtosDeletados = await deleteProdutosPorCat(
+      idLoja,
+      idCategoria
+    );
+
+    // 2. Exclui a categoria
+    const categoriaRef = doc(
+      db,
+      "clientes123pedidos",
+      idLoja,
+      "categorias",
+      idCategoria
+    );
+
+    await deleteDoc(categoriaRef);
+
+    console.log(
+      `Categoria ${idCategoria} excluída junto com ${produtosDeletados} produtos`
+    );
+
+    return {
+      categoriaId: idCategoria,
+      produtosDeletados
+    };
+
+  } catch (error) {
+    console.error("Erro ao excluir categoria e seus produtos:", error);
+    throw error;
+  }
 }
 
 export function gerarSlug(texto) {

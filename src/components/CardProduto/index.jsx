@@ -16,7 +16,15 @@ import RestaurantMenuIcon from "@mui/icons-material/RestaurantMenu";
 import { useState } from "react";
 import { useCarrinho } from "../../contexts/CarrinhoContext";
 
-export default function CardProduto({ produto, destacado,onSelecionar, selecionado, modoMisto, foraDeHorario }) {
+//ajustando para receber so produto sem quebrar
+export default function CardProduto({
+  produto,
+  destacado = false,
+  onSelecionar = () => { },
+  selecionado = false,
+  modoMisto = false,
+  foraDeHorario = false
+}) {
   const { itens, incrementar, decrementar } = useCarrinho();
   const [expandir, setExpandir] = useState(false);
   const [imgError, setImgError] = useState(false);
@@ -81,8 +89,8 @@ export default function CardProduto({ produto, destacado,onSelecionar, seleciona
 
         {/* Descrição flutuante sobre a imagem quando expandida */}
         {produto.descricao && (
-          <Collapse 
-            in={expandir} 
+          <Collapse
+            in={expandir}
             sx={{
               position: "absolute",
               bottom: 0,

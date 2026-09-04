@@ -333,7 +333,7 @@ export default function CategoriaForm({
             {/* Extras */}
             <Divider sx={{ my: 2 }} />
 
-            {/* Criar grupo */}
+            {/* Criar opcional */}
             <Box
                 sx={{
                     display: "grid",
@@ -348,7 +348,7 @@ export default function CategoriaForm({
             >
                 <TextField
                     size="large"
-                    label="Nome do grupo"
+                    label="Nome do opcional"
                     value={novoGrupo.nome}
                     onChange={(e) =>
                         setNovoGrupo(prev => ({ ...prev, nome: e.target.value }))
@@ -382,11 +382,11 @@ export default function CategoriaForm({
                     }
                 />
                 <Button variant="contained" size="large" onClick={adicionarGrupo}>
-                    Criar Grupo
+                    Criar Opcional
                 </Button>
             </Box>
 
-            {/* Lista de grupos */}
+            {/* Lista de opcionais */}
             {categoria.gruposExtras?.map(grupo => (
                 <Box key={grupo.id} sx={{ border: "1px solid #ccc", p: 2, mb: 2, width: "100%" }}>
 

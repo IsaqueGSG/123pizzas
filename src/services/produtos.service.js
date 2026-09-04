@@ -133,7 +133,6 @@ export async function duplicarProdutosDaCategoria(idLoja, categoriaAntigaId, nov
       ...p,
       categoriaId: novaCategoriaId,
       nome: p.nome, // mantém nome original
-      // NÃO copiar id nem createdAt (serão recriados)
     };
   });
 
