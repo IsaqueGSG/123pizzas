@@ -154,7 +154,7 @@ export default function Checkout() {
       pago: true,
       nome: nomeRapido,
       telefone: telefoneRapido,
-      total: valorTotalCarrinho // Sem taxa de entrega
+      total: valorTotalCarrinho
     });
   };
 
@@ -281,8 +281,8 @@ export default function Checkout() {
               </Card>
               {!checkRetirarLoja && (
                 <Box sx={{ mt: 1 }}>
+                  {errosForm.entrega && <FormHelperText error sx={{ mb: 1, textAlign: "center" }}>{errosForm.entrega}</FormHelperText>}
                   <MapaEntrega />
-                  {errosForm.entrega && <FormHelperText error sx={{ mt: 1, textAlign: "center" }}>{errosForm.entrega}</FormHelperText>}
                 </Box>
               )}
             </CardContent>
@@ -298,8 +298,11 @@ export default function Checkout() {
                   const selecionado = preferencias?.pagamentos?.find(p => p.nome === e.target.value);
                   setCliente({ ...cliente, formaPagamento: { forma: e.target.value, obsExibicao: selecionado?.obs || "", obsPagamento: "" } });
                 }}
+                helperText={errosForm.formaPagamento} error={!!errosForm.formaPagamento}
               >
+
                 {checkPago && <MenuItem value="PAGO">Pago</MenuItem>}
+
                 <MenuItem value="DINHEIRO">Dinheiro</MenuItem>
                 {preferencias?.pagamentos?.map((p) => <MenuItem key={p.id} value={p.nome}>{p.nome}</MenuItem>)}
               </TextField>
