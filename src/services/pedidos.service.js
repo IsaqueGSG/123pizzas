@@ -87,7 +87,8 @@ export async function atualizarPedido(idLoja, pedidoId, dados) {
 export async function processarPedido({
   idLoja,
   pedido,
-  preferencias
+  preferencias,
+  numeroComanda
 }) {
 
   await atualizarPedido(idLoja, pedido.id, { status: "preparando" });
@@ -107,7 +108,7 @@ export async function processarPedido({
     imprimir(html);
   } else {
     try {
-      await window.electronAPI.imprimirPedido(pedido, largura);
+      await window.electronAPI.imprimirPedido(pedido, largura, numeroComanda);
     } catch (error) {
       alert("Erro ao imprimir no Electron:", error);
       const html = geraComandaHTML(pedido, largura);

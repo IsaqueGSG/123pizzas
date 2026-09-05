@@ -69,12 +69,24 @@ export function PedidosRealtimeProvider({ children }) {
 
                     if (autoRef.current && !pedido.impresso) {
 
+                        const pedidosOrdenados = snapshot.docs
+                            .map(d => ({
+                                id: d.id,
+                                ...d.data()
+                            }))
+                            .sort((a, b) =>
+                                a.createdAt.seconds - b.createdAt.seconds
+                            );
+
+                        const numComanda =
+                            pedidosOrdenados.findIndex(p => p.id === pedido.id) + 1;
+
                         await processarPedido({
                             idLoja,
                             pedido,
-                            preferencias
+                            preferencias,
+                            numComanda
                         });
-
                     }
 
                 }
@@ -84,6 +96,7 @@ export function PedidosRealtimeProvider({ children }) {
             setLoading(false);
             firstLoad.current = false;
             setPedidos(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+
         });
         return () => unsub();
     }, [idLoja, isAdminRoute]);
