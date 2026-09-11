@@ -1,5 +1,4 @@
 function obterCategoriaItem(item) {
-
   // 1️⃣ Campo direto (mais confiável)
   if (item.categoriaNome?.trim()) {
     return item.categoriaNome.trim();
@@ -62,7 +61,9 @@ export function gerarMensagemConfirmacao(pedido) {
   }
 
   pedido.itens.forEach(item => {
-    mensagem += `🍽️ *${item.categoriaNome.toUpperCase()}*\n`;
+    // 🟢 Ajuste: Usa a função segura em vez de chamar item.categoriaNome direto
+    const nomeCategoria = obterCategoriaItem(item);
+    mensagem += `🍽️ *${nomeCategoria.toUpperCase()}*\n`;
 
     mensagem += `• ${item.quantidade}x ${item.nome}\n`;
 
@@ -98,6 +99,17 @@ export function gerarMensagemConfirmacao(pedido) {
   mensagem += `\n💰 *Resumo:*\n`;
   mensagem += `Subtotal: R$ ${subTotalItens.toFixed(2)}\n`;
   mensagem += `Taxa de entrega: R$ ${(endereco.taxaEntrega ?? 0).toFixed(2)}\n`;
+
+  // 🟢 Ajuste seguro para tratar desconto tanto se for número quanto se for objeto
+  if (pedido?.desconto) {
+    
+    if (pedido.desconto.tipo === "valor") {
+      mensagem += `Desconto: R$ ${Number(pedido.desconto.valor).toFixed(2)}\n`;
+    }else if (pedido.desconto.tipo === "porcentagem") {
+      mensagem += `Desconto: ${Number(pedido.desconto.valor).toFixed(2)}%\n`;
+    }
+  }
+
   mensagem += `\n*TOTAL: R$ ${pedido.total.toFixed(2)}*\n\n`;
 
   mensagem += `Avisaremos quando o pedido estiver a caminho! 🚀`;
@@ -106,7 +118,7 @@ export function gerarMensagemConfirmacao(pedido) {
 }
 
 export async function enviarMensagemWhatsApp(idLoja, telefone, texto) {
-  
+
 
   if (!texto || !texto.trim()) {
     console.warn("Texto vazio. WhatsApp não enviado.");

@@ -22,12 +22,13 @@ import {
   gerarMensagemConfirmacao
 } from "./whatsapp.service";
 
-export async function criarPedido(idLoja, { cliente, itens, total, retirarNaLoja }) {
+export async function criarPedido(idLoja, { cliente, itens, desconto, total, retirarNaLoja }) {
   return addDoc(
     collection(db, "clientes123pedidos", idLoja, "pedidos"),
     {
       cliente,
       itens,
+      desconto,
       total,
       retirarNaLoja,
       status: "pendente",

@@ -9,7 +9,6 @@ import {
 } from "@mui/material";
 import { Add as AddIcon, Remove as RemoveIcon, Edit as EditIcon, Close as CloseIcon } from "@mui/icons-material";
 
-// Contextos e Serviços
 import { useAuth } from "../../contexts/AuthContext";
 import { useLoja } from "../../contexts/LojaContext";
 import { useEntrega } from "../../contexts/EntregaContext";
@@ -23,14 +22,13 @@ export default function Checkout() {
   const navigate = useNavigate();
   const pedidoFinalizadoRef = useRef(false);
 
-  // Contextos
   const { idLoja } = useLoja();
   const { preferencias } = usePreferencias();
   const { user, role } = useAuth();
   const { enderecoLoja, endereco, clearEndereco, setEndereco } = useEntrega();
   const { itens, incrementar, decrementar, limparCarrinho } = useCarrinho();
 
-  const isAdmin = user && role === "admin"; // 🟢 Helper para facilitar checagens
+  const isAdmin = user && role === "admin";
 
   // Estados Locais
   const [aba, setAba] = useState(0);
@@ -48,12 +46,11 @@ export default function Checkout() {
     formaPagamento: { forma: "", obsPagamento: "" }
   });
 
-  // 🟢 Estado para Edição Manual de Valores pelo Admin
-  const [valoresOverride, setValoresOverride] = useState({
+  // 🟢 Novo Estado para Desconto (valor ou porcentagem)
+  const [descontoOverride, setDescontoOverride] = useState({
     ativo: false,
-    subtotal: 0,
-    taxa: 0,
-    total: 0
+    tipo: "valor", // "valor" (R$) ou "porcentagem" (%)
+    valor: ""
   });
 
   // Cálculos Financeiros Base
@@ -61,10 +58,21 @@ export default function Checkout() {
   const taxaEntregaEfetiva = checkRetirarLoja ? 0 : Number(endereco?.taxaEntrega ?? 0);
   const valorTotalPedido = valorTotalCarrinho + taxaEntregaEfetiva;
 
-  // 🟢 Valores Finais (Calculados ou Substituídos pelo Admin)
-  const subtotalFinal = valoresOverride.ativo ? Number(valoresOverride.subtotal) : valorTotalCarrinho;
-  const taxaEntregaFinal = checkRetirarLoja ? 0 : (valoresOverride.ativo ? Number(valoresOverride.taxa) : taxaEntregaEfetiva);
-  const totalFinal = valoresOverride.ativo ? Number(valoresOverride.total) : valorTotalPedido;
+  // 🟢 Cálculo do Desconto e Valores Finais
+  const calcularDesconto = () => {
+    if (!descontoOverride.ativo || !descontoOverride.valor) return 0;
+    const numDesconto = Number(descontoOverride.valor) || 0;
+    
+    if (descontoOverride.tipo === "porcentagem") {
+      return (valorTotalPedido * numDesconto) / 100;
+    }
+    return numDesconto; // Tipo "valor" em Reais
+  };
+
+  const valorDescontoFinal = calcularDesconto();
+  const subtotalFinal = valorTotalCarrinho;
+  const taxaEntregaFinal = taxaEntregaEfetiva;
+  const totalFinal = Math.max(0, valorTotalPedido - valorDescontoFinal);
 
   // Helpers de Telefone
   const limparTelefone = (valor) => valor.replace(/\D/g, "");
@@ -80,7 +88,7 @@ export default function Checkout() {
     return num.replace(/(\d{2})(\d{5})(\d+)/, "($1) $2-$3");
   };
 
-  // 🟢 Validação Unificada
+  // Validação Unificada
   const validarPasso = (passo) => {
     const erros = {};
     if (passo >= 1 && itens.length === 0) erros.carrinho = "Seu carrinho está vazio.";
@@ -135,13 +143,15 @@ export default function Checkout() {
         },
         retirarNaLoja: isRetirarNaLojaFinal,
         itens: itens.map(i => ({ ...i })),
-        // 🟢 Utiliza os valores finais editados ou calculados
         total: overrides.total ?? totalFinal,
         taxaEntrega: overrides.taxaEntrega ?? taxaEntregaFinal,
         status: "pendente",
         impresso: false,
-        criadoEm: new Date()
+        criadoEm: new Date(),
+        desconto: descontoOverride.ativo ? { tipo: descontoOverride.tipo, valor: Number(descontoOverride.valor) } : null
       };
+
+      console.log("Pedido a ser criado:", pedido); // Log do pedido antes de enviar
 
       await criarPedido(idLoja, pedido);
       limparCarrinho();
@@ -158,14 +168,16 @@ export default function Checkout() {
 
   const finalizarComoAdmin = () => {
     const nomeRapido = cliente.nome.trim() ? cliente.nome : "Cliente Balcão";
-    const telefoneRapido = telefoneLimpo || "00000000000";
+    const telefoneRapido = telefoneLimpo || "";
+    const retirarNaLojaRapido = checkRetirarLoja || true;
+    const pagoRapido = checkPago || true;
 
     finalizarPedido({
-      retirarNaLoja: true,
-      pago: true,
       nome: nomeRapido,
       telefone: telefoneRapido,
-      total: totalFinal // Usa o total final que pode ter sido editado
+      retirarNaLoja: retirarNaLojaRapido,
+      pago: pagoRapido,
+      total: totalFinal
     });
   };
 
@@ -377,104 +389,72 @@ export default function Checkout() {
 
                 <Divider sx={{ my: 1.5 }} />
 
-                {/* 🟢 TOTAIS E PAGAMENTO EDITÁVEIS PARA ADMIN */}
+                {/* 🟢 SEÇÃO DE DESCONTO PARA ADMIN */}
+                {isAdmin && (
+                  <Box sx={{ my: 1.5, p: 1.5, border: "1px dashed", borderColor: "divider", borderRadius: 2, bgcolor: "background.paper" }}>
+                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: descontoOverride.ativo ? 1 : 0 }}>
+                      <Typography variant="body2" fontWeight="bold">Aplicar Desconto</Typography>
+                      {descontoOverride.ativo ? (
+                        <CloseIcon size="small" color="error" sx={{ cursor: "pointer" }} onClick={() => setDescontoOverride({ ativo: false, tipo: "valor", valor: "" })} />
+                      ) : (
+                        <EditIcon size="small" sx={{ cursor: "pointer" }} onClick={() => setDescontoOverride(prev => ({ ...prev, ativo: true }))} />
+                      )}
+                    </Box>
+
+                    {descontoOverride.ativo && (
+                      <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
+                        <TextField
+                          label="Tipo"
+                          select
+                          size="small"
+                          sx={{ width: "30%" }}
+                          value={descontoOverride.tipo}
+                          onChange={(e) => setDescontoOverride({ ...descontoOverride, tipo: e.target.value })}
+                        >
+                          <MenuItem value="valor">Valor (R$)</MenuItem>
+                          <MenuItem value="porcentagem">Porcentagem (%)</MenuItem>
+                        </TextField>
+
+                        <TextField
+                          label={descontoOverride.tipo === "valor" ? "Desconto (R$)" : "Desconto (%)"}
+                          type="number"
+                          size="small"
+                          fullWidth
+                          value={descontoOverride.valor}
+                          onChange={(e) => setDescontoOverride({ ...descontoOverride, valor: e.target.value })}
+                        />
+                      </Box>
+                    )}
+                  </Box>
+                )}
+
+                {/* EXIBIÇÃO DOS TOTAIS */}
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                  <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                    <Typography variant="body2">
+                      Subtotal: R$ {subtotalFinal.toFixed(2)}
+                    </Typography>
+                  </Box>
 
-
-
-                  {/* Renderização Normal ou Editável */}
-                  {!valoresOverride.ativo ? (
-                    <>
-                      <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                        <Typography variant="body2">
-                          Subtotal: R$ {subtotalFinal.toFixed(2)}
-                        </Typography>
-
-                        {/* Botão de Controle de Edição */}
-                        {isAdmin && (
-                          <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 1 }}>
-                            {!valoresOverride.ativo ? (
-                              <EditIcon
-                                size="small"
-                                onClick={() => setValoresOverride({
-                                  ativo: true,
-                                  subtotal: valorTotalCarrinho.toFixed(2),
-                                  taxa: taxaEntregaEfetiva.toFixed(2),
-                                  total: valorTotalPedido.toFixed(2)
-                                })}
-                              />
-                            ) : (
-                              <CloseIcon
-                                size="small"
-                                color="error"
-                                onClick={() => setValoresOverride({ ativo: false, subtotal: 0, taxa: 0, total: 0 })}
-                              />
-                            )}
-                          </Box>
-                        )}
-                      </Box>
-                      {!checkRetirarLoja && (
-                        <Typography variant="body2">
-                          Taxa de Entrega: R$ {taxaEntregaFinal.toFixed(2)}
-                        </Typography>
-                      )}
-                      <Typography fontWeight="bold" sx={{ mt: 0.5 }}>
-                        Total Geral: R$ {totalFinal.toFixed(2)}
+                  {!checkRetirarLoja && (
+                    <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                      <Typography variant="body2">
+                        Taxa de Entrega: R$ {taxaEntregaFinal.toFixed(2)}
                       </Typography>
-                    </>
-                  ) : (
-                    <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5, mt: 1, mb: 1 }}>
-
-                      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <TextField
-                          label="Subtotal Editado (R$)"
-                          type="number"
-                          size="small"
-                          value={valoresOverride.subtotal}
-                          onChange={(e) => setValoresOverride({ ...valoresOverride, subtotal: e.target.value })}
-                        />
-                        
-                        {/* Botão de Controle de Edição */}
-                        {isAdmin && (
-                          <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 1 }}>
-                            {!valoresOverride.ativo ? (
-                              <EditIcon
-                                size="small"
-                                onClick={() => setValoresOverride({
-                                  ativo: true,
-                                  subtotal: valorTotalCarrinho.toFixed(2),
-                                  taxa: taxaEntregaEfetiva.toFixed(2),
-                                  total: valorTotalPedido.toFixed(2)
-                                })}
-                              />
-                            ) : (
-                              <CloseIcon
-                                size="small"
-                                color="error"
-                                onClick={() => setValoresOverride({ ativo: false, subtotal: 0, taxa: 0, total: 0 })}
-                              />
-                            )}
-                          </Box>
-                        )}
-                      </Box>
-                      {!checkRetirarLoja && (
-                        <TextField
-                          label="Taxa de Entrega (R$)"
-                          type="number"
-                          size="small"
-                          value={valoresOverride.taxa}
-                          onChange={(e) => setValoresOverride({ ...valoresOverride, taxa: e.target.value })}
-                        />
-                      )}
-                      <TextField
-                        label="Total Geral Final (R$)"
-                        type="number"
-                        size="small"
-                        value={valoresOverride.total}
-                        onChange={(e) => setValoresOverride({ ...valoresOverride, total: e.target.value })}
-                      />
                     </Box>
                   )}
+
+                  {descontoOverride.ativo && valorDescontoFinal > 0 && (
+                    <Box sx={{ display: "flex", justifyContent: "space-between", color: "error.main" }}>
+                      <Typography variant="body2">
+                        Desconto: - R$ {valorDescontoFinal.toFixed(2)} {descontoOverride.tipo === "porcentagem" && `(${descontoOverride.valor}%)`}
+                      </Typography>
+                    </Box>
+                  )}
+
+                  <Typography fontWeight="bold" sx={{ mt: 0.5 }}>
+                    Total Geral: R$ {totalFinal.toFixed(2)}
+                  </Typography>
 
                   <Typography variant="body2" color="primary" fontWeight="bold" sx={{ mt: 0.5 }}>
                     Pagamento: {cliente.formaPagamento.forma || "Não selecionado"}

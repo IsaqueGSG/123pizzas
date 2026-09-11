@@ -16,9 +16,7 @@ import {
 } from "@mui/material";
 import PrintIcon from '@mui/icons-material/Print';
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import Badge from '@mui/material/Badge';
 
 import { deletarPedidos, atualizarPedido } from "../../services/pedidos.service";
 import { imprimir, geraComandaHTML } from "../../services/impressora.service";
@@ -53,30 +51,24 @@ export default function AdminPedidos() {
   const [pedidoSelecionado, setPedidoSelecionado] = useState(null);
 
   const pedidosPorData = useMemo(() => {
-
     if (!dataFiltro) return pedidos;
 
-    // 🔥 cria data LOCAL corretamente
     const [ano, mes, dia] = dataFiltro.split("-").map(Number);
     const inicio = new Date(ano, mes - 1, dia, 0, 0, 0, 0);
     const fim = new Date(ano, mes - 1, dia, 23, 59, 59, 999);
 
     return pedidos.filter(p => {
       if (!p.createdAt?.seconds) return false;
-
       const d = new Date(p.createdAt.seconds * 1000);
-
       return d >= inicio && d <= fim;
     });
-
+    
   }, [pedidos, dataFiltro]);
 
   const pedidosFiltrados = useMemo(() => {
-
     return pedidosPorData
       .filter(p => p.status === statusTabs[abaAtiva])
       .sort((a, b) => b.createdAt.seconds - a.createdAt.seconds);
-
   }, [pedidosPorData, abaAtiva]);
 
   const contadoresStatus = useMemo(() => {
@@ -107,11 +99,11 @@ export default function AdminPedidos() {
   }
 
   async function imprimirPedidoSeguro(pedido) {
+    console.log("imprimirPedidoSeguro", pedido);
     const largura = preferencias?.impressao?.largura || "80mm";
     const numComanda = getNumeroComanda(pedido);
 
     try {
-      // navegador normal
       if (!window.electronAPI) {
         const html = geraComandaHTML(pedido, largura, numComanda);
         imprimir(html);
@@ -155,17 +147,17 @@ export default function AdminPedidos() {
     try {
       await atualizarPedido(idLoja, pedido.id, { status: "preparando" });
 
-      const imprimiu = imprimirPedidoSeguro(pedido); // Tenta imprimir a comanda
+      const imprimiu = await imprimirPedidoSeguro(pedido);
 
       const texto = gerarMensagemConfirmacao(pedido);
 
-      await enviarMensagemWhatsApp( // Envia a mensagem de confirmação
+      await enviarMensagemWhatsApp(
         idLoja,
         pedido.cliente.telefone,
         texto
       );
 
-      if (!imprimiu) { // Se não conseguiu imprimir, não marca como impresso
+      if (!imprimiu) {
         alert("⚠️ falha na impressão.");
         return;
       }
@@ -205,10 +197,8 @@ export default function AdminPedidos() {
   };
 
   const handleFinalizar = async (pedido) => {
-
     try {
       await atualizarPedido(idLoja, pedido.id, { status: "finalizado" });
-
     } catch (error) {
       console.error("Erro ao finalizar pedido:", error);
       alert("Erro ao finalizar pedido");
@@ -234,22 +224,17 @@ export default function AdminPedidos() {
   };
 
   function obterCategoriaItem(item) {
-
     if (item.categoriaNome?.trim()) {
       return item.categoriaNome.trim();
     }
-
     if (item.categoria?.nome?.trim()) {
       return item.categoria.nome.trim();
     }
-
     if (item.sabores?.length) {
       const nome = item.sabores[0]?.categoria?.nome;
       if (nome?.trim()) return nome.trim();
     }
-
     if (item.tipo?.trim()) return item.tipo.trim();
-
     return "Itens";
   }
 
@@ -257,12 +242,9 @@ export default function AdminPedidos() {
 
   return (
     <Box sx={{ p: 2 }}>
-
       <AdminDrawer />
 
       <Paper sx={{ p: 1, display: 'flex', alignItems: 'center', gap: 1.5, borderRadius: 2 }}>
-
-        {/* Filtro de Data - Reduzido */}
         <TextField
           type="date"
           size="small"
@@ -275,7 +257,6 @@ export default function AdminPedidos() {
 
         <Divider orientation="vertical" flexItem sx={{ height: 24, my: 'auto' }} />
 
-        {/* Switch - Adicionado size="small" */}
         <FormControlLabel
           sx={{ ml: 0, mr: 0 }}
           control={<Switch size="small" checked={autoAceitarPedidos} onChange={toggleAutoAceitar} />}
@@ -284,7 +265,6 @@ export default function AdminPedidos() {
 
         <Divider orientation="vertical" flexItem sx={{ height: 24, my: 'auto' }} />
 
-        {/* Status - Indicador Visual */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, px: 0.5 }}>
           <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: aberto ? 'success.main' : 'error.main' }} />
           <Typography
@@ -298,7 +278,6 @@ export default function AdminPedidos() {
 
         <Box sx={{ flexGrow: 1 }} />
 
-        {/* Botão de Ação - Reduzido para ícone ou tamanho small */}
         <Tooltip title="Abrir Loja">
           <Button
             variant="outlined"
@@ -307,7 +286,6 @@ export default function AdminPedidos() {
             sx={{ fontSize: '0.75rem', py: 0.5 }}
             onClick={() => {
               const url = `${window.location.origin}/${idLoja}`;
-
               window.open(url, "_blank", "noopener,noreferrer");
             }}
           >
@@ -325,11 +303,11 @@ export default function AdminPedidos() {
         sx={{
           mb: 3,
           px: 0,
-          mx: -2, // Puxa para as bordas da tela se o Box pai tiver padding de 2
-          width: "calc(100% + 32px)", // Compensa a margem negativa para ocupar exatamente a largura total
+          mx: -2,
+          width: "calc(100% + 32px)",
           "& .MuiTab-root": {
             minWidth: 0,
-            px: 1, // Reduz o padding lateral interno de cada aba
+            px: 1,
           }
         }}
       >
@@ -341,24 +319,35 @@ export default function AdminPedidos() {
         ))}
       </Tabs>
 
-      {
-        loading ? (
-          <Typography sx={{ p: 3 }}>Carregando pedidos...</Typography>
-        ) : (
-          <Box
-            sx={{
-              mt: 3,
-              display: "grid",
-              gridTemplateColumns: {
-                xs: "1fr",
-                sm: "repeat(3, 1fr)",
-                md: "repeat(4, 1fr)"
-              },
-              gap: 2
-            }}
-          >
-            {pedidosFiltrados.map((pedido) => (
+      {loading ? (
+        <Typography sx={{ p: 3 }}>Carregando pedidos...</Typography>
+      ) : (
+        <Box
+          sx={{
+            mt: 3,
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "1fr",
+              sm: "repeat(3, 1fr)",
+              md: "repeat(4, 1fr)"
+            },
+            gap: 2
+          }}
+        >
+          {pedidosFiltrados.map((pedido) => {
+            const pagamento = pedido.cliente?.formaPagamento || {};
+            const endereco = pedido.cliente?.endereco || {};
 
+            // Tratamento seguro do desconto
+            const valorDesconto = (() => {
+              if (!pedido?.desconto) return 0;
+              if (typeof pedido.desconto === "object") {
+                return Number(pedido.desconto.valor) || 0;
+              }
+              return Number(pedido.desconto) || 0;
+            })();
+
+            return (
               <Card
                 key={pedido.id}
                 sx={{
@@ -368,13 +357,9 @@ export default function AdminPedidos() {
                   flexDirection: "column"
                 }}
               >
-
                 {/* CABEÇALHO DO CARD */}
                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-
                   <Box sx={{ width: "100%" }}>
-
-                    {/* Nome do Cliente e Data */}
                     <Box sx={{ mr: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <Typography variant="subtitle1" fontWeight="bold" sx={{ lineHeight: 1.2 }}>
                         {pedido.cliente?.nome || "#"}
@@ -384,19 +369,17 @@ export default function AdminPedidos() {
                       </Typography>
                     </Box>
 
-                    {/* Endereço/Localização */}
                     {pedido.retirarNaLoja && (
                       <Typography variant="body2" color="text.secondary">
                         📍 Retirar na Loja
                       </Typography>
                     )}
 
-                    {!pedido.retirarNaLoja && pedido.cliente.endereco.placeId !== "" && (
+                    {!pedido.retirarNaLoja && endereco.placeId !== "" && (
                       <Typography variant="body2" color="text.secondary">
-                        📍 {pedido.cliente.endereco.rua || "Rua não informada"},{" "}
-                        {pedido.cliente.endereco.numero || "S/N"}
-                        {pedido.cliente.endereco.bairro &&
-                          ` - ${pedido.cliente.endereco.bairro}`}
+                        📍 {endereco.rua || "Rua não informada"},{" "}
+                        {endereco.numero || "S/N"}
+                        {endereco.bairro && ` - ${endereco.bairro}`}
                       </Typography>
                     )}
                   </Box>
@@ -407,11 +390,9 @@ export default function AdminPedidos() {
                       size="small"
                       color="primary"
                       onClick={async () => {
-                        console.log("Imprimindo pedido", pedido);
                         const larguraImpressao = preferencias?.impressao?.largura || "80mm";
                         const numComanda = getNumeroComanda(pedido);
                         if (!window.electronAPI) {
-                          console.log(pedido)
                           const html = geraComandaHTML(pedido, larguraImpressao, numComanda);
                           imprimir(html);
                         } else {
@@ -423,22 +404,20 @@ export default function AdminPedidos() {
                       <PrintIcon fontSize="small" />
                     </IconButton>
                     <Tooltip title={Boolean(pedido?.cliente?.telefone) ? "WhatsApp do cliente" : "Telefone não cadastrado"} arrow>
-                      <span> {/* Span necessário para o Tooltip funcionar quando o botão está disabled */}
+                      <span>
                         <IconButton
                           size="small"
                           color={Boolean(pedido?.cliente?.telefone) ? "success" : "error"}
                           onClick={() => {
-
                             if (Boolean(pedido?.cliente?.telefone)) {
                               abrirConversaWhatsApp(pedido.cliente.telefone)
-                            }else{
+                            } else {
                               alert("Telefone não cadastrado para este cliente.");
                             }
                           }}
-                          //deixar aspecto de desabilitado quando não tiver telefone
-                          sx={{ 
-                            border: '1px solid', 
-                            borderColor: pedido?.cliente?.telefone ? 'success.main' : 'error.main', 
+                          sx={{
+                            border: '1px solid',
+                            borderColor: pedido?.cliente?.telefone ? 'success.main' : 'error.main',
                           }}
                         >
                           <WhatsAppIcon fontSize="small" />
@@ -451,87 +430,82 @@ export default function AdminPedidos() {
                 <Divider sx={{ my: 1 }} />
 
                 {/* ITENS */}
-                {
-                  Object.entries(
-                    pedido.itens.reduce((acc, item) => {
-                      const cat = obterCategoriaItem(item);
-                      if (!acc[cat]) acc[cat] = [];
-                      acc[cat].push(item);
-                      return acc;
-                    }, {})
-                  ).map(([categoria, itens]) => (
+                {Object.entries(
+                  pedido.itens.reduce((acc, item) => {
+                    const cat = obterCategoriaItem(item);
+                    if (!acc[cat]) acc[cat] = [];
+                    acc[cat].push(item);
+                    return acc;
+                  }, {})
+                ).map(([categoria, itens]) => (
+                  <Box key={categoria} sx={{ mb: 2 }}>
+                    <Typography
+                      variant="subtitle2"
+                      fontWeight="bold"
+                      sx={{ color: "text.secondary" }}
+                    >
+                      🍽️ {categoria.toUpperCase()}
+                    </Typography>
 
-                    <Box key={categoria} sx={{ mb: 2 }}>
+                    {itens.map((item, index) => (
+                      <Box key={index}>
+                        <Typography fontWeight="bold">
+                          {item.quantidade}x {item.nome}
+                        </Typography>
 
-                      {/* TÍTULO DA CATEGORIA */}
-                      <Typography
-                        variant="subtitle2"
-                        fontWeight="bold"
-                        sx={{
-                          color: "text.secondary"
-                        }}
-                      >
-                        🍽️ {categoria.toUpperCase()}
-                      </Typography>
+                        {item.selecoes && Object.keys(item.selecoes).length > 0 && (
+                          <Box>
+                            {Object.entries(item.selecoes).map(([grupoId, grupo]) => (
+                              <Typography key={grupoId} variant="body2">
+                                <strong>• {grupo.nome}:</strong>{" "}
+                                {grupo.itens
+                                  .map(i =>
+                                    i.valor > 0
+                                      ? `${i.nome} (+R$ ${i.valor.toFixed(2)})`
+                                      : i.nome
+                                  )
+                                  .join(", ")}
+                              </Typography>
+                            ))}
+                          </Box>
+                        )}
 
-                      {/* ITENS DA CATEGORIA */}
-                      {itens.map((item, index) => (
-                        <Box key={index} >
-
-                          <Typography fontWeight="bold">
-                            {item.quantidade}x {item.nome}
+                        {item?.observacao && (
+                          <Typography variant="body2">
+                            <strong>• Obs:</strong> {item.observacao}
                           </Typography>
+                        )}
+                      </Box>
+                    ))}
+                  </Box>
+                ))}
 
-                          {item.selecoes && Object.keys(item.selecoes).length > 0 && (
-                            <Box >
-                              {Object.entries(item.selecoes).map(([grupoId, grupo]) => (
-                                <Typography key={grupoId} variant="body2">
-                                  <strong>• {grupo.nome}:</strong>{" "}
-                                  {grupo.itens
-                                    .map(i =>
-                                      i.valor > 0
-                                        ? `${i.nome} (+R$ ${i.valor.toFixed(2)})`
-                                        : i.nome
-                                    )
-                                    .join(", ")}
-                                </Typography>
-                              ))}
-                            </Box>
-                          )}
-
-                          {item?.observacao && (
-                            <Typography variant="body2">
-                              <strong>• Obs:</strong> {item.observacao}
-                            </Typography>
-                          )}
-
-                        </Box>
-                      ))}
-
-                    </Box>
-                  ))
-                }
-
-                {/* AÇÕES */}
-                {/* AÇÕES */}
+                {/* RODAPÉ E AÇÕES */}
                 <Box sx={{ mt: "auto" }}>
                   <Divider sx={{ mb: 1 }} />
                   <Box sx={{ mt: 1 }}>
-                    <Typography fontWeight="bold">
-                      {pedido.cliente.formaPagamento.forma || "Total"}: R$ {pedido.total.toFixed(2)}
-                      {pedido.cliente.endereco?.taxaEntrega > 0 && ` (Entrega: R$ ${pedido.cliente.endereco?.taxaEntrega.toFixed(2)})`}
-                    </Typography>
-                    {pedido.cliente.formaPagamento.obsPagamento && (
-                      <Typography variant="body2">
-                        <strong>Recebe:</strong> R$ {Number(pedido.cliente.formaPagamento.obsPagamento).toFixed(2)} e <strong>Devolve:</strong> R$ {(pedido.cliente.formaPagamento.obsPagamento - pedido.total).toFixed(2)}
+
+                    {valorDesconto > 0 && (
+                      <Typography variant="body2" color="error.main">
+                        Desconto: - R$ {valorDesconto.toFixed(2)}
+                        {pedido.desconto?.tipo === "porcentagem" && ` (${pedido.desconto.valor}%)`}
                       </Typography>
                     )}
+
+                    {pagamento.forma === "DINHEIRO" && pagamento.obsPagamento && (
+                      <Typography variant="body2">
+                        <strong>Recebe:</strong> R$ {Number(pagamento.obsPagamento).toFixed(2)} e <strong>Devolve:</strong> R$ {(Number(pagamento.obsPagamento) - pedido.total).toFixed(2)}
+                      </Typography>
+                    )}
+
+                    <Typography fontWeight="bold">
+                      {pagamento.forma || "Total"}: R$ {pedido.total.toFixed(2)}
+                      {endereco?.taxaEntrega > 0 && ` (Entrega: R$ ${endereco?.taxaEntrega.toFixed(2)})`}
+                    </Typography>
                   </Box>
 
-                  {/* Container de botões unificado */}
+                  {/* Botões */}
                   <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
-
-                    {/* BOTÃO PRINCIPAL (Preparar/Despachar/Finalizar) */}
                     {pedido.status === "pendente" && (
                       <Button variant="contained" color="success" fullWidth onClick={() => handlePreparar(pedido)}>
                         Preparar
@@ -544,12 +518,10 @@ export default function AdminPedidos() {
                         color="success"
                         fullWidth
                         onClick={() => {
-                          if (pedido.retirarNaLoja || pedido.cliente.endereco?.placeId === "") {
+                          if (pedido.retirarNaLoja || endereco?.placeId === "") {
                             handleDespachando(pedido, null);
                             return;
                           }
-                          const skip = sessionStorage.getItem("dontAskAgain") === "true";
-                          const ultimoMotoboy = sessionStorage.getItem("ultimoMotoboy");
                           if (skip && ultimoMotoboy) {
                             handleDespachando(pedido, ultimoMotoboy);
                           } else {
@@ -568,7 +540,6 @@ export default function AdminPedidos() {
                       </Button>
                     )}
 
-                    {/* BOTÃO DE AÇÃO SECUNDÁRIA (Cancelar ou Excluir) */}
                     {["pendente", "preparando", "despachando"].includes(pedido.status) && (
                       <Button variant="outlined" color="error" fullWidth onClick={() => atualizarPedido(idLoja, pedido.id, { status: "cancelado" })}>
                         Cancelar
@@ -586,11 +557,10 @@ export default function AdminPedidos() {
                   </Box>
                 </Box>
               </Card>
-            ))
-            }
-          </Box >
-        )
-      }
+            );
+          })}
+        </Box>
+      )}
 
       <ConfirmDialog
         open={confirmOpen}
@@ -607,16 +577,13 @@ export default function AdminPedidos() {
         open={openModalMotoboys}
         onClose={() => setOpenModalMotoboys(false)}
         onSelect={(nome) => {
-          // salva último motoboy
           sessionStorage.setItem("ultimoMotoboy", nome);
-
           if (pedidoParaDespachar) {
             handleDespachando(pedidoParaDespachar, nome);
             setPedidoParaDespachar(null);
           }
         }}
       />
-    </Box >
-
+    </Box>
   );
 }

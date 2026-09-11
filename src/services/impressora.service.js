@@ -77,6 +77,29 @@ export function geraComandaHTML(pedido, largura = "80mm", numComanda) {
     return acc;
   }, {});
 
+
+  const desconto = (pedido = pedido) => {
+    // 🟢 Ajuste seguro para tratar desconto tanto se for número quanto se for objeto
+    if (pedido?.desconto) {
+
+      if (pedido.desconto.tipo === "valor") {
+        return `
+        < div class="subTotal" >
+          <b>Desconto:</b> R$ ${Number(pedido.desconto.valor).toFixed(2)}
+        </div >
+        `;
+      } else if (pedido.desconto.tipo === "porcentagem") {
+        return `
+        <div class="subTotal">
+          <b>Desconto:</b> ${Number(pedido.desconto.valor).toFixed(2)}%
+        </div>
+        `;
+      }
+
+    }
+  }
+
+
   return `
 <style>
   body {
@@ -193,6 +216,8 @@ ${Object.entries(itensPorCategoria).map(([tipo, itens]) => `
 
 <div class="divider"></div>
 
+${desconto(pedido) || ""}
+    
 <div class="total">
   ${pedido?.cliente?.formaPagamento?.forma}: R$ ${Number(pedido?.total || 0).toFixed(2)}
 </div>

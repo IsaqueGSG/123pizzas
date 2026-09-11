@@ -53,6 +53,7 @@ export function PedidosRealtimeProvider({ children }) {
         if (!idLoja || !isAdminRoute) return;
 
         const unsub = escutarPedidos(idLoja, (snapshot) => {
+
             snapshot.docChanges().forEach(async (change) => {
 
                 const pedido = { id: change.doc.id, ...change.doc.data() };
@@ -131,6 +132,19 @@ export function PedidosRealtimeProvider({ children }) {
         });
 
         return resultado;
+    }, [pedidos]);
+
+    const QtdPedidosHoje = useMemo(() => {
+        const hoje = new Date().toLocaleDateString("sv-SE"); // Formato YYYY-MM-DD
+        return pedidos.filter(p => {
+            if (!p.criadoEm) return false;
+            const data = p.criadoEm?.toDate
+                ? p.criadoEm.toDate()
+                : new Date(p.criadoEm);
+
+            if (isNaN(data)) return false;
+            return data.toLocaleDateString("sv-SE") === hoje;
+        }).length;
     }, [pedidos]);
 
     const toggleAudio = () => {
