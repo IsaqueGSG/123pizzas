@@ -62,7 +62,7 @@ export default function Checkout() {
   const calcularDesconto = () => {
     if (!descontoOverride.ativo || !descontoOverride.valor) return 0;
     const numDesconto = Number(descontoOverride.valor) || 0;
-    
+
     if (descontoOverride.tipo === "porcentagem") {
       return (valorTotalPedido * numDesconto) / 100;
     }
@@ -117,6 +117,12 @@ export default function Checkout() {
   };
 
   const lidarComAvanco = () => {
+
+    if (isAdmin) {
+      finalizarComoAdmin();
+      return;
+    }
+
     if (validarPasso(aba + 1)) {
       if (aba < 3) setAba(aba + 1);
       else finalizarPedido();
@@ -169,8 +175,24 @@ export default function Checkout() {
   const finalizarComoAdmin = () => {
     const nomeRapido = cliente.nome.trim() ? cliente.nome : "Cliente Balcão";
     const telefoneRapido = telefoneLimpo || "";
-    const retirarNaLojaRapido = checkRetirarLoja || true;
-    const pagoRapido = checkPago || true;
+    let retirarNaLojaRapido = checkRetirarLoja;
+    let pagoRapido = checkPago;
+
+    //endereco não definido, então forçamos a retirada na loja
+    if (!endereco.placeId) {
+      retirarNaLojaRapido = true;
+    }
+
+    //garante que o endereço tenha número, caso contrário alerta e não finaliza
+    if (endereco.placeId && !endereco.numero) {
+      alert("Informe o número do endereço para entrega.");
+      return;
+    }
+
+    //forma de pagamento nao definida, então forçamos como pago
+    if (cliente.formaPagamento.forma.trim() === "") {
+      pagoRapido = true;
+    }
 
     finalizarPedido({
       nome: nomeRapido,
@@ -224,6 +246,9 @@ export default function Checkout() {
   const getTextoBotao = () => {
     if (carregandoEnvio) return "Processando...";
     if (carregandoEndereco) return "Buscando endereço...";
+
+    if (isAdmin) return "Finalizar Pedido (Admin)";
+
     const textos = ["Continuar para dados", "Continuar para entrega", "Continuar para pagamento", "Finalizar pedido"];
     return textos[aba];
   };
@@ -469,15 +494,17 @@ export default function Checkout() {
 
       {/* FOOTER FIXO */}
       <Box sx={{ position: "fixed", bottom: 0, left: 0, width: "100%", bgcolor: "background.paper", boxShadow: "0 -3px 12px rgba(0,0,0,0.12)", p: 1.5, zIndex: 1200 }}>
-        <Button variant="contained" size="medium" fullWidth disabled={carregandoEnvio || carregandoEndereco || itens.length === 0} onClick={lidarComAvanco} sx={{ py: 1, borderRadius: 2, fontWeight: "bold" }}>
-          {carregandoEndereco ? <CircularProgress size={16} color="inherit" /> : getTextoBotao()}
-        </Button>
 
-        {isAdmin && (
-          <Button variant="outlined" color="success" fullWidth sx={{ mt: 1, py: 1, borderRadius: 2, fontWeight: "bold" }} disabled={carregandoEnvio || itens.length === 0} onClick={finalizarComoAdmin}>
-            Venda Rápida Balcão (ADM)
-          </Button>
-        )}
+        <Button
+          sx={{ py: 1, borderRadius: 2, fontWeight: "bold" }}
+          variant="contained"
+          size="medium"
+          fullWidth
+          disabled={carregandoEnvio || carregandoEndereco || itens.length === 0}
+          onClick={lidarComAvanco}
+        >
+          {getTextoBotao()}
+        </Button>
       </Box>
     </Box>
   );
