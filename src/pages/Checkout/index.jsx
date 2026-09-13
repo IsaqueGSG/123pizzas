@@ -48,7 +48,7 @@ export default function Checkout() {
 
   // 🟢 Novo Estado para Desconto (valor ou porcentagem)
   const [descontoOverride, setDescontoOverride] = useState({
-    ativo: false,
+    ativo: true, // Ativo por padrão para Admin
     tipo: "valor", // "valor" (R$) ou "porcentagem" (%)
     valor: ""
   });
@@ -417,39 +417,31 @@ export default function Checkout() {
                 {/* 🟢 SEÇÃO DE DESCONTO PARA ADMIN */}
                 {isAdmin && (
                   <Box sx={{ my: 1.5, p: 1.5, border: "1px dashed", borderColor: "divider", borderRadius: 2, bgcolor: "background.paper" }}>
-                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: descontoOverride.ativo ? 1 : 0 }}>
-                      <Typography variant="body2" fontWeight="bold">Aplicar Desconto</Typography>
-                      {descontoOverride.ativo ? (
-                        <CloseIcon size="small" color="error" sx={{ cursor: "pointer" }} onClick={() => setDescontoOverride({ ativo: false, tipo: "valor", valor: "" })} />
-                      ) : (
-                        <EditIcon size="small" sx={{ cursor: "pointer" }} onClick={() => setDescontoOverride(prev => ({ ...prev, ativo: true }))} />
-                      )}
+                    <Typography variant="body2" fontWeight="bold">Aplicar Desconto (ADMIN)</Typography>
+
+                    <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
+
+                      <TextField
+                        label={descontoOverride.tipo === "valor" ? "Desconto (R$)" : "Desconto (%)"}
+                        type="number"
+                        size="small"
+                        fullWidth
+                        value={descontoOverride.valor}
+                        onChange={(e) => setDescontoOverride({ ...descontoOverride, valor: e.target.value })}
+                      />
+                    
+                      <TextField
+                        label="Tipo"
+                        select
+                        size="small"
+                        sx={{ width: "30%" }}
+                        value={descontoOverride.tipo}
+                        onChange={(e) => setDescontoOverride({ ...descontoOverride, tipo: e.target.value })}
+                      >
+                        <MenuItem value="valor">Valor (R$)</MenuItem>
+                        <MenuItem value="porcentagem">Porcentagem (%)</MenuItem>
+                      </TextField>
                     </Box>
-
-                    {descontoOverride.ativo && (
-                      <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
-                        <TextField
-                          label="Tipo"
-                          select
-                          size="small"
-                          sx={{ width: "30%" }}
-                          value={descontoOverride.tipo}
-                          onChange={(e) => setDescontoOverride({ ...descontoOverride, tipo: e.target.value })}
-                        >
-                          <MenuItem value="valor">Valor (R$)</MenuItem>
-                          <MenuItem value="porcentagem">Porcentagem (%)</MenuItem>
-                        </TextField>
-
-                        <TextField
-                          label={descontoOverride.tipo === "valor" ? "Desconto (R$)" : "Desconto (%)"}
-                          type="number"
-                          size="small"
-                          fullWidth
-                          value={descontoOverride.valor}
-                          onChange={(e) => setDescontoOverride({ ...descontoOverride, valor: e.target.value })}
-                        />
-                      </Box>
-                    )}
                   </Box>
                 )}
 
