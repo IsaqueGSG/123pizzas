@@ -185,8 +185,9 @@ export default function Checkout() {
 
     //garante que o endereço tenha número, caso contrário alerta e não finaliza
     if (endereco.placeId && !endereco.numero) {
-      alert("Informe o número do endereço para entrega.");
-      return;
+      setErrosForm({ entrega: "Informe o número do endereço." });
+      setAba(2);
+      return; 
     }
 
     //forma de pagamento nao definida, então forçamos como pago

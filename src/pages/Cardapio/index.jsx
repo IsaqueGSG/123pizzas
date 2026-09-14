@@ -247,13 +247,6 @@ export default function Cardapio() {
 
   return (
     <Box>
-
-      {loading && (
-        <Box sx={{ height: "100vh", display: "flex", justifyContent: "center", alignItems: "center" }}>
-          <CircularProgress />
-        </Box>
-      )}
-
       {!loading && (categoriasAtivas.length > 0 && categoriaSelecionada) ? (
         <Box
           sx={{
@@ -305,7 +298,9 @@ export default function Cardapio() {
           )}
         </Box>
       ) : (
-        <h1>Ainda nao há produtos nessa Loja</h1>
+        <Box sx={{ height: "100vh", display: "flex", justifyContent: "center", alignItems: "center" }}>
+          <CircularProgress />
+        </Box>
       )}
 
       <Box sx={{ p: 2, position: "relative" }}>

@@ -50,7 +50,7 @@ export function gerarMensagemConfirmacao(pedido) {
 
   mensagem += `📍 *Entrega:*\n`;
   if (pedido.retirarNaLoja) {
-    mensagem += `Retirar na loja.\n\n`;
+    mensagem += `Retirar na loja.\n`;
   } else {
     mensagem += `${endereco.rua || ""}, ${endereco.numero || ""}\n`;
     mensagem += `${endereco.bairro || ""} - ${endereco.cidade || ""}/${endereco.uf || ""}\n`;
@@ -59,6 +59,8 @@ export function gerarMensagemConfirmacao(pedido) {
   if (endereco.observacao) {
     mensagem += `Obs: ${endereco.observacao}\n`;
   }
+
+  mensagem += `\n\n`;
 
   pedido.itens.forEach(item => {
     // 🟢 Ajuste: Usa a função segura em vez de chamar item.categoriaNome direto
