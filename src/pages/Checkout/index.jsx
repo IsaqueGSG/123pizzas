@@ -112,7 +112,8 @@ export default function Checkout() {
   const lidarComAvanco = () => {
 
     if (isAdmin) {
-      finalizarComoAdmin();
+      if (aba < 3) setAba(aba + 1);
+      else finalizarComoAdmin();
       return;
     }
 
@@ -241,10 +242,11 @@ export default function Checkout() {
     if (carregandoEnvio) return "Processando...";
     if (carregandoEndereco) return "Buscando endereço...";
 
-    if (isAdmin) return "Finalizar Pedido (Admin)";
-
     const textos = ["Continuar para dados", "Continuar para entrega", "Continuar para pagamento", "Finalizar pedido"];
-    return textos[aba];
+
+    const texto = isAdmin ? textos[aba] + " (Admin)" : textos[aba];
+    
+    return texto;
   };
 
   if (!mapsLoaded || !enderecoLoja) {
