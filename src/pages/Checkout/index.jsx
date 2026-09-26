@@ -26,32 +26,25 @@ export default function Checkout() {
   const { preferencias } = usePreferencias();
   const { user, role } = useAuth();
   const { enderecoLoja, endereco, clearEndereco, setEndereco } = useEntrega();
-  const { itens, incrementar, decrementar, limparCarrinho } = useCarrinho();
+  const {
+    itens, limparCarrinho, 
+    incrementar, decrementar,
+    cliente, setCliente, 
+    checkTroco, setCheckTroco,
+    checkPago, setCheckPago,
+    descontoOverride, setDescontoOverride,
+    checkRetirarLoja, setCheckRetirarLoja 
+  } = useCarrinho();
 
   const isAdmin = user && role === "admin";
 
   // Estados Locais
   const [aba, setAba] = useState(0);
-  const [checkTroco, setCheckTroco] = useState(false);
-  const [checkRetirarLoja, setCheckRetirarLoja] = useState(false);
-  const [checkPago, setCheckPago] = useState(false);
   const [carregandoEnvio, setCarregandoEnvio] = useState(false);
   const [carregandoEndereco, setCarregandoEndereco] = useState(false);
   const [mapsLoaded, setMapsLoaded] = useState(false);
   const [errosForm, setErrosForm] = useState({});
 
-  const [cliente, setCliente] = useState({
-    nome: "",
-    telefone: "",
-    formaPagamento: { forma: "", obsPagamento: "" }
-  });
-
-  // 🟢 Novo Estado para Desconto (valor ou porcentagem)
-  const [descontoOverride, setDescontoOverride] = useState({
-    ativo: true, // Ativo por padrão para Admin
-    tipo: "valor", // "valor" (R$) ou "porcentagem" (%)
-    valor: ""
-  });
 
   // Cálculos Financeiros Base
   const valorTotalCarrinho = itens.reduce((total, item) => total + Number(item.valor ?? 0) * Number(item.quantidade ?? 1), 0);
@@ -187,7 +180,7 @@ export default function Checkout() {
     if (endereco.placeId && !endereco.numero) {
       setErrosForm({ entrega: "Informe o número do endereço." });
       setAba(2);
-      return; 
+      return;
     }
 
     //forma de pagamento nao definida, então forçamos como pago
@@ -430,7 +423,7 @@ export default function Checkout() {
                         value={descontoOverride.valor}
                         onChange={(e) => setDescontoOverride({ ...descontoOverride, valor: e.target.value })}
                       />
-                    
+
                       <TextField
                         label="Tipo"
                         select

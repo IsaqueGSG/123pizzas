@@ -61,9 +61,35 @@ export const CartProvider = ({ children }) => {
     0
   );
 
+  const [cliente, setCliente] = useState({
+    nome: "",
+    telefone: "",
+    formaPagamento: { forma: "", obsPagamento: "" }
+  });
+
+  const [descontoOverride, setDescontoOverride] = useState({
+    ativo: true, // Ativo por padrão para Admin
+    tipo: "valor", // "valor" (R$) ou "porcentagem" (%)
+    valor: ""
+  });
+
+  const [checkTroco, setCheckTroco] = useState(false);
+  const [checkRetirarLoja, setCheckRetirarLoja] = useState(false);
+  const [checkPago, setCheckPago] = useState(false);
+
   return (
     <CarrinhoContext.Provider
       value={{
+        cliente,
+        setCliente,
+        descontoOverride,
+        setDescontoOverride,
+        checkTroco,
+        setCheckTroco,
+        checkRetirarLoja,
+        setCheckRetirarLoja,
+        checkPago,
+        setCheckPago,
         itens,
         addItem,
         incrementar,
